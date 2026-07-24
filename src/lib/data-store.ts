@@ -595,16 +595,28 @@ export const DataStore = {
     displayName?: string;
     role?: string;
   }) => {
+    const existing = await DataStore.getUserRecord(user.id);
+
     await upsertDocument(COLLECTIONS.USERS, user.id, {
       authUserId: user.id,
-      email: safeString(user.email, `${user.id}@tutorslink.local`),
-      displayName: safeString(user.displayName, user.email?.split("@")[0] || "Alvey User"),
-      role: safeString(user.role, "student"),
-      discordId: null,
-      active: true,
+      email: safeString(
+        user.email,
+        existing?.email ?? `${user.id}@tutorslink.local`
+      ),
+      displayName: safeString(
+        user.displayName,
+        existing?.displayName ??
+        user.email?.split("@")[0] ??
+        "Alvey User"
+      ),
+
+      // KEEP THE EXISTING ROLE
+      role: existing?.role ?? safeString(user.role, "student"),
+
+      discordId: existing?.discordId ?? null,
+      active: existing?.active ?? true,
     });
   },
-
   getUserRecord: async (userId: string): Promise<any | null> => {
     try {
       return await getDocument(COLLECTIONS.USERS, userId);
@@ -1084,9 +1096,16 @@ export const DataStore = {
   getUserRoles: async (userId: string): Promise<string[]> => {
     try {
       const doc = await getDocument(COLLECTIONS.USERS, userId);
+
+      console.log("USER DOC:", doc);
+
       const role = safeString(doc?.role, "");
+      console.log("ROLE:", role);
+
       if (role) return [role];
-    } catch { }
+    } catch (e) {
+      console.log("ERROR:", e);
+    }
 
     const mockRoles = getLocal<Record<string, string[]>>("user_roles_map", {});
     return mockRoles[userId] || ["student"];

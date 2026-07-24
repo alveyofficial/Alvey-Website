@@ -9,7 +9,7 @@ import { DataStore } from "@/lib/data-store";
 
 type Role = "student" | "tutor" | "recruitment" | "website_manager" | "owner";
 
-export const Route = createFileRoute("/_authenticated/dashboard")({
+export const Route = createFileRoute("/_authenticated/student/dashboard")({
   head: () => ({
     meta: [
       { title: "Student Dashboard · Alvey" },

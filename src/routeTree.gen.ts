@@ -43,6 +43,7 @@ import { Route as AuthenticatedTutorEarningsRouteImport } from './routes/_authen
 import { Route as AuthenticatedTutorAvailabilityRouteImport } from './routes/_authenticated/tutor/availability'
 import { Route as AuthenticatedTutorAdvertisementRouteImport } from './routes/_authenticated/tutor/advertisement'
 import { Route as AuthenticatedTutorAccountRouteImport } from './routes/_authenticated/tutor/account'
+import { Route as AuthenticatedStudentDashboardRouteImport } from './routes/_authenticated/student/dashboard'
 import { Route as AuthenticatedRecruitmentNotificationsRouteImport } from './routes/_authenticated/recruitment/notifications'
 import { Route as AuthenticatedRecruitmentNotesRouteImport } from './routes/_authenticated/recruitment/notes'
 import { Route as AuthenticatedRecruitmentDocumentsRouteImport } from './routes/_authenticated/recruitment/documents'
@@ -243,6 +244,12 @@ const AuthenticatedTutorAccountRoute =
     path: '/tutor/account',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedStudentDashboardRoute =
+  AuthenticatedStudentDashboardRouteImport.update({
+    id: '/student/dashboard',
+    path: '/student/dashboard',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedRecruitmentNotificationsRoute =
   AuthenticatedRecruitmentNotificationsRouteImport.update({
     id: '/recruitment/notifications',
@@ -394,6 +401,7 @@ export interface FileRoutesByFullPath {
   '/recruitment/documents': typeof AuthenticatedRecruitmentDocumentsRoute
   '/recruitment/notes': typeof AuthenticatedRecruitmentNotesRoute
   '/recruitment/notifications': typeof AuthenticatedRecruitmentNotificationsRoute
+  '/student/dashboard': typeof AuthenticatedStudentDashboardRoute
   '/tutor/account': typeof AuthenticatedTutorAccountRoute
   '/tutor/advertisement': typeof AuthenticatedTutorAdvertisementRoute
   '/tutor/availability': typeof AuthenticatedTutorAvailabilityRoute
@@ -447,6 +455,7 @@ export interface FileRoutesByTo {
   '/recruitment/documents': typeof AuthenticatedRecruitmentDocumentsRoute
   '/recruitment/notes': typeof AuthenticatedRecruitmentNotesRoute
   '/recruitment/notifications': typeof AuthenticatedRecruitmentNotificationsRoute
+  '/student/dashboard': typeof AuthenticatedStudentDashboardRoute
   '/tutor/account': typeof AuthenticatedTutorAccountRoute
   '/tutor/advertisement': typeof AuthenticatedTutorAdvertisementRoute
   '/tutor/availability': typeof AuthenticatedTutorAvailabilityRoute
@@ -503,6 +512,7 @@ export interface FileRoutesById {
   '/_authenticated/recruitment/documents': typeof AuthenticatedRecruitmentDocumentsRoute
   '/_authenticated/recruitment/notes': typeof AuthenticatedRecruitmentNotesRoute
   '/_authenticated/recruitment/notifications': typeof AuthenticatedRecruitmentNotificationsRoute
+  '/_authenticated/student/dashboard': typeof AuthenticatedStudentDashboardRoute
   '/_authenticated/tutor/account': typeof AuthenticatedTutorAccountRoute
   '/_authenticated/tutor/advertisement': typeof AuthenticatedTutorAdvertisementRoute
   '/_authenticated/tutor/availability': typeof AuthenticatedTutorAvailabilityRoute
@@ -558,6 +568,7 @@ export interface FileRouteTypes {
     | '/recruitment/documents'
     | '/recruitment/notes'
     | '/recruitment/notifications'
+    | '/student/dashboard'
     | '/tutor/account'
     | '/tutor/advertisement'
     | '/tutor/availability'
@@ -611,6 +622,7 @@ export interface FileRouteTypes {
     | '/recruitment/documents'
     | '/recruitment/notes'
     | '/recruitment/notifications'
+    | '/student/dashboard'
     | '/tutor/account'
     | '/tutor/advertisement'
     | '/tutor/availability'
@@ -666,6 +678,7 @@ export interface FileRouteTypes {
     | '/_authenticated/recruitment/documents'
     | '/_authenticated/recruitment/notes'
     | '/_authenticated/recruitment/notifications'
+    | '/_authenticated/student/dashboard'
     | '/_authenticated/tutor/account'
     | '/_authenticated/tutor/advertisement'
     | '/_authenticated/tutor/availability'
@@ -931,6 +944,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTutorAccountRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/student/dashboard': {
+      id: '/_authenticated/student/dashboard'
+      path: '/student/dashboard'
+      fullPath: '/student/dashboard'
+      preLoaderRoute: typeof AuthenticatedStudentDashboardRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/recruitment/notifications': {
       id: '/_authenticated/recruitment/notifications'
       path: '/recruitment/notifications'
@@ -1096,6 +1116,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedRecruitmentDocumentsRoute: typeof AuthenticatedRecruitmentDocumentsRoute
   AuthenticatedRecruitmentNotesRoute: typeof AuthenticatedRecruitmentNotesRoute
   AuthenticatedRecruitmentNotificationsRoute: typeof AuthenticatedRecruitmentNotificationsRoute
+  AuthenticatedStudentDashboardRoute: typeof AuthenticatedStudentDashboardRoute
   AuthenticatedTutorAccountRoute: typeof AuthenticatedTutorAccountRoute
   AuthenticatedTutorAdvertisementRoute: typeof AuthenticatedTutorAdvertisementRoute
   AuthenticatedTutorAvailabilityRoute: typeof AuthenticatedTutorAvailabilityRoute
@@ -1146,6 +1167,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedRecruitmentNotesRoute: AuthenticatedRecruitmentNotesRoute,
   AuthenticatedRecruitmentNotificationsRoute:
     AuthenticatedRecruitmentNotificationsRoute,
+  AuthenticatedStudentDashboardRoute: AuthenticatedStudentDashboardRoute,
   AuthenticatedTutorAccountRoute: AuthenticatedTutorAccountRoute,
   AuthenticatedTutorAdvertisementRoute: AuthenticatedTutorAdvertisementRoute,
   AuthenticatedTutorAvailabilityRoute: AuthenticatedTutorAvailabilityRoute,

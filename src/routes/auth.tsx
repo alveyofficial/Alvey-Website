@@ -28,7 +28,14 @@ async function ensureUserRecord(displayNameHint = "") {
   const uid: string = user.$id || user.id;
   const email: string = user.email ?? "";
   const name: string = user.name || displayNameHint || email.split("@")[0];
-  await DataStore.saveUserRecord({ id: uid, email, displayName: name, role: "student" });
+  const existing = await DataStore.getUserRecord(uid);
+
+  await DataStore.saveUserRecord({
+    id: uid,
+    email,
+    displayName: name,
+    role: existing?.role ?? "student",
+  });
 }
 
 function AuthPage() {
@@ -49,8 +56,24 @@ function AuthPage() {
       if (user) {
         console.log("USER FOUND");
         await ensureUserRecord();
-        console.log("NAVIGATING");
-        navigate({ to: "/dashboard" });
+
+        const uid = (user as any).$id || (user as any).id;
+        const roles = await DataStore.getUserRoles(uid);
+
+        console.log("Roles:", roles);
+
+        if (roles.includes("tutor")) {
+          navigate({ to: "/tutor" });
+        } else if (
+          roles.includes("owner") ||
+          roles.includes("website_manager")
+        ) {
+          navigate({ to: "/admin" });
+        } else if (roles.includes("recruitment")) {
+          navigate({ to: "/recruitment" });
+        } else {
+          navigate({ to: "/student/dashboard" });
+        }
       } else {
         console.log("NO USER");
       }
