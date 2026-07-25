@@ -34,7 +34,7 @@ async function ensureUserRecord(displayNameHint = "") {
     id: uid,
     email,
     displayName: name,
-    role: existing?.role ?? "student",
+    role: existing?.role ?? "guest",
   });
 }
 
@@ -60,22 +60,18 @@ function AuthPage() {
         const uid = (user as any).$id || (user as any).id;
         const roles = await DataStore.getUserRoles(uid);
 
-        console.log("Roles:", roles);
-
-        if (roles.includes("tutor")) {
-          navigate({ to: "/tutor" });
-        } else if (
-          roles.includes("owner") ||
-          roles.includes("website_manager")
-        ) {
+        if (roles.includes("owner") || roles.includes("website_manager")) {
           navigate({ to: "/admin" });
+        } else if (roles.includes("tutor")) {
+          navigate({ to: "/tutor" });
         } else if (roles.includes("recruitment")) {
           navigate({ to: "/recruitment" });
-        } else {
+        } else if (roles.includes("student")) {
           navigate({ to: "/student/dashboard" });
+        } else {
+          // guest
+          navigate({ to: "/" });
         }
-      } else {
-        console.log("NO USER");
       }
     })();
   }, []);

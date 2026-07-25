@@ -3,10 +3,13 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { Menu, X, GraduationCap, LayoutDashboard, LogOut, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { appwrite } from "@/integrations/appwrite/client";
+import { DataStore } from "@/lib/data-store";
 
 export function Navbar() {
+  const [dashboardRoute, setDashboardRoute] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [session, setSession] = useState<Record<string, unknown> | null>(null);
+  const [canAccessDashboard, setCanAccessDashboard] = useState(false);
   const [isDark, setIsDark] = useState(false);
   const navigate = useNavigate();
 
@@ -26,10 +29,62 @@ export function Navbar() {
     setIsDark(dark);
     document.documentElement.classList.toggle("dark", dark);
 
-    appwrite.auth.getSession().then(({ data }) => setSession(data.session));
+    appwrite.auth.getSession().then(async ({ data }) => {
+      setSession(data.session);
 
-    const { data: authSub } = appwrite.auth.onAuthStateChange((_e, sesh) => {
+      if (data.session?.user) {
+        const uid =
+          (data.session.user as any).$id ||
+          (data.session.user as any).id;
+
+        const roles = await DataStore.getUserRoles(uid);
+
+        let route: string | null = null;
+
+        if (roles.includes("owner") || roles.includes("website_manager")) {
+          route = "/admin";
+        } else if (roles.includes("tutor")) {
+          route = "/tutor";
+        } else if (roles.includes("recruitment")) {
+          route = "/recruitment";
+        } else if (roles.includes("student")) {
+          route = "/student/dashboard";
+        }
+        setDashboardRoute(route);
+        setCanAccessDashboard(route !== null);
+      } else {
+        setDashboardRoute(null);
+        setCanAccessDashboard(false);
+      }
+    });
+    const { data: authSub } = appwrite.auth.onAuthStateChange(async (_e, sesh) => {
       setSession(sesh);
+
+      if (sesh?.user) {
+        const uid =
+          (sesh.user as any).$id ||
+          (sesh.user as any).id;
+
+        const roles = await DataStore.getUserRoles(uid);
+
+        let route: string | null = null;
+
+        if (roles.includes("owner") || roles.includes("website_manager")) {
+          route = "/admin";
+        } else if (roles.includes("tutor")) {
+          route = "/tutor";
+        } else if (roles.includes("recruitment")) {
+          route = "/recruitment";
+        } else if (roles.includes("student")) {
+          route = "/student/dashboard";
+        }
+
+        setDashboardRoute(route);
+        setCanAccessDashboard(route !== null);
+      } else {
+        setDashboardRoute(null);
+        setCanAccessDashboard(false);
+      }
     });
 
     return () => authSub.subscription.unsubscribe();
@@ -99,17 +154,19 @@ export function Navbar() {
           </Button>
           {session ? (
             <div className="flex items-center gap-2">
-              <Button
-                asChild
-                variant="ghost"
-                size="sm"
-                className="gap-2 text-muted-foreground hover:text-foreground rounded-xl"
-              >
-                <Link to="/dashboard">
-                  <LayoutDashboard className="h-4 w-4" />
-                  Dashboard
-                </Link>
-              </Button>
+              {canAccessDashboard && (
+                <Button
+                  asChild
+                  variant="ghost"
+                  size="sm"
+                  className="gap-2 text-muted-foreground hover:text-foreground rounded-xl"
+                >
+                  <Link to={dashboardRoute!}>
+                    <LayoutDashboard className="h-4 w-4" />
+                    Dashboard
+                  </Link>
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"
@@ -146,14 +203,14 @@ export function Navbar() {
           <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-9 w-9 text-muted-foreground hover:text-foreground rounded-xl">
             {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
-          {session && (
+          {session && canAccessDashboard && (
             <Button
               asChild
               variant="ghost"
               size="icon"
               className="h-9 w-9 text-muted-foreground hover:text-foreground"
             >
-              <Link to="/dashboard" title="Dashboard">
+              <Link to={dashboardRoute!} title="Dashboard">
                 <LayoutDashboard className="h-5 w-5" />
               </Link>
             </Button>
@@ -190,17 +247,21 @@ export function Navbar() {
             <div className="pt-4 border-t border-border/60 space-y-2 px-4">
               {session ? (
                 <div className="space-y-2">
-                  <Button
-                    asChild
-                    variant="outline"
-                    className="w-full justify-center gap-2 rounded-xl"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <Link to="/dashboard">
-                      <LayoutDashboard className="h-4 w-4" />
-                      Go to Dashboard
-                    </Link>
-                  </Button>
+
+                  {canAccessDashboard && (
+                    <Button
+                      asChild
+                      variant="outline"
+                      className="w-full justify-center gap-2 rounded-xl"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <Link to={dashboardRoute!}>
+                        <LayoutDashboard className="h-4 w-4" />
+                        Go to Dashboard
+                      </Link>
+                    </Button>
+                  )}
+
                   <Button
                     variant="ghost"
                     className="w-full justify-center gap-2 text-destructive hover:bg-destructive/5 rounded-xl"
@@ -212,6 +273,7 @@ export function Navbar() {
                     <LogOut className="h-4 w-4" />
                     Logout
                   </Button>
+
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-3">
