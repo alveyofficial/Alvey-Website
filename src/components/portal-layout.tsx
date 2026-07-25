@@ -50,7 +50,7 @@ export function PortalLayout({
             {navItems.map((item) => {
               const isActive =
                 currentPath === item.href ||
-                (item.href !== "/dashboard" && currentPath.startsWith(item.href));
+                (item.href !== "/student/dashboard" && currentPath.startsWith(item.href));
               return (
                 <Link
                   key={item.name}
@@ -132,7 +132,7 @@ export function PortalLayout({
             {navItems.map((item) => {
               const isActive =
                 currentPath === item.href ||
-                (item.href !== "/dashboard" && currentPath.startsWith(item.href));
+                (item.href !== "/student/dashboard" && currentPath.startsWith(item.href));
               return (
                 <Link
                   key={item.name}

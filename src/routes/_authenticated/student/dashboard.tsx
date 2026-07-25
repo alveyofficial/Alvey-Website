@@ -124,7 +124,7 @@ function Dashboard() {
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-xl">Upcoming Lessons</CardTitle>
               <Button variant="ghost" size="sm" asChild>
-                <Link to="/dashboard">
+                <Link to="/student/dashboard">
                   View Schedule <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>

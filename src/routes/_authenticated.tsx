@@ -41,7 +41,7 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 const studentNav: NavItem[] = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Dashboard", href: "/student/dashboard", icon: LayoutDashboard },
   { name: "My Tutors", href: "/my-tutors", icon: Users },
   { name: "Schedule", href: "/schedule", icon: Calendar },
   { name: "Lesson History", href: "/lessons", icon: Clock },

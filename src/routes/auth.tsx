@@ -96,17 +96,16 @@ function AuthPage() {
       const uid = (user as any).$id || (user as any).id;
       const roles = await DataStore.getUserRoles(uid);
 
-      if (roles.includes("tutor")) {
-        navigate({ to: "/tutor" });
-      } else if (
-        roles.includes("owner") ||
-        roles.includes("website_manager")
-      ) {
+      if (roles.includes("owner") || roles.includes("website_manager")) {
         navigate({ to: "/admin" });
+      } else if (roles.includes("tutor")) {
+        navigate({ to: "/tutor" });
       } else if (roles.includes("recruitment")) {
         navigate({ to: "/recruitment" });
-      } else {
+      } else if (roles.includes("student")) {
         navigate({ to: "/student/dashboard" });
+      } else {
+        navigate({ to: "/" });
       }
 
       toast.success("Welcome back!");
@@ -130,8 +129,6 @@ function AuthPage() {
       if (error) throw error;
       // Write the user record to the database
       await ensureUserRecord(name);
-      toast.success("Account created — welcome!");
-      navigate({ to: "/dashboard" });
     } catch (err: any) {
       toast.error(err?.message ?? "Sign-up failed");
     } finally {

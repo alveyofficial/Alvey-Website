@@ -26,7 +26,6 @@ import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated.notifications'
 import { Route as AuthenticatedMyTutorsRouteImport } from './routes/_authenticated.my-tutors'
 import { Route as AuthenticatedLessonsRouteImport } from './routes/_authenticated.lessons'
-import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
 import { Route as AuthenticatedCmsRouteImport } from './routes/_authenticated.cms'
 import { Route as AuthenticatedTutorIndexRouteImport } from './routes/_authenticated/tutor/index'
 import { Route as AuthenticatedRecruitmentIndexRouteImport } from './routes/_authenticated/recruitment/index'
@@ -146,11 +145,6 @@ const AuthenticatedMyTutorsRoute = AuthenticatedMyTutorsRouteImport.update({
 const AuthenticatedLessonsRoute = AuthenticatedLessonsRouteImport.update({
   id: '/lessons',
   path: '/lessons',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedCmsRoute = AuthenticatedCmsRouteImport.update({
@@ -368,7 +362,6 @@ export interface FileRoutesByFullPath {
   '/': typeof PublicIndexRoute
   '/auth': typeof AuthRoute
   '/cms': typeof AuthenticatedCmsRoute
-  '/dashboard': typeof AuthenticatedDashboardRoute
   '/lessons': typeof AuthenticatedLessonsRoute
   '/my-tutors': typeof AuthenticatedMyTutorsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
@@ -422,7 +415,6 @@ export interface FileRoutesByTo {
   '/': typeof PublicIndexRoute
   '/auth': typeof AuthRoute
   '/cms': typeof AuthenticatedCmsRoute
-  '/dashboard': typeof AuthenticatedDashboardRoute
   '/lessons': typeof AuthenticatedLessonsRoute
   '/my-tutors': typeof AuthenticatedMyTutorsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
@@ -478,7 +470,6 @@ export interface FileRoutesById {
   '/_public': typeof PublicRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/cms': typeof AuthenticatedCmsRoute
-  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/lessons': typeof AuthenticatedLessonsRoute
   '/_authenticated/my-tutors': typeof AuthenticatedMyTutorsRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
@@ -535,7 +526,6 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/cms'
-    | '/dashboard'
     | '/lessons'
     | '/my-tutors'
     | '/notifications'
@@ -589,7 +579,6 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/cms'
-    | '/dashboard'
     | '/lessons'
     | '/my-tutors'
     | '/notifications'
@@ -644,7 +633,6 @@ export interface FileRouteTypes {
     | '/_public'
     | '/auth'
     | '/_authenticated/cms'
-    | '/_authenticated/dashboard'
     | '/_authenticated/lessons'
     | '/_authenticated/my-tutors'
     | '/_authenticated/notifications'
@@ -823,13 +811,6 @@ declare module '@tanstack/react-router' {
       path: '/lessons'
       fullPath: '/lessons'
       preLoaderRoute: typeof AuthenticatedLessonsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/dashboard': {
-      id: '/_authenticated/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/cms': {
@@ -1089,7 +1070,6 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedCmsRoute: typeof AuthenticatedCmsRoute
-  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedLessonsRoute: typeof AuthenticatedLessonsRoute
   AuthenticatedMyTutorsRoute: typeof AuthenticatedMyTutorsRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
@@ -1134,7 +1114,6 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedCmsRoute: AuthenticatedCmsRoute,
-  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedLessonsRoute: AuthenticatedLessonsRoute,
   AuthenticatedMyTutorsRoute: AuthenticatedMyTutorsRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
