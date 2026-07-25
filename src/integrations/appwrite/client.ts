@@ -121,7 +121,7 @@ export const appwrite = {
       } catch (error) {
         return {
           data: { session: null },
-          error: error instanceof Error ? error : new Error(String(error)),
+          error: error,
         };
       }
     },

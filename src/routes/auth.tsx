@@ -83,12 +83,41 @@ function AuthPage() {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
     try {
-      navigate({ to: "/dashboard" });
-      toast.success("Welcome back");
+      const { error } = await appwrite.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      const user = await getCurrentUser();
+      if (!user) throw new Error("Failed to load user.");
+
+      await ensureUserRecord();
+
+      const uid = (user as any).$id || (user as any).id;
+      const roles = await DataStore.getUserRoles(uid);
+
+      if (roles.includes("tutor")) {
+        navigate({ to: "/tutor" });
+      } else if (
+        roles.includes("owner") ||
+        roles.includes("website_manager")
+      ) {
+        navigate({ to: "/admin" });
+      } else if (roles.includes("recruitment")) {
+        navigate({ to: "/recruitment" });
+      } else {
+        navigate({ to: "/student/dashboard" });
+      }
+
+      toast.success("Welcome back!");
     } catch (err: any) {
-      console.log(err);
-      console.log(err.code);
+      toast.error(err?.message ?? "Sign in failed");
+    } finally {
+      setLoading(false);
     }
   };
 
