@@ -100,6 +100,8 @@ function FindATutorPage() {
   const [selectedSubject, setSelectedSubject] = useState(searchParams.subject || "All");
   const [selectedLevel, setSelectedLevel] = useState(searchParams.level || "All");
   const [selectedLanguage, setSelectedLanguage] = useState("All");
+  const [subjectOpen, setSubjectOpen] = useState(false);
+  const [levelOpen, setLevelOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
   const [maxPrice, setMaxPrice] = useState<number>(100);
   const [onlyVerified, setOnlyVerified] = useState(false);
@@ -232,18 +234,63 @@ function FindATutorPage() {
               <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Subject
               </label>
-              <select
-                value={selectedSubject}
-                onChange={(e) => setSelectedSubject(e.target.value)}
-                className="w-full bg-background border border-border rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-              >
-                <option value="All">All Subjects</option>
-                {subjects.map((sub) => (
-                  <option key={sub} value={sub}>
-                    {sub}
-                  </option>
-                ))}
-              </select>
+              <Popover open={subjectOpen} onOpenChange={setSubjectOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={subjectOpen}
+                    className="w-full justify-between rounded-xl font-normal"
+                  >
+                    {selectedSubject === "All" ? "All Subjects" : selectedSubject}
+                    <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search subjects..." />
+                    <CommandList>
+                      <CommandEmpty>No subject found.</CommandEmpty>
+                      <CommandGroup>
+                        <CommandItem
+                          value="All Subjects"
+                          onSelect={() => {
+                            setSelectedSubject("All");
+                            setSubjectOpen(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              selectedSubject === "All" ? "opacity-100" : "opacity-0",
+                            )}
+                          />
+                          All Subjects
+                        </CommandItem>
+                        {subjects.map((sub) => (
+                          <CommandItem
+                            key={sub}
+                            value={sub}
+                            onSelect={() => {
+                              setSelectedSubject(sub);
+                              setSubjectOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                selectedSubject === sub ? "opacity-100" : "opacity-0",
+                              )}
+                            />
+                            {sub}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
 
             {/* Academic Level Selector */}
@@ -251,18 +298,63 @@ function FindATutorPage() {
               <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Academic Level
               </label>
-              <select
-                value={selectedLevel}
-                onChange={(e) => setSelectedLevel(e.target.value)}
-                className="w-full bg-background border border-border rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-              >
-                <option value="All">All Levels</option>
-                {levels.map((lvl) => (
-                  <option key={lvl} value={lvl}>
-                    {lvl}
-                  </option>
-                ))}
-              </select>
+              <Popover open={levelOpen} onOpenChange={setLevelOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={levelOpen}
+                    className="w-full justify-between rounded-xl font-normal"
+                  >
+                    {selectedLevel === "All" ? "All Levels" : selectedLevel}
+                    <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search levels..." />
+                    <CommandList>
+                      <CommandEmpty>No level found.</CommandEmpty>
+                      <CommandGroup>
+                        <CommandItem
+                          value="All Levels"
+                          onSelect={() => {
+                            setSelectedLevel("All");
+                            setLevelOpen(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              selectedLevel === "All" ? "opacity-100" : "opacity-0",
+                            )}
+                          />
+                          All Levels
+                        </CommandItem>
+                        {levels.map((lvl) => (
+                          <CommandItem
+                            key={lvl}
+                            value={lvl}
+                            onSelect={() => {
+                              setSelectedLevel(lvl);
+                              setLevelOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                selectedLevel === lvl ? "opacity-100" : "opacity-0",
+                              )}
+                            />
+                            {lvl}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
 
             {/* Language Selector */}

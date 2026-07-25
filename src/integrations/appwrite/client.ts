@@ -162,6 +162,22 @@ export const appwrite = {
         return { error: error instanceof Error ? error : new Error(String(error)) };
       }
     },
+    async createRecovery(email: string, redirectUrl: string) {
+      try {
+        await getClient().account.createRecovery(email, redirectUrl);
+        return { error: null };
+      } catch (error) {
+        return { error: error instanceof Error ? error : new Error(String(error)) };
+      }
+    },
+    async updateRecovery(userId: string, secret: string, password: string) {
+      try {
+        await getClient().account.updateRecovery(userId, secret, password);
+        return { error: null };
+      } catch (error) {
+        return { error: error instanceof Error ? error : new Error(String(error)) };
+      }
+    },
     async signInWithOAuth(
       provider: "google" | "apple" | "microsoft" | "discord" | "linkedin",
       opts?: { redirect_uri?: string; extraParams?: Record<string, string> },
