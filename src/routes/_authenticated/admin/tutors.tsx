@@ -1,6 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { GraduationCap, Search, Star, CheckCircle, Plus, Trash2 } from "lucide-react";
+import {
+  GraduationCap, Search, Star, CheckCircle, Plus, Trash2,
+  Save, User, Mail, Globe, DollarSign, BookOpen, AlertTriangle,
+} from "lucide-react";
 import { PageHeader, EmptyState } from "@/components/portal-shared";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -111,6 +114,10 @@ function CreateTutorModal({
       };
 
       await DataStore.saveTutor(tutor);
+      // Add to Tutors team
+      if (email.trim()) {
+        await DataStore.addToTeam("tutors", email.trim(), tutorId);
+      }
       await DataStore.logAction("admin_create_tutor", null, { name: fullName, email });
       toast.success("Tutor created successfully.");
       onCreated();
@@ -376,6 +383,252 @@ function AddSubjectModal({
   );
 }
 
+// ---------- Manage Tutor Modal ----------
+function ManageTutorModal({
+  tutor,
+  onClose,
+  onSaved,
+}: {
+  tutor: Tutor;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [name, setName] = useState(tutor.name || "");
+  const [headline, setHeadline] = useState(tutor.headline || "");
+  const [about, setAbout] = useState(tutor.about || "");
+  const [hourlyRate, setHourlyRate] = useState(String(tutor.hourly_rate || ""));
+  const [yearsExp, setYearsExp] = useState(String(tutor.years_experience || ""));
+  const [languages, setLanguages] = useState((tutor.languages || []).join(", "));
+  const [subjects, setSubjects] = useState((tutor.subjects || []).join(", "));
+  const [levels, setLevels] = useState((tutor.levels || []).join(", "));
+  const [isVerified, setIsVerified] = useState(tutor.is_verified ?? true);
+  const [isFeatured, setIsFeatured] = useState(tutor.is_featured ?? false);
+  const [avatarUrl, setAvatarUrl] = useState(tutor.avatar_url || "");
+  const [availability, setAvailability] = useState(tutor.availability || "");
+  const [saving, setSaving] = useState(false);
+  const [archiving, setArchiving] = useState(false);
+  const [confirmArchive, setConfirmArchive] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await DataStore.updateTutorProfile({
+        id: tutor.id,
+        name: name.trim(),
+        headline: headline.trim(),
+        about: about.trim(),
+        hourly_rate: parseFloat(hourlyRate) || 0,
+        years_experience: parseInt(yearsExp) || 0,
+        languages: languages.split(",").map((l) => l.trim()).filter(Boolean),
+        subjects: subjects.split(",").map((s) => s.trim()).filter(Boolean),
+        levels: levels.split(",").map((l) => l.trim()).filter(Boolean),
+        is_verified: isVerified,
+        is_featured: isFeatured,
+        avatar_url: avatarUrl.trim() || tutor.avatar_url,
+        availability: availability.trim(),
+      });
+      toast.success("Tutor profile updated");
+      onSaved();
+      onClose();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update tutor");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleArchive = async () => {
+    setArchiving(true);
+    try {
+      await DataStore.archiveTutor(tutor.id);
+      toast.success("Tutor archived");
+      onSaved();
+      onClose();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to archive tutor");
+    } finally {
+      setArchiving(false);
+      setConfirmArchive(false);
+    }
+  };
+
+  return (
+    <>
+      <Dialog open onOpenChange={(v) => { if (!v) onClose(); }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <GraduationCap className="h-5 w-5 text-blue-600" /> Manage Tutor — {tutor.name}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="grid sm:grid-cols-2 gap-4 py-2">
+            {/* Left column */}
+            <div className="space-y-4">
+              <div>
+                <Label>Full Name</Label>
+                <Input value={name} onChange={(e) => setName(e.target.value)} className="mt-1" />
+              </div>
+              <div>
+                <Label>Headline</Label>
+                <Input value={headline} onChange={(e) => setHeadline(e.target.value)} className="mt-1" />
+              </div>
+              <div>
+                <Label>About / Bio</Label>
+                <textarea
+                  className="mt-1 w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y"
+                  value={about}
+                  onChange={(e) => setAbout(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label>Avatar URL</Label>
+                <Input
+                  type="url"
+                  value={avatarUrl}
+                  onChange={(e) => setAvatarUrl(e.target.value)}
+                  className="mt-1"
+                  placeholder="https://..."
+                />
+              </div>
+              <div>
+                <Label>Availability</Label>
+                <Input
+                  value={availability}
+                  onChange={(e) => setAvailability(e.target.value)}
+                  className="mt-1"
+                  placeholder="e.g. Mon & Wed 14:00-18:00 UTC"
+                />
+              </div>
+            </div>
+
+            {/* Right column */}
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Hourly Rate (USD)</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={hourlyRate}
+                    onChange={(e) => setHourlyRate(e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label>Years Experience</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={yearsExp}
+                    onChange={(e) => setYearsExp(e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label>Languages <span className="text-xs text-muted-foreground">(comma-separated)</span></Label>
+                <Input
+                  value={languages}
+                  onChange={(e) => setLanguages(e.target.value)}
+                  className="mt-1"
+                  placeholder="English, Arabic"
+                />
+              </div>
+              <div>
+                <Label>Subjects <span className="text-xs text-muted-foreground">(comma-separated)</span></Label>
+                <Input
+                  value={subjects}
+                  onChange={(e) => setSubjects(e.target.value)}
+                  className="mt-1"
+                  placeholder="Mathematics, Physics"
+                />
+              </div>
+              <div>
+                <Label>Levels <span className="text-xs text-muted-foreground">(comma-separated)</span></Label>
+                <Input
+                  value={levels}
+                  onChange={(e) => setLevels(e.target.value)}
+                  className="mt-1"
+                  placeholder="GCSE, A-Level, IB"
+                />
+              </div>
+              {/* Flags */}
+              <div className="flex flex-col gap-3 pt-2 border-t">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="rounded border-border"
+                    checked={isVerified}
+                    onChange={(e) => setIsVerified(e.target.checked)}
+                  />
+                  <span className="text-sm font-medium">Verified</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="rounded border-border"
+                    checked={isFeatured}
+                    onChange={(e) => setIsFeatured(e.target.checked)}
+                  />
+                  <span className="text-sm font-medium">Featured</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="flex-col sm:flex-row gap-2 mt-4 pt-4 border-t">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-red-600 gap-1.5 sm:mr-auto"
+              onClick={() => setConfirmArchive(true)}
+              disabled={archiving}
+            >
+              <Trash2 className="h-4 w-4" /> Archive Tutor
+            </Button>
+            <Button variant="outline" onClick={onClose}>Cancel</Button>
+            <Button onClick={handleSave} disabled={saving} className="gap-1.5">
+              {saving
+                ? <><Loader2 className="h-4 w-4 animate-spin" /> Saving…</>
+                : <><Save className="h-4 w-4" /> Save Changes</>}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Archive confirmation */}
+      {confirmArchive && (
+        <Dialog open onOpenChange={() => setConfirmArchive(false)}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-red-600">
+                <AlertTriangle className="h-5 w-5" /> Archive {tutor.name}?
+              </DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-muted-foreground py-2">
+              This will deactivate the tutor profile and remove them from search results.
+              Their data is preserved and can be restored.
+            </p>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setConfirmArchive(false)}>Cancel</Button>
+              <Button
+                className="bg-red-600 hover:bg-red-700"
+                onClick={handleArchive}
+                disabled={archiving}
+              >
+                {archiving
+                  ? <><Loader2 className="h-4 w-4 animate-spin mr-2" />Archiving…</>
+                  : "Archive"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
+  );
+}
+
 // ---------- Subjects Tab ----------
 function SubjectsTab() {
   const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([]);
@@ -462,6 +715,8 @@ function AdminTutors() {
   const [tutors, setTutors] = useState<Tutor[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
+  const [managing, setManaging] = useState<Tutor | null>(null);
+  const [search, setSearch] = useState("");
 
   const loadTutors = async () => {
     setLoading(true);
@@ -473,6 +728,16 @@ function AdminTutors() {
   useEffect(() => {
     loadTutors();
   }, []);
+
+  const filtered = tutors.filter((t) => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return (
+      String(t.name || "").toLowerCase().includes(q) ||
+      String(t.headline || "").toLowerCase().includes(q) ||
+      (t.subjects || []).some((s) => s.toLowerCase().includes(q))
+    );
+  });
 
   return (
     <div>
@@ -488,7 +753,12 @@ function AdminTutors() {
           <div className="flex items-center gap-3 mb-4">
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search tutors..." className="pl-9" />
+              <Input
+                placeholder="Search tutors..."
+                className="pl-9"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
             </div>
             <Button onClick={() => setCreateOpen(true)} className="gap-1.5 shrink-0">
               <Plus className="h-4 w-4" /> Add Tutor
@@ -507,7 +777,7 @@ function AdminTutors() {
             />
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {tutors.map((t) => {
+              {filtered.map((t) => {
                 const isActive = (t as any).is_active ?? true;
                 return (
                   <Card key={t.id as string}>
@@ -545,7 +815,11 @@ function AdminTutors() {
                         <Badge variant={isActive ? "default" : "secondary"}>
                           {isActive ? "Active" : "Inactive"}
                         </Badge>
-                        <Button variant="outline" size="sm">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setManaging(t)}
+                        >
                           Manage
                         </Button>
                       </div>
@@ -567,6 +841,17 @@ function AdminTutors() {
           <SubjectsTab />
         </TabsContent>
       </Tabs>
+
+      {managing && (
+        <ManageTutorModal
+          tutor={managing}
+          onClose={() => setManaging(null)}
+          onSaved={() => {
+            setManaging(null);
+            loadTutors();
+          }}
+        />
+      )}
     </div>
   );
 }

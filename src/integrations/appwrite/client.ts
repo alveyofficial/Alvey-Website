@@ -1,4 +1,4 @@
-import { Account, Client, Databases, ID, OAuthProvider, Storage } from "appwrite";
+import { Account, Client, Databases, ID, OAuthProvider, Storage, Teams } from "appwrite";
 
 const viteEnv =
   typeof import.meta !== "undefined"
@@ -45,6 +45,7 @@ function createClientInstance() {
     account: new Account(client),
     databases: new Databases(client),
     storage: new Storage(client),
+    teams: new Teams(client),
   };
 }
 
@@ -102,6 +103,9 @@ export const appwrite = {
   },
   get storage() {
     return getClient().storage;
+  },
+  get teams() {
+    return getClient().teams;
   },
   auth: {
     async getUser() {

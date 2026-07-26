@@ -1755,7 +1755,43 @@ export const DataStore = {
     await deleteDocument(COLLECTIONS.DISCORD_LINKS, userId);
   },
 
-  // --- STUDENT ASSIGNMENTS ---
+  // --- TEAM MEMBERSHIP ---
+  addToTeam: async (teamId: string, email: string, userId?: string): Promise<void> => {
+    try {
+      // Prefer memberId lookup when we have a userId so we can add without email invite
+      await appwrite.teams.createMembership(
+        teamId,
+        [], // roles array (empty = default member)
+        email,
+        userId,
+        undefined, // url (not needed for server-side)
+        undefined, // name
+      );
+    } catch (e: any) {
+      // 409 = already a member — treat as success
+      if (e?.code !== 409) console.warn("addToTeam:", e);
+    }
+  },
+
+  removeFromTeam: async (teamId: string, membershipId: string): Promise<void> => {
+    try {
+      await appwrite.teams.deleteMembership(teamId, membershipId);
+    } catch (e: any) {
+      if (e?.code !== 404) console.warn("removeFromTeam:", e);
+    }
+  },
+
+  getTeamMembershipByUserId: async (teamId: string, userId: string): Promise<string | null> => {
+    try {
+      const list = await appwrite.teams.listMemberships(teamId);
+      const match = list.memberships.find((m: any) => m.userId === userId);
+      return match?.$id ?? null;
+    } catch {
+      return null;
+    }
+  },
+
+
   getStudentAssignmentsFromDB: async (studentId: string): Promise<any[]> => {
     try {
       const tutors = await DataStore.getTutors();

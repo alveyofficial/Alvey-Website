@@ -61,6 +61,8 @@ import { Route as AuthenticatedAdminNotificationsRouteImport } from './routes/_a
 import { Route as AuthenticatedAdminHomepageRouteImport } from './routes/_authenticated/admin/homepage'
 import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin/analytics'
 import { Route as AuthenticatedAdminAiAssistantRouteImport } from './routes/_authenticated/admin/ai-assistant'
+import { Route as AuthenticatedAdminTutorApplicationsArchivedRouteImport } from './routes/_authenticated/admin/tutor-applications-archived'
+import { Route as AuthenticatedAdminRecruitmentApplicationsArchivedRouteImport } from './routes/_authenticated/admin/recruitment-applications-archived'
 import { Route as AuthenticatedAdminAdvertisementsRouteImport } from './routes/_authenticated/admin/advertisements'
 
 const AuthRoute = AuthRouteImport.update({
@@ -358,6 +360,20 @@ const AuthenticatedAdminAdvertisementsRoute =
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 
+const AuthenticatedAdminTutorApplicationsArchivedRoute =
+  AuthenticatedAdminTutorApplicationsArchivedRouteImport.update({
+    id: '/admin/tutor-applications-archived',
+    path: '/admin/tutor-applications-archived',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+
+const AuthenticatedAdminRecruitmentApplicationsArchivedRoute =
+  AuthenticatedAdminRecruitmentApplicationsArchivedRouteImport.update({
+    id: '/admin/recruitment-applications-archived',
+    path: '/admin/recruitment-applications-archived',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+
 export interface FileRoutesByFullPath {
   '/': typeof PublicIndexRoute
   '/auth': typeof AuthRoute
@@ -376,6 +392,8 @@ export interface FileRoutesByFullPath {
   '/work-with-us': typeof PublicWorkWithUsRoute
   '/api/chatbot': typeof ApiChatbotRoute
   '/admin/advertisements': typeof AuthenticatedAdminAdvertisementsRoute
+  '/admin/tutor-applications-archived': typeof AuthenticatedAdminTutorApplicationsArchivedRoute
+  '/admin/recruitment-applications-archived': typeof AuthenticatedAdminRecruitmentApplicationsArchivedRoute
   '/admin/ai-assistant': typeof AuthenticatedAdminAiAssistantRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/homepage': typeof AuthenticatedAdminHomepageRoute
@@ -429,6 +447,8 @@ export interface FileRoutesByTo {
   '/work-with-us': typeof PublicWorkWithUsRoute
   '/api/chatbot': typeof ApiChatbotRoute
   '/admin/advertisements': typeof AuthenticatedAdminAdvertisementsRoute
+  '/admin/tutor-applications-archived': typeof AuthenticatedAdminTutorApplicationsArchivedRoute
+  '/admin/recruitment-applications-archived': typeof AuthenticatedAdminRecruitmentApplicationsArchivedRoute
   '/admin/ai-assistant': typeof AuthenticatedAdminAiAssistantRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/homepage': typeof AuthenticatedAdminHomepageRoute
@@ -485,17 +505,21 @@ export interface FileRoutesById {
   '/api/chatbot': typeof ApiChatbotRoute
   '/_public/': typeof PublicIndexRoute
   '/_authenticated/admin/advertisements': typeof AuthenticatedAdminAdvertisementsRoute
+  '/_authenticated/admin/tutor-applications-archived': typeof AuthenticatedAdminTutorApplicationsArchivedRoute
+  '/_authenticated/admin/recruitment-applications-archived': typeof AuthenticatedAdminRecruitmentApplicationsArchivedRoute
   '/_authenticated/admin/ai-assistant': typeof AuthenticatedAdminAiAssistantRoute
   '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/_authenticated/admin/homepage': typeof AuthenticatedAdminHomepageRoute
   '/_authenticated/admin/notifications': typeof AuthenticatedAdminNotificationsRoute
   '/_authenticated/admin/pages': typeof AuthenticatedAdminPagesRoute
   '/_authenticated/admin/recruitment-applications': typeof AuthenticatedAdminRecruitmentApplicationsRoute
+  '/_authenticated/admin/recruitment-applications-archived': typeof AuthenticatedAdminRecruitmentApplicationsArchivedRoute
   '/_authenticated/admin/reviews': typeof AuthenticatedAdminReviewsRoute
   '/_authenticated/admin/scheduling': typeof AuthenticatedAdminSchedulingRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/_authenticated/admin/students': typeof AuthenticatedAdminStudentsRoute
   '/_authenticated/admin/tutor-applications': typeof AuthenticatedAdminTutorApplicationsRoute
+  '/_authenticated/admin/tutor-applications-archived': typeof AuthenticatedAdminTutorApplicationsArchivedRoute
   '/_authenticated/admin/tutors': typeof AuthenticatedAdminTutorsRoute
   '/_authenticated/recruitment/activity': typeof AuthenticatedRecruitmentActivityRoute
   '/_authenticated/recruitment/applications': typeof AuthenticatedRecruitmentApplicationsRoute
@@ -540,6 +564,8 @@ export interface FileRouteTypes {
     | '/work-with-us'
     | '/api/chatbot'
     | '/admin/advertisements'
+    | '/admin/tutor-applications-archived'
+    | '/admin/recruitment-applications-archived'
     | '/admin/ai-assistant'
     | '/admin/analytics'
     | '/admin/homepage'
@@ -593,6 +619,8 @@ export interface FileRouteTypes {
     | '/work-with-us'
     | '/api/chatbot'
     | '/admin/advertisements'
+    | '/admin/tutor-applications-archived'
+    | '/admin/recruitment-applications-archived'
     | '/admin/ai-assistant'
     | '/admin/analytics'
     | '/admin/homepage'
@@ -648,6 +676,8 @@ export interface FileRouteTypes {
     | '/api/chatbot'
     | '/_public/'
     | '/_authenticated/admin/advertisements'
+    | '/_authenticated/admin/tutor-applications-archived'
+    | '/_authenticated/admin/recruitment-applications-archived'
     | '/_authenticated/admin/ai-assistant'
     | '/_authenticated/admin/analytics'
     | '/_authenticated/admin/homepage'
@@ -1065,6 +1095,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAdvertisementsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin/tutor-applications-archived': {
+      id: '/_authenticated/admin/tutor-applications-archived'
+      path: '/admin/tutor-applications-archived'
+      fullPath: '/admin/tutor-applications-archived'
+      preLoaderRoute: typeof AuthenticatedAdminTutorApplicationsArchivedRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/admin/recruitment-applications-archived': {
+      id: '/_authenticated/admin/recruitment-applications-archived'
+      path: '/admin/recruitment-applications-archived'
+      fullPath: '/admin/recruitment-applications-archived'
+      preLoaderRoute: typeof AuthenticatedAdminRecruitmentApplicationsArchivedRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
@@ -1084,11 +1128,13 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAdminNotificationsRoute: typeof AuthenticatedAdminNotificationsRoute
   AuthenticatedAdminPagesRoute: typeof AuthenticatedAdminPagesRoute
   AuthenticatedAdminRecruitmentApplicationsRoute: typeof AuthenticatedAdminRecruitmentApplicationsRoute
+  AuthenticatedAdminRecruitmentApplicationsArchivedRoute: typeof AuthenticatedAdminRecruitmentApplicationsArchivedRoute
   AuthenticatedAdminReviewsRoute: typeof AuthenticatedAdminReviewsRoute
   AuthenticatedAdminSchedulingRoute: typeof AuthenticatedAdminSchedulingRoute
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
   AuthenticatedAdminStudentsRoute: typeof AuthenticatedAdminStudentsRoute
   AuthenticatedAdminTutorApplicationsRoute: typeof AuthenticatedAdminTutorApplicationsRoute
+  AuthenticatedAdminTutorApplicationsArchivedRoute: typeof AuthenticatedAdminTutorApplicationsArchivedRoute
   AuthenticatedAdminTutorsRoute: typeof AuthenticatedAdminTutorsRoute
   AuthenticatedRecruitmentActivityRoute: typeof AuthenticatedRecruitmentActivityRoute
   AuthenticatedRecruitmentApplicationsRoute: typeof AuthenticatedRecruitmentApplicationsRoute
@@ -1129,12 +1175,16 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminPagesRoute: AuthenticatedAdminPagesRoute,
   AuthenticatedAdminRecruitmentApplicationsRoute:
     AuthenticatedAdminRecruitmentApplicationsRoute,
+  AuthenticatedAdminRecruitmentApplicationsArchivedRoute:
+    AuthenticatedAdminRecruitmentApplicationsArchivedRoute,
   AuthenticatedAdminReviewsRoute: AuthenticatedAdminReviewsRoute,
   AuthenticatedAdminSchedulingRoute: AuthenticatedAdminSchedulingRoute,
   AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
   AuthenticatedAdminStudentsRoute: AuthenticatedAdminStudentsRoute,
   AuthenticatedAdminTutorApplicationsRoute:
     AuthenticatedAdminTutorApplicationsRoute,
+  AuthenticatedAdminTutorApplicationsArchivedRoute:
+    AuthenticatedAdminTutorApplicationsArchivedRoute,
   AuthenticatedAdminTutorsRoute: AuthenticatedAdminTutorsRoute,
   AuthenticatedRecruitmentActivityRoute: AuthenticatedRecruitmentActivityRoute,
   AuthenticatedRecruitmentApplicationsRoute:
