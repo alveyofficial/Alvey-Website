@@ -25,10 +25,10 @@ function WorkWithUs() {
   const [emailAddress, setEmailAddress] = useState("");
   const [countryOfResidence, setCountryOfResidence] = useState("");
   const [languagesFluentIn, setLanguagesFluentIn] = useState("");
-  
+
   const [currentEducationLevel, setCurrentEducationLevel] = useState("");
   const [otherEducation, setOtherEducation] = useState("");
-  
+
   const [role, setRole] = useState("");
   const [reasonToApply, setReasonToApply] = useState("");
   const [experience, setExperience] = useState("");
@@ -49,9 +49,15 @@ function WorkWithUs() {
 
     setLoading(true);
     try {
-      const languages = languagesFluentIn.split(",").map(l => l.trim()).filter(Boolean);
-      const education = currentEducationLevel === "Other" ? otherEducation : currentEducationLevel;
-      
+      const languages = languagesFluentIn
+        .split(",")
+        .map((l) => l.trim())
+        .filter(Boolean);
+      const education =
+        currentEducationLevel === "Other"
+          ? otherEducation
+          : currentEducationLevel;
+      const now = new Date().toISOString();
       await appwrite.databases.createDocument({
         databaseId: "Database",
         collectionId: "volunteer_applications",
@@ -62,17 +68,18 @@ function WorkWithUs() {
           Instagram_handle: instagramHandle,
           Email_address: emailAddress,
           Country_of_residence: countryOfResidence,
-          Languages_fluent_in: languages.length > 0 ? languages : [languagesFluentIn],
+          Languages_fluent_in: languages,
           Current_education_level: education,
           Role_you_want_to_apply_for: role,
           Reason_to_apply: reasonToApply,
+          projectLinks: projectLinks.trim() || undefined,
           Experience: experience,
-          projectLinks: projectLinks || undefined,
           hoursPerWeek,
           Why_good_fit: whyGoodFit,
           status: "pending",
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+          isDeleted: false,
+          createdAt: now,
+          updatedAt: now,
         },
       });
       setSuccess(true);
@@ -108,7 +115,7 @@ function WorkWithUs() {
       </div>
 
       <form onSubmit={handleSubmit} className="bg-card border rounded-2xl p-8 shadow-sm space-y-8">
-        
+
         <div className="space-y-4">
           <h2 className="text-2xl font-semibold border-b pb-2">Personal Information</h2>
           <div>
@@ -179,7 +186,7 @@ function WorkWithUs() {
               </SelectContent>
             </Select>
           </div>
-          
+
           <div>
             <Label>Why do you want to apply for the selected role? <span className="text-destructive">*</span></Label>
             <Textarea required className="min-h-[100px]" value={reasonToApply} onChange={e => setReasonToApply(e.target.value)} />
@@ -192,8 +199,8 @@ function WorkWithUs() {
 
           <div>
             <Label>Please share any of your projects or work relating to the field you are choosing. (link) <span className="text-destructive">*</span></Label>
-            <p className="text-xs text-muted-foreground mb-2">If you dont have any you may type "NA"</p>
-            <Input required value={projectLinks} onChange={e => setProjectLinks(e.target.value)} />
+            <p className="text-xs text-muted-foreground mb-2">If you dont have any you may leave it blank"</p>
+            <Input value={projectLinks} onChange={e => setProjectLinks(e.target.value)} />
           </div>
 
           <div>

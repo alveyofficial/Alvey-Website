@@ -87,35 +87,103 @@ function Index() {
   return (
     <div className="w-full">
       {/* Hero Section */}
-      <section className="relative py-24 bg-gradient-to-br from-primary/5 via-background to-background text-center px-4 overflow-hidden">
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={staggerContainer}
-          className="max-w-4xl mx-auto space-y-6 relative z-10"
-        >
-          <motion.h1 variants={fadeInUp} className="text-5xl md:text-6xl font-extrabold tracking-tight text-foreground">
-            Master your potential with <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Alvey</span>
-          </motion.h1>
-          <motion.p variants={fadeInUp} className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Connecting ambitious students with world-class tutors. Start your personalized learning
-            journey today.
-          </motion.p>
-          <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
-            <Button size="lg" asChild className="text-lg px-8 shadow-lg shadow-blue-500/20 rounded-xl transition-transform hover:scale-105">
-              <Link to="/find-a-tutor" search={{ level: "", subject: "" }}>
-                Find a Tutor
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" asChild className="text-lg px-8 rounded-xl transition-transform hover:scale-105">
-              <Link to="/apply">Apply as a Tutor</Link>
-            </Button>
+      {/* Hero */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-[#F8FAFC] via-[#CFDFEF] to-white">
+        <div className="max-w-7xl mx-auto px-6 min-h-[90vh] grid lg:grid-cols-2 gap-20 items-center">
+
+
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={staggerContainer}
+            className="space-y-10"
+          >
+
+            <motion.h1
+              variants={fadeInUp}
+              className="font-manrope text-6xl md:text-8xl font-extrabold leading-tight tracking-tight"
+            >
+              Find a tutor
+              <br />
+
+              <span className="text-[#164E5E]">
+                that actually fits you.
+              </span>
+            </motion.h1>
+
+            <motion.p
+              variants={fadeInUp}
+              className="text-xl text-muted-foreground max-w-xl leading-8"
+            >
+              Learning shouldn't feel stressful.
+              Discover trusted tutors for every stage of your education.
+            </motion.p>
+
+            <motion.div
+              variants={fadeInUp}
+              className="flex gap-4 flex-wrap"
+            >
+
+              <Button
+                size="lg"
+                asChild
+                className="h-14 px-10 text-lg rounded-2xl"
+              >
+                <Link
+                  to="/find-a-tutor"
+                  search={{ level: "", subject: "" }}
+                >
+                  Find Tutor
+                </Link>
+              </Button>
+
+              <Button
+                variant="outline"
+                size="lg"
+                asChild
+                className="h-14 px-10 rounded-2xl text-lg"
+              >
+                <Link to="/apply">
+                  Become Tutor
+                </Link>
+              </Button>
+
+            </motion.div>
+
           </motion.div>
-        </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
+            className="hidden lg:flex flex-col items-center justify-center"
+          >
+
+            <img
+              src="/logo.png"
+              className="w-44 mb-8 animate-float rounded-3xl shadow-[0_30px_50px_-20px_rgba(0,0,0,0.35)]"
+            />
+
+            <h1
+              className="font-manrope text-[7rem] leading-none font-extrabold text-[#164E5E]"
+            >
+              ALVEY
+            </h1>
+
+            <p
+              className="font-manrope text-4xl font-semibold tracking-wide text-[#7D868C]"
+            >
+              Study Better.
+            </p>
+
+          </motion.div>
+
+        </div>
+
       </section>
 
       {/* Statistics Section */}
-      <section className="py-20 bg-muted/30">
+      <section className="py-20 bg-white">
         <motion.div
           initial="hidden"
           whileInView="visible"
@@ -173,20 +241,20 @@ function Index() {
         >
           {levelsLoading
             ? Array.from({ length: 8 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="h-24 rounded-2xl bg-muted animate-pulse"
-                />
-              ))
+              <div
+                key={i}
+                className="h-24 rounded-2xl bg-muted animate-pulse"
+              />
+            ))
             : levels.map((level) => (
-                <motion.div key={level} variants={fadeInUp} whileHover={{ y: -5 }}>
-                  <Link to="/find-a-tutor" search={{ level, subject: "" }}>
-                    <Card className="hover:border-blue-500/50 hover:shadow-lg transition-all cursor-pointer h-full border-border/50 bg-background/50 backdrop-blur-sm rounded-2xl">
-                      <CardContent className="p-8 text-center font-semibold text-lg">{level}</CardContent>
-                    </Card>
-                  </Link>
-                </motion.div>
-              ))}
+              <motion.div key={level} variants={fadeInUp} whileHover={{ y: -5 }}>
+                <Link to="/find-a-tutor" search={{ level, subject: "" }}>
+                  <Card className="hover:border-blue-500/50 hover:shadow-lg transition-all cursor-pointer h-full border-border/50 bg-background/50 backdrop-blur-sm rounded-2xl">
+                    <CardContent className="p-8 text-center font-semibold text-lg">{level}</CardContent>
+                  </Card>
+                </Link>
+              </motion.div>
+            ))}
         </motion.div>
       </section>
 
@@ -215,7 +283,7 @@ function Index() {
               { step: "3", title: "Contact Us", desc: "We facilitate the connection and scheduling." },
               { step: "4", title: "Begin Learning", desc: "Achieve your academic goals." }
             ].map((item, i) => (
-              <motion.div key={i} variants={fadeInUp} className="space-y-6 relative">
+              <motion.div key={i} variants={fadeInUp} className="space-y-8 -mt-16">
                 <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-3xl font-bold mx-auto shadow-sm transform rotate-3 transition-transform hover:rotate-0">
                   {item.step}
                 </div>

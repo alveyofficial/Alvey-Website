@@ -201,11 +201,11 @@ export async function getEnrollmentTrend(
   ]);
 
   for (const doc of studentDocs) {
-    const label = monthLabel(doc.$createdAt);
+    const label = monthLabel(doc.$createdAt as string);
     if (bucket[label]) bucket[label].students += 1;
   }
   for (const doc of tutorDocs) {
-    const label = monthLabel(doc.$createdAt);
+    const label = monthLabel(doc.$createdAt as string);
     if (bucket[label]) bucket[label].tutors += 1;
   }
 

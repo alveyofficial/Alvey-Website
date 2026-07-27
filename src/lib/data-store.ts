@@ -1902,11 +1902,18 @@ export const DataStore = {
         Query.orderDesc("$createdAt"),
         Query.limit(200),
       ]);
-      if (docs.length > 0) return docs;
+      return docs.map((doc: any) => ({
+        ...doc,
+        // Nornalized feilds
+        id: doc.$id,
+        full_name: doc.Full_name,
+        email: doc.Email_address,
+        role_applied_for: doc.Role_you_want_to_apply_for,
+        created_at: doc.createdAt ?? doc.$createdAt,
+      }));
     } catch { }
     return getLocal<any[]>(KEYS.RECRUITMENT, []);
   },
-
   // --- AVAILABILITY ---
   getTutorAvailability: async (tutorId: string): Promise<any[]> => {
     try {

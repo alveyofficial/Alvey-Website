@@ -1,4 +1,9 @@
+<<<<<<< HEAD
 import { createFileRoute, Link } from "@tanstack/react-router";
+=======
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { createFileRoute } from "@tanstack/react-router";
+>>>>>>> bc0697a (Fixed a 409 Conflict issue on sign up)
 import { useEffect, useState } from "react";
 import {
   FileText,
@@ -40,6 +45,30 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { DataStore } from "@/lib/data-store";
+
+interface RecruitmentApplication {
+  id: string;
+  full_name?: string;
+  role_applied_for?: string;
+  email?: string;
+  created_at?: string;
+  status?: string;
+}
+
+function InfoField({
+  label,
+  value,
+}: {
+  label: string;
+  value?: string | null;
+}) {
+  return (
+    <div>
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="font-medium">{value || "—"}</p>
+    </div>
+  );
+}
 
 export const Route = createFileRoute("/_authenticated/admin/recruitment-applications")({
   component: AdminRecruitmentApplications,
@@ -448,6 +477,7 @@ function ReviewModal({
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 
 function AdminRecruitmentApplications() {
+<<<<<<< HEAD
   const [applications, setApplications] = useState<
     Record<string, unknown>[]
   >([]);
@@ -458,6 +488,12 @@ function AdminRecruitmentApplications() {
     string,
     unknown
   > | null>(null);
+=======
+  const [applications, setApplications] = useState<RecruitmentApplication[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedApplication, setSelectedApplication] = useState<any | null>(null);
+  const [reviewOpen, setReviewOpen] = useState(false);
+>>>>>>> bc0697a (Fixed a 409 Conflict issue on sign up)
 
   useEffect(() => {
     loadApplications();
@@ -466,14 +502,37 @@ function AdminRecruitmentApplications() {
   const loadApplications = async () => {
     setLoading(true);
     const data = await DataStore.getRecruitmentApplicationsFromDB();
+    console.log(data); // <-- null this is itt
     setApplications(data);
     setLoading(false);
   };
 
+<<<<<<< HEAD
   const handleQuickApprove = async (app: Record<string, unknown>) => {
     const id = (app.$id || app.id) as string;
     const name = String(
       app.full_name || app.Full_name || app.fullName || "Applicant",
+=======
+  const handleApprove = async (id: string) => {
+    console.log("Approve ID:", id);
+
+    await DataStore.updateRecruitmentStatus(id, "approved");
+    toast.success("Application approved");
+    loadApplications();
+  };
+
+  const handleReject = async (id: string) => {
+    await DataStore.updateRecruitmentStatus(id, "rejected");
+    toast.success("Application rejected");
+    loadApplications();
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-12">
+        <div className="h-8 w-8 rounded-full border-4 border-blue-600 border-t-transparent animate-spin" />
+      </div>
+>>>>>>> bc0697a (Fixed a 409 Conflict issue on sign up)
     );
     const userId = (app.applicantUserId || app.applicant_user_id) as
       | string
@@ -606,6 +665,7 @@ function AdminRecruitmentApplications() {
                       </p>
                     </div>
                   </div>
+<<<<<<< HEAD
                   <div className="flex items-center gap-2 flex-wrap">
                     <StatusBadge status={(app.status || "pending") as string} />
                     <Button
@@ -642,6 +702,167 @@ function AdminRecruitmentApplications() {
               </Card>
             );
           })}
+=======
+                  <div>
+                    <p className="font-semibold text-sm">{app.full_name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {app.role_applied_for || "Position"} · {app.email}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Applied {app.created_at ? new Date(app.created_at).toLocaleDateString() : "Unknown date"}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <StatusBadge status={app.status || "pending"} />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={() => {
+                      setSelectedApplication(app);
+                      setReviewOpen(true);
+                    }}
+                  >
+                    <Eye className="h-4 w-4" />
+                    Review
+                  </Button>
+                  {app.status === "pending" || app.status === "under_review" ? (
+                    <>
+                      <Button
+                        size="sm"
+                        className="bg-emerald-600 hover:bg-emerald-700 gap-1.5"
+                        onClick={() => handleApprove(app.id)}
+                      >
+                        <CheckCircle className="h-4 w-4" /> Approve
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-red-600 gap-1.5"
+                        onClick={() => handleReject(app.id)}
+                      >
+                        <XCircle className="h-4 w-4" /> Reject
+                      </Button>
+                    </>
+                  ) : null}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+          <Dialog open={reviewOpen} onOpenChange={setReviewOpen}>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Volunteer Application</DialogTitle>
+              </DialogHeader>
+
+              {selectedApplication && (
+                <div className="space-y-6">
+
+                  <div className="rounded-xl border p-5">
+
+                    <h3 className="text-lg font-semibold mb-4">
+                      Personal Information
+                    </h3>
+
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <InfoField
+                        label="Name"
+                        value={selectedApplication.full_name}
+                      />
+                      <InfoField
+                        label="Email"
+                        value={selectedApplication.email}
+                      />
+                      <InfoField
+                        label="Discord"
+                        value={selectedApplication.Discord_username}
+                      />
+                      <InfoField
+                        label="Instagram"
+                        value={selectedApplication.Instagram_handle}
+                      />
+                      <InfoField
+                        label="Country"
+                        value={selectedApplication.Country_of_residence}
+                      />
+                      <InfoField
+                        label="Education"
+                        value={selectedApplication.Current_education_level}
+                      />
+                    </div>
+
+                  </div>
+
+                  <div>
+                    <h2 className="font-semibold">Application</h2>
+
+                    <p><strong>Role: </strong>
+                      {selectedApplication.Role_you_want_to_apply_for}
+                    </p>
+
+                    <p><strong>Hours: </strong>
+                      {selectedApplication.hoursPerWeek}
+                    </p>
+
+                    <p><strong>Status: </strong>
+                      {selectedApplication.status}
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border p-5">
+
+                    <h3 className="text-lg font-semibold mb-3">
+                      Reason to Apply
+                    </h3>
+
+                    <div className="rounded-md bg-muted p-4 whitespace-pre-wrap">
+
+                      {selectedApplication.Reason_to_apply}
+
+                    </div>
+
+                  </div>
+
+                  <div className="rounded-xl border p-5">
+
+                    <h3 className="text-lg font-semibold mb-3">
+                      Experience
+                    </h3>
+
+                    <div className="rounded-md bg-muted p-4 whitespace-pre-wrap">
+
+                      {selectedApplication.Experience}
+
+                    </div>
+
+                  </div>
+
+                  <div>
+                    <h3 className="font-semibold">Projects</h3>
+
+                    <p>{selectedApplication.projectLinks || "N/A"}</p>
+                  </div>
+
+                  <div className="rounded-xl border p-5">
+
+                    <h3 className="text-lg font-semibold mb-3">
+                      Why good fit
+                    </h3>
+
+                    <div className="rounded-md bg-muted p-4 whitespace-pre-wrap">
+
+                      {selectedApplication.Why_good_fit}
+
+                    </div>
+
+                  </div>
+
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+>>>>>>> bc0697a (Fixed a 409 Conflict issue on sign up)
         </div>
       )}
 
