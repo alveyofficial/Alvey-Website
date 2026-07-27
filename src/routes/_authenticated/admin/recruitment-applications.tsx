@@ -1,9 +1,4 @@
-<<<<<<< HEAD
 import { createFileRoute, Link } from "@tanstack/react-router";
-=======
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { createFileRoute } from "@tanstack/react-router";
->>>>>>> bc0697a (Fixed a 409 Conflict issue on sign up)
 import { useEffect, useState } from "react";
 import {
   FileText,
@@ -92,8 +87,8 @@ async function sendDiscordNotification(app: Record<string, unknown>): Promise<vo
     );
     const role = String(
       app.role_applied_for ||
-        app.Role_you_want_to_apply_for ||
-        "a staff position",
+      app.Role_you_want_to_apply_for ||
+      "a staff position",
     );
     const email = String(app.email || app.Email_address || "");
 
@@ -282,13 +277,13 @@ function ReviewModal({
                 {field(
                   "Education Level",
                   app.current_education_level ||
-                    app.Current_education_level,
+                  app.Current_education_level,
                 )}
                 {arrayField(
                   "Languages",
                   app.languages_fluent_in ||
-                    app.Languages_fluent_in ||
-                    app.languages,
+                  app.Languages_fluent_in ||
+                  app.languages,
                 )}
               </CardContent>
             </Card>
@@ -305,9 +300,9 @@ function ReviewModal({
                 {field(
                   "Role Applied For",
                   app.role_applied_for ||
-                    app.Role_you_want_to_apply_for,
+                  app.Role_you_want_to_apply_for,
                 )}
-                {(app.reason_to_apply || app.Reason_to_apply) && (
+                {Boolean(app.reason_to_apply || app.Reason_to_apply) && (
                   <div className="space-y-1">
                     <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Reason to Apply
@@ -319,7 +314,7 @@ function ReviewModal({
                     </p>
                   </div>
                 )}
-                {(app.experience || app.Experience) && (
+                {Boolean(app.experience || app.Experience) && (
                   <div className="space-y-1">
                     <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Experience
@@ -329,7 +324,7 @@ function ReviewModal({
                     </p>
                   </div>
                 )}
-                {(app.why_good_fit || app.Why_good_fit || app.cover_letter) && (
+                {Boolean(app.why_good_fit || app.Why_good_fit || app.cover_letter) && (
                   <div className="space-y-1">
                     <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Why a Good Fit / Cover Letter
@@ -337,8 +332,8 @@ function ReviewModal({
                     <p className="text-sm text-muted-foreground whitespace-pre-wrap">
                       {String(
                         app.why_good_fit ||
-                          app.Why_good_fit ||
-                          app.cover_letter,
+                        app.Why_good_fit ||
+                        app.cover_letter,
                       )}
                     </p>
                   </div>
@@ -394,34 +389,34 @@ function ReviewModal({
                 {(app.status === "pending" ||
                   app.status === "under_review" ||
                   !app.status) && (
-                  <>
-                    <Button
-                      className="w-full bg-emerald-600 hover:bg-emerald-700 gap-2"
-                      onClick={handleApprove}
-                      disabled={acting !== null}
-                    >
-                      {acting === "approve" ? (
-                        <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-                      ) : (
-                        <CheckCircle className="h-4 w-4" />
-                      )}
-                      Accept & Notify Discord
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="w-full text-red-600 gap-2"
-                      onClick={handleReject}
-                      disabled={acting !== null}
-                    >
-                      {acting === "reject" ? (
-                        <span className="animate-spin h-4 w-4 border-2 border-red-600 border-t-transparent rounded-full" />
-                      ) : (
-                        <XCircle className="h-4 w-4" />
-                      )}
-                      Reject & Archive
-                    </Button>
-                  </>
-                )}
+                    <>
+                      <Button
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 gap-2"
+                        onClick={handleApprove}
+                        disabled={acting !== null}
+                      >
+                        {acting === "approve" ? (
+                          <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                        ) : (
+                          <CheckCircle className="h-4 w-4" />
+                        )}
+                        Accept & Notify Discord
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="w-full text-red-600 gap-2"
+                        onClick={handleReject}
+                        disabled={acting !== null}
+                      >
+                        {acting === "reject" ? (
+                          <span className="animate-spin h-4 w-4 border-2 border-red-600 border-t-transparent rounded-full" />
+                        ) : (
+                          <XCircle className="h-4 w-4" />
+                        )}
+                        Reject & Archive
+                      </Button>
+                    </>
+                  )}
                 {app.status === "approved" && (
                   <Button
                     variant="outline"
@@ -477,7 +472,7 @@ function ReviewModal({
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 
 function AdminRecruitmentApplications() {
-<<<<<<< HEAD
+
   const [applications, setApplications] = useState<
     Record<string, unknown>[]
   >([]);
@@ -488,12 +483,9 @@ function AdminRecruitmentApplications() {
     string,
     unknown
   > | null>(null);
-=======
-  const [applications, setApplications] = useState<RecruitmentApplication[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedApplication, setSelectedApplication] = useState<any | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
->>>>>>> bc0697a (Fixed a 409 Conflict issue on sign up)
+
 
   useEffect(() => {
     loadApplications();
@@ -507,45 +499,28 @@ function AdminRecruitmentApplications() {
     setLoading(false);
   };
 
-<<<<<<< HEAD
+
   const handleQuickApprove = async (app: Record<string, unknown>) => {
     const id = (app.$id || app.id) as string;
+
     const name = String(
-      app.full_name || app.Full_name || app.fullName || "Applicant",
-=======
-  const handleApprove = async (id: string) => {
-    console.log("Approve ID:", id);
-
-    await DataStore.updateRecruitmentStatus(id, "approved");
-    toast.success("Application approved");
-    loadApplications();
-  };
-
-  const handleReject = async (id: string) => {
-    await DataStore.updateRecruitmentStatus(id, "rejected");
-    toast.success("Application rejected");
-    loadApplications();
-  };
-
-  if (loading) {
-    return (
-      <div className="flex justify-center py-12">
-        <div className="h-8 w-8 rounded-full border-4 border-blue-600 border-t-transparent animate-spin" />
-      </div>
->>>>>>> bc0697a (Fixed a 409 Conflict issue on sign up)
+      app.full_name ||
+      app.Full_name ||
+      app.fullName ||
+      "Applicant"
     );
+
     const userId = (app.applicantUserId || app.applicant_user_id) as
       | string
       | undefined;
-
     await DataStore.updateRecruitmentApplicationStatus(id, "approved");
-    if (userId) await DataStore.assignUserRole(userId, "recruitment");
+    if (userId) {
+      await DataStore.assignUserRole(userId, "recruitment");
+    }
     await sendDiscordNotification(app);
-
-    toast.success(`${name} accepted — Discord notification sent (if configured)`);
+    toast.success(`${name} accepted`);
     loadApplications();
   };
-
   const handleQuickReject = async (id: string) => {
     await DataStore.updateRecruitmentApplicationStatus(id, "rejected");
     toast.success("Application rejected and archived");
@@ -633,8 +608,8 @@ function AdminRecruitmentApplications() {
             const email = String(app.email || app.Email_address || "");
             const role = String(
               app.role_applied_for ||
-                app.Role_you_want_to_apply_for ||
-                "Position",
+              app.Role_you_want_to_apply_for ||
+              "Position",
             );
             const appliedDate = new Date(
               (app.$createdAt ||
@@ -665,7 +640,7 @@ function AdminRecruitmentApplications() {
                       </p>
                     </div>
                   </div>
-<<<<<<< HEAD
+
                   <div className="flex items-center gap-2 flex-wrap">
                     <StatusBadge status={(app.status || "pending") as string} />
                     <Button
@@ -679,77 +654,30 @@ function AdminRecruitmentApplications() {
                     {(app.status === "pending" ||
                       app.status === "under_review" ||
                       !app.status) && (
-                      <>
-                        <Button
-                          size="sm"
-                          className="bg-emerald-600 hover:bg-emerald-700 gap-1.5"
-                          onClick={() => handleQuickApprove(app)}
-                        >
-                          <CheckCircle className="h-4 w-4" /> Accept
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-red-600 gap-1.5"
-                          onClick={() => handleQuickReject(id)}
-                        >
-                          <XCircle className="h-4 w-4" /> Reject
-                        </Button>
-                      </>
-                    )}
+                        <>
+                          <Button
+                            size="sm"
+                            className="bg-emerald-600 hover:bg-emerald-700 gap-1.5"
+                            onClick={() => handleQuickApprove(app)}
+                          >
+                            <CheckCircle className="h-4 w-4" /> Accept
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-red-600 gap-1.5"
+                            onClick={() => handleQuickReject(id)}
+                          >
+                            <XCircle className="h-4 w-4" /> Reject
+                          </Button>
+                        </>
+                      )}
                   </div>
                 </CardContent>
               </Card>
             );
           })}
-=======
-                  <div>
-                    <p className="font-semibold text-sm">{app.full_name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {app.role_applied_for || "Position"} · {app.email}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Applied {app.created_at ? new Date(app.created_at).toLocaleDateString() : "Unknown date"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <StatusBadge status={app.status || "pending"} />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-1.5"
-                    onClick={() => {
-                      setSelectedApplication(app);
-                      setReviewOpen(true);
-                    }}
-                  >
-                    <Eye className="h-4 w-4" />
-                    Review
-                  </Button>
-                  {app.status === "pending" || app.status === "under_review" ? (
-                    <>
-                      <Button
-                        size="sm"
-                        className="bg-emerald-600 hover:bg-emerald-700 gap-1.5"
-                        onClick={() => handleApprove(app.id)}
-                      >
-                        <CheckCircle className="h-4 w-4" /> Approve
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-red-600 gap-1.5"
-                        onClick={() => handleReject(app.id)}
-                      >
-                        <XCircle className="h-4 w-4" /> Reject
-                      </Button>
-                    </>
-                  ) : null}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+
           <Dialog open={reviewOpen} onOpenChange={setReviewOpen}>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
@@ -862,17 +790,18 @@ function AdminRecruitmentApplications() {
               )}
             </DialogContent>
           </Dialog>
->>>>>>> bc0697a (Fixed a 409 Conflict issue on sign up)
-        </div>
+        </div >
       )}
 
-      {reviewing && (
-        <ReviewModal
-          app={reviewing}
-          onClose={() => setReviewing(null)}
-          onAction={loadApplications}
-        />
-      )}
-    </div>
+      {
+        reviewing && (
+          <ReviewModal
+            app={reviewing}
+            onClose={() => setReviewing(null)}
+            onAction={loadApplications}
+          />
+        )
+      }
+    </div >
   );
 }
