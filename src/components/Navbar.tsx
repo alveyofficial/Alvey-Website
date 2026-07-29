@@ -41,7 +41,7 @@ export function Navbar() {
 
         let route: string | null = null;
 
-        if (roles.includes("owner") || roles.includes("website_manager")) {
+        if (roles.includes("admin") || roles.includes("website")) {
           route = "/admin";
         } else if (roles.includes("tutor")) {
           route = "/tutor";
@@ -69,7 +69,7 @@ export function Navbar() {
 
         let route: string | null = null;
 
-        if (roles.includes("owner") || roles.includes("website_manager")) {
+        if (roles.includes("admin") || roles.includes("website")) {
           route = "/admin";
         } else if (roles.includes("tutor")) {
           route = "/tutor";

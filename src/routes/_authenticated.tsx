@@ -28,7 +28,7 @@ import {
   LogOut,
 } from "lucide-react";
 
-type Role = "student" | "tutor" | "recruitment" | "website_manager" | "owner";
+type Role = "student" | "tutor" | "recruitment" | "website" | "admin";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -141,8 +141,8 @@ function AuthLayout() {
 
   const isTutor = roles.includes("tutor");
   const isRecruitment = roles.includes("recruitment");
-  const isManager = roles.includes("website_manager");
-  const isOwner = roles.includes("owner");
+  const isManager = roles.includes("website");
+  const isOwner = roles.includes("admin");
   const isAdmin = isManager || isOwner;
 
   let navItems = studentNav;

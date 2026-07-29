@@ -43,7 +43,7 @@ function AdminDashboard() {
         return;
       }
       const roles = await DataStore.getUserRoles(uid as string);
-      const isAdmin = roles.includes("website_manager") || roles.includes("owner");
+      const isAdmin = roles.includes("website_manager") || roles.includes("admin");
       setAuthorized(isAdmin);
       if (!isAdmin) return;
 

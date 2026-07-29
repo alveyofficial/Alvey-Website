@@ -7,7 +7,7 @@ import { BookOpen, Calendar, Clock, Bell, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DataStore } from "@/lib/data-store";
 
-type Role = "student" | "tutor" | "recruitment" | "website_manager" | "owner";
+type Role = "student" | "tutor" | "recruitment" | "website" | "admin";
 
 export const Route = createFileRoute("/_authenticated/student/dashboard")({
   head: () => ({
@@ -50,11 +50,11 @@ function Dashboard() {
     return <div>Tutor Dashboard Coming Soon</div>;
   }
 
-  if (roles.includes("owner")) {
+  if (roles.includes("admin")) {
     return <div>Owner Dashboard Coming Soon</div>;
   }
 
-  if (roles.includes("website_manager")) {
+  if (roles.includes("website")) {
     return <div>Website Manager Dashboard Coming Soon</div>;
   }
 

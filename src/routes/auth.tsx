@@ -111,7 +111,8 @@ function AuthPage() {
       redirectByRole(roles, navigate);
       toast.success("Welcome back!");
     } catch (err: any) {
-      toast.error(err?.message ?? "Sign in failed");
+      console.error(err);
+      toast.error(err?.message || "Invalid email or password.");
     } finally {
       setLoading(false);
     }
@@ -130,7 +131,8 @@ function AuthPage() {
       if (error) throw error;
       await ensureUserRecord(name);
     } catch (err: any) {
-      toast.error(err?.message ?? "Sign-up failed");
+      console.error(err);
+      toast.error("Failed to create account.");
     } finally {
       setLoading(false);
     }
@@ -212,13 +214,7 @@ function AuthPage() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <Label htmlFor="si-pw">Password</Label>
-                      <button
-                        type="button"
-                        onClick={() => setView("forgot")}
-                        className="text-xs text-blue-600 hover:text-blue-700 hover:underline focus:outline-none"
-                      >
-                        Forgot password?
-                      </button>
+
                     </div>
                     <div className="relative">
                       <Input
@@ -237,6 +233,13 @@ function AuthPage() {
                         {showSignInPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => setView("forgot")}
+                      className="text-xs text-blue-600 hover:text-blue-700 hover:underline focus:outline-none"
+                    >
+                      Forgot password?
+                    </button>
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? "Signing in…" : "Sign in"}
@@ -465,7 +468,7 @@ function ForgotSentCard({ onBack }: { onBack: () => void }) {
 // ─── Shared helper ────────────────────────────────────────────────────────────
 
 function redirectByRole(roles: string[], navigate: ReturnType<typeof useNavigate>) {
-  if (roles.includes("owner") || roles.includes("website_manager")) {
+  if (roles.includes("admin") || roles.includes("website")) {
     navigate({ to: "/admin" });
   } else if (roles.includes("tutor")) {
     navigate({ to: "/tutor" });

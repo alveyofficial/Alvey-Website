@@ -1093,22 +1093,17 @@ export const DataStore = {
   },
 
   // --- USER ROLES & PROFILES ---
-  getUserRoles: async (userId: string): Promise<string[]> => {
+  getUserRoles: async (_userId: string): Promise<string[]> => {
     try {
-      const doc = await getDocument(COLLECTIONS.USERS, userId);
+      const { teams } = await appwrite.teams.list();
 
-      console.log("USER DOC:", doc);
+      console.log("USER TEAMS:", teams);
 
-      const role = safeString(doc?.role, "");
-      console.log("ROLE:", role);
-
-      if (role) return [role];
-    } catch (e) {
-      console.log("ERROR:", e);
+      return teams.map(team => team.$id);
+    } catch (err) {
+      console.error(err);
+      return [];
     }
-
-    const mockRoles = getLocal<Record<string, string[]>>("user_roles_map", {});
-    return mockRoles[userId] || ["student"];
   },
 
   assignUserRole: async (userId: string, role: string): Promise<void> => {

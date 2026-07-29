@@ -78,7 +78,7 @@ function AdminAnalytics() {
         return;
       }
       const roles = await DataStore.getUserRoles(uid);
-      setAuthorized(roles.includes("website_manager") || roles.includes("owner"));
+      setAuthorized(roles.includes("website") || roles.includes("admin"));
     })();
   }, []);
 
