@@ -133,7 +133,7 @@ function CreateStudentModal({
               <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="student">Student</SelectItem>
-                <SelectItem value="website_manager">Website Manager</SelectItem>
+                <SelectItem value="website">Website Manager</SelectItem>
                 <SelectItem value="recruitment">Recruitment</SelectItem>
                 <SelectItem value="tutor">Tutor</SelectItem>
               </SelectContent>
