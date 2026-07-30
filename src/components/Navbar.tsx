@@ -122,12 +122,20 @@ export function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5 group">
-          <div className="bg-blue-600 group-hover:bg-blue-700 h-9 w-9 rounded-xl flex items-center justify-center transition-colors shadow-md shadow-blue-500/10">
-            <GraduationCap className="h-5 w-5 text-white" />
+          <img
+            src="/logo.png"
+            className="w-10 h-10 rounded-xl shadow-lg transition-transform duration-300 group-hover:scale-110"
+          />
+
+          <div className="leading-none">
+            <h1 className="font-black text-xl tracking-tight text-[#164E5E]">
+              ALVEY
+            </h1>
+
+            <p className="text-[10px] tracking-[0.25em] uppercase text-[#7D868C]">
+              Study Better
+            </p>
           </div>
-          <span className="font-bold text-lg tracking-tight bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-            Alvey
-          </span>
         </Link>
 
         {/* Desktop Navigation Links */}

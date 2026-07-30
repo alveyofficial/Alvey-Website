@@ -88,8 +88,12 @@ function Index() {
     <div className="w-full">
       {/* Hero Section */}
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#F8FAFC] via-[#CFDFEF] to-white">
-        <div className="max-w-7xl mx-auto px-6 min-h-[90vh] grid lg:grid-cols-2 gap-20 items-center">
+      <section className="relative overflow-hidden bg-[linear-gradient(180deg,#CFDFEF_0%,#F8FCFD_55%,white_100%)] dark:bg-[linear-gradient(180deg,#08131A_0%,#0D2330_55%,#111827_100%)]">
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-56 -left-40 h-[700px] w-[700px] rounded-full bg-[#164E5E]/10 dark:bg-[#3D7F8F]/20 blur-[120px]" />
+          <div className="absolute bottom-[-250px] right-[-150px] h-[600px] w-[600px] rounded-full bg-[#3D7F8F]/20 dark:bg-[#3D7F8F]/30 blur-[120px]" />
+        </div>
+        <div className="relative z-10 max-w-7xl mx-auto px-8 py-32 grid lg:grid-cols-[1.1fr_.9fr] items-center gap-10">
 
 
           <motion.div
@@ -101,19 +105,19 @@ function Index() {
 
             <motion.h1
               variants={fadeInUp}
-              className="font-manrope text-6xl md:text-8xl font-extrabold leading-tight tracking-tight"
+              className="font-manrope text-5xl md:text-7xl xl:text-8xl font-extrabold leading-tight tracking-tight"
             >
               Find a tutor
               <br />
 
-              <span className="text-[#164E5E]">
+              <span className="text-[#164E5E] dark:text-cyan-300">
                 that actually fits you.
               </span>
             </motion.h1>
 
             <motion.p
               variants={fadeInUp}
-              className="text-xl text-muted-foreground max-w-xl leading-8"
+              className="text-xl text-muted-foreground dark:text-slate-300 max-w-xl leading-8"
             >
               Learning shouldn't feel stressful.
               Discover trusted tutors for every stage of your education.
@@ -125,9 +129,21 @@ function Index() {
             >
 
               <Button
-                size="lg"
                 asChild
-                className="h-14 px-10 text-lg rounded-2xl"
+                className="
+h-14
+px-10
+rounded-full
+bg-[#164E5E]
+text-white
+font-semibold
+shadow-[0_15px_35px_rgba(22,78,94,.28)]
+hover:bg-[#3D7F8F]
+hover:shadow-[0_20px_40px_rgba(61,127,143,.35)]
+hover:-translate-y-1
+transition-all
+duration-300
+"
               >
                 <Link
                   to="/find-a-tutor"
@@ -138,14 +154,34 @@ function Index() {
               </Button>
 
               <Button
-                variant="outline"
-                size="lg"
                 asChild
-                className="h-14 px-10 rounded-2xl text-lg"
+                variant="outline"
+                className="
+h-14
+px-10
+rounded-full
+border-2
+border-[#164E5E]
+bg-white/80
+backdrop-blur
+text-[#164E5E]
+font-semibold
+shadow-lg
+hover:bg-[#164E5E]
+hover:text-white
+hover:border-[#164E5E]
+hover:-translate-y-1
+transition-all
+duration-300
+"
               >
+
                 <Link to="/apply">
+
                   Become Tutor
+
                 </Link>
+
               </Button>
 
             </motion.div>
@@ -156,26 +192,26 @@ function Index() {
             initial={{ opacity: 0, x: 100 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
-            className="hidden lg:flex flex-col items-center justify-center"
+            className="relative hidden lg:flex items-center justify-center"
           >
+            <div
+              className="relative w-[480px] h-[480px] rounded-[48px] bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-white/60 dark:border-slate-700 shadow-[0_40px_80px_rgba(22,78,94,.15)] flex flex-col items-center justify-center">
 
-            <img
-              src="/logo.png"
-              className="w-44 mb-8 animate-float rounded-3xl shadow-[0_30px_50px_-20px_rgba(0,0,0,0.35)]"
-            />
 
-            <h1
-              className="font-manrope text-[7rem] leading-none font-extrabold text-[#164E5E]"
-            >
-              ALVEY
-            </h1>
+              <img
+                src="/logo.png"
+                className="w-40 drop-shadow-[0_30px_50px_rgba(22,78,94,.25)] mb-10 animate-float rounded-3xl"
+              />
 
-            <p
-              className="font-manrope text-4xl font-semibold tracking-wide text-[#7D868C]"
-            >
-              Study Better.
-            </p>
+              <h1 className="text-6xl font-black tracking-tight text-[#164E5E] dark:text-white">
+                Alvey
+              </h1>
 
+              <p className="text-xl font-medium text-[#7D868C] dark:text-slate-400 mt-2">
+                Connecting students with
+                trusted tutors.
+              </p>
+            </div>
           </motion.div>
 
         </div>
@@ -183,7 +219,7 @@ function Index() {
       </section>
 
       {/* Statistics Section */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-white dark:bg-slate-950">
         <motion.div
           initial="hidden"
           whileInView="visible"
@@ -249,8 +285,14 @@ function Index() {
             : levels.map((level) => (
               <motion.div key={level} variants={fadeInUp} whileHover={{ y: -5 }}>
                 <Link to="/find-a-tutor" search={{ level, subject: "" }}>
-                  <Card className="hover:border-blue-500/50 hover:shadow-lg transition-all cursor-pointer h-full border-border/50 bg-background/50 backdrop-blur-sm rounded-2xl">
-                    <CardContent className="p-8 text-center font-semibold text-lg">{level}</CardContent>
+                  <Card
+                    className="rounded-3xl border border-[#CFDFEF] bg-white dark:bg-slate-900 shadow-md hover:bg-[#164E5E] hover:text-white hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+                    <CardContent
+                      className="py-12 flex justify-center items-center">
+                      <p className="font-semibold text-lg">
+                        {level}
+                      </p>
+                    </CardContent>
                   </Card>
                 </Link>
               </motion.div>
@@ -259,72 +301,308 @@ function Index() {
       </section>
 
       {/* How it Works */}
-      <section className="py-32 px-4 bg-muted/10">
-        <div className="max-w-7xl mx-auto text-center">
-          <motion.h2
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeInUp}
-            className="text-4xl font-bold mb-20 tracking-tight"
-          >
-            How Alvey Works
-          </motion.h2>
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={staggerContainer}
-            className="grid md:grid-cols-4 gap-12 relative"
-          >
+      <section className="py-32 bg-white dark:bg-slate-950">
+
+        <div className="max-w-7xl mx-auto px-8">
+
+          <div className="text-center mb-20">
+            <h2 className="text-5xl font-black text-[#164E5E]">
+              How Alvey works
+            </h2>
+
+            <p className="mt-5 text-xl text-gray-500">
+              Getting started takes less than five minutes.
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-4 gap-8">
+
             {[
-              { step: "1", title: "Search Tutors", desc: "Browse our marketplace of vetted professionals." },
-              { step: "2", title: "Choose a Tutor", desc: "Review profiles, ratings, and experience." },
-              { step: "3", title: "Contact Us", desc: "We facilitate the connection and scheduling." },
-              { step: "4", title: "Begin Learning", desc: "Achieve your academic goals." }
-            ].map((item, i) => (
-              <motion.div key={i} variants={fadeInUp} className="space-y-8 -mt-16">
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-3xl font-bold mx-auto shadow-sm transform rotate-3 transition-transform hover:rotate-0">
-                  {item.step}
-                </div>
-                <div>
-                  <h3 className="font-semibold text-xl mb-2">{item.title}</h3>
-                  <p className="text-base text-muted-foreground">
-                    {item.desc}
+              {
+                num: "01",
+                title: "Browse",
+                desc: "Search tutors by subject and level."
+              },
+              {
+                num: "02",
+                title: "Compare",
+                desc: "Read tutor profiles and reviews."
+              },
+              {
+                num: "03",
+                title: "Connect",
+                desc: "Contact us and schedule lessons."
+              },
+              {
+                num: "04",
+                title: "Learn",
+                desc: "Improve faster with expert guidance."
+              }
+            ].map((step) => (
+              <Card
+                className="rounded-3xl border-0 bg-white dark:bg-slate-900 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-3">
+
+                <CardContent className="p-10">
+
+                  <p className="text-5xl font-black text-[#CFDFEF]">
+                    {step.num}
                   </p>
-                </div>
-              </motion.div>
+
+                  <h3 className="mt-6 text-2xl font-bold text-[#164E5E]">
+                    {step.title}
+                  </h3>
+
+                  <p className="mt-4 text-gray-500 leading-7">
+                    {step.desc}
+                  </p>
+
+                </CardContent>
+
+              </Card>
             ))}
-          </motion.div>
+
+          </div>
+
         </div>
+
       </section>
 
       {/* Call to Action */}
-      <section className="py-32 px-4 bg-blue-600 text-white text-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          variants={fadeInUp}
-          className="max-w-3xl mx-auto space-y-10 relative z-10"
-        >
-          <h2 className="text-5xl font-bold tracking-tight">Ready to unlock your potential?</h2>
-          <p className="text-xl text-blue-100 max-w-2xl mx-auto font-medium">
-            Join thousands of students who have transformed their grades and confidence with Alvey
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
-            <Button size="lg" variant="secondary" asChild className="text-lg px-10 rounded-xl font-semibold shadow-xl hover:scale-105 transition-transform text-blue-600">
-              <Link to="/find-a-tutor" search={{ level: "", subject: "" }}>
-                Find a Tutor
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" asChild className="border-2 border-white text-white hover:bg-white hover:text-blue-600 text-lg px-10 rounded-xl font-semibold shadow-xl hover:scale-105 transition-all">
-              <Link to="/contact">Contact Us</Link>
-            </Button>
+      <section className="py-36">
+
+        <div className="max-w-6xl mx-auto px-8">
+
+          <div className="relative overflow-hidden rounded-[42px] bg-gradient-to-br from-[#164E5E] via-[#205C6D] to-[#3D7F8F] shadow-[0_40px_90px_rgba(22,78,94,.35)]">
+            <div className="absolute inset-0 opacity-20">
+              <div className="absolute left-[-120px] bottom-[-120px] h-80 w-80 rounded-full bg-white/10 blur-[140px]" />
+              <div className="absolute right-[-80px] top-[-80px] h-96 w-96 rounded-full bg-cyan-300/20 blur-[140px]" />
+              <div className="absolute w-96 h-96 bg-white rounded-full blur-[140px] -top-32 -right-32" />
+            </div>
+            <div className="relative z-10 py-24 px-16 text-center">
+              <h2 className="text-5xl font-black text-white">
+                Ready to learn smarter?
+              </h2>
+              <p className="text-white/80 text-xl mt-6 max-w-2xl mx-auto">
+                Thousands of students trust Alvey to connect them with
+                qualified tutors.
+              </p>
+              <div className="flex justify-center gap-6 mt-12">
+                <Button
+                  asChild
+                  className="
+h-14
+px-10
+rounded-full
+bg-[#164E5E]
+text-white
+font-semibold
+shadow-[0_15px_35px_rgba(22,78,94,.28)]
+hover:bg-[#3D7F8F]
+hover:shadow-[0_20px_40px_rgba(61,127,143,.35)]
+hover:-translate-y-1
+transition-all
+duration-300
+"
+                >
+                  <Link
+                    to="/find-a-tutor"
+                    search={{ level: "", subject: "" }}
+                  >
+                    Find Tutor
+                  </Link>
+                </Button>
+
+                <Button
+                  asChild
+                  variant="outline"
+                  className="
+h-14
+px-10
+rounded-full
+border-2
+border-[#164E5E]
+bg-white/80
+backdrop-blur
+text-[#164E5E]
+font-semibold
+shadow-lg
+hover:bg-[#164E5E]
+hover:text-white
+hover:border-[#164E5E]
+hover:-translate-y-1
+transition-all
+duration-300
+"
+                >
+                  <Link to="/apply">
+                    Become Tutor
+                  </Link>
+                </Button>
+
+              </div>
+
+            </div>
+
           </div>
-        </motion.div>
+
+        </div>
+
       </section>
-    </div>
+      <footer className="border-t bg-white dark:bg-slate-950 dark:border-slate-800">
+
+        <div className="max-w-7xl mx-auto px-8 py-16">
+
+          <div className="grid md:grid-cols-4 gap-12">
+
+            {/* Brand */}
+
+            <div>
+
+              <h2 className="text-3xl font-black text-[#164E5E]">
+                Alvey
+              </h2>
+
+              <p className="mt-4 text-gray-500 dark:text-slate-400 leading-7">
+                Helping students connect with trusted tutors across every subject.
+              </p>
+
+            </div>
+
+            {/* Platform */}
+
+            <div>
+
+              <h3 className="font-bold text-[#164E5E] dark:text-white mb-6">
+                Platform
+              </h3>
+
+              <div className="space-y-3 text-gray-500">
+
+                <Link
+                  to="/find-a-tutor"
+                  search={{
+                    level: "",
+                    subject: "",
+                  }}
+                  className="block hover:text-[#164E5E] transition-colors"
+                >
+                  Find Tutor
+                </Link>
+
+                <Link
+                  to="/apply"
+                  className="block hover:text-[#164E5E] transition-colors"
+                >
+                  Become Tutor
+                </Link>
+
+                <Link
+                  to="/about"
+                  className="block hover:text-[#164E5E] transition-colors"
+                >
+                  About
+                </Link>
+
+              </div>
+
+            </div>
+
+            {/* Support */}
+
+            <div>
+
+              <h3 className="font-bold text-[#164E5E] mb-6">
+                Support
+              </h3>
+
+              <div className="space-y-3 text-gray-500">
+
+                <Link
+                  to="/contact"
+                  className="block hover:text-[#164E5E] transition-colors"
+                >
+                  Contact Us
+                </Link>
+
+                <a
+                  href="mailto:support@alvey.study"
+                  className="block hover:text-[#164E5E] transition-colors"
+                >
+                  support@alvey.study
+                </a>
+
+                <Link
+                  to="/contact"
+                  className="block hover:text-[#164E5E] transition-colors"
+                >
+                  Privacy Policy
+                </Link>
+
+                <Link
+                  to="/contact"
+                  className="block hover:text-[#164E5E] transition-colors"
+                >
+                  Terms of Service
+                </Link>
+
+              </div>
+
+            </div>
+
+            {/* Social */}
+
+            <div>
+
+              <h3 className="font-bold text-[#164E5E] mb-6">
+                Follow Us
+              </h3>
+
+              <div className="space-y-3 text-gray-500">
+
+                <a
+                  href="#"
+                  className="block hover:text-[#164E5E] transition-colors"
+                >
+                  Instagram
+                </a>
+
+                <a
+                  href="#"
+                  className="block hover:text-[#164E5E] transition-colors"
+                >
+                  LinkedIn
+                </a>
+
+                <a
+                  href="#"
+                  className="block hover:text-[#164E5E] transition-colors"
+                >
+                  X (Twitter)
+                </a>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          <hr className="my-10 border-gray-200" />
+
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-gray-500 text-sm">
+
+            <p>
+              © {new Date().getFullYear()} Alvey. All rights reserved.
+            </p>
+
+            <p className="font-medium">
+              Built with CHAII HAHAH by the Alvey Team
+            </p>
+
+          </div>
+
+        </div>
+
+      </footer>
+    </div >
   );
 }

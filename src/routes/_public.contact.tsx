@@ -31,7 +31,7 @@ function Contact() {
           </div>
         </div>
         <Card>
-          <CardContent className="p-8">
+          <CardContent className="py-12">
             <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Name</label>
