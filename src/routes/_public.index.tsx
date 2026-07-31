@@ -24,29 +24,70 @@ export const Route = createFileRoute("/_public/")({
 });
 
 const FALLBACK_LEVELS = [
-  "Primary",
-  "Secondary",
-  "IGCSE",
-  "GCSE",
-  "A-Level",
-  "SAT",
-  "University",
-  "Professional",
+  {
+    name: "Primary",
+    description: "",
+    slug: "primary",
+  },
+  {
+    name: "Secondary",
+    description: "",
+    slug: "secondary",
+  },
+  {
+    name: "IGCSE",
+    description: "",
+    slug: "igcse",
+  },
+  {
+    name: "GCSE",
+    description: "",
+    slug: "gcse",
+  },
+  {
+    name: "A-Level",
+    description: "",
+    slug: "a-level",
+  },
+  {
+    name: "SAT",
+    description: "",
+    slug: "sat",
+  },
+  {
+    name: "University",
+    description: "",
+    slug: "university",
+  },
+  {
+    name: "Professional",
+    description: "",
+    slug: "professional",
+  },
 ];
-
+type Level = {
+  name: string;
+  description: string;
+  slug: string;
+};
 function Index() {
-  const [levels, setLevels] = useState<string[]>([]);
+
+  const [levels, setLevels] = useState<Level[]>([]);
   const [levelsLoading, setLevelsLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
       try {
         const docs = await DataStore.getSubjectCategories();
+        console.log(docs);
         if (docs.length > 0) {
-          const names = docs
-            .map((doc: any) => doc.name || doc.title || doc.label || "")
-            .filter(Boolean) as string[];
-          setLevels(names.length > 0 ? names : FALLBACK_LEVELS);
+          const categories: Level[] = docs.map((doc) => ({
+            name: doc.name,
+            description: doc.description,
+            slug: doc.slug,
+          }));
+
+          setLevels(categories);
         } else {
           setLevels(FALLBACK_LEVELS);
         }
@@ -167,7 +208,8 @@ backdrop-blur
 text-[#164E5E]
 font-semibold
 shadow-lg
-hover:bg-[#164E5E]
+hover:bg-[#3D7F8F]
+hover:border-[#3D7F8F]
 hover:text-white
 hover:border-[#164E5E]
 hover:-translate-y-1
@@ -219,7 +261,7 @@ duration-300
       </section>
 
       {/* Statistics Section */}
-      <section className="py-20 bg-white dark:bg-slate-950">
+      <section className="py-20 bg-white dark:bg-[#08131A]">
         <motion.div
           initial="hidden"
           whileInView="visible"
@@ -245,8 +287,8 @@ duration-300
             },
           ].map((stat, i) => (
             <motion.div key={i} variants={fadeInUp} className="space-y-2">
-              <div className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">{stat.value}</div>
-              <div className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+              <div className="text-5xl font-extrabold text-[#164E5E] dark:text-[#6FD4D8]">{stat.value}</div>
+              <div className="text-sm font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">
                 {stat.label}
               </div>
             </motion.div>
@@ -283,14 +325,19 @@ duration-300
               />
             ))
             : levels.map((level) => (
-              <motion.div key={level} variants={fadeInUp} whileHover={{ y: -5 }}>
-                <Link to="/find-a-tutor" search={{ level, subject: "" }}>
+              <motion.div key={level.name} variants={fadeInUp} whileHover={{ y: -5 }} >
+                <Link to="/find-a-tutor" search={{
+                  level: level.slug,
+                  subject: "",
+                }}>
                   <Card
-                    className="rounded-3xl border border-[#CFDFEF] bg-white dark:bg-slate-900 shadow-md hover:bg-[#164E5E] hover:text-white hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
-                    <CardContent
-                      className="py-12 flex justify-center items-center">
-                      <p className="font-semibold text-lg">
-                        {level}
+                    className="rounded-3xl border border-[#262345] bg-white dark:bg-slate-900 shadow-md hover:bg-gradient-to-br hover:from-[#164E5E] hover:to-[#3D7F8F] hover:text-white hover:text-white hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+                    <CardContent className="py-8 px-6 flex flex-col items-center text-center">
+                      <h3 className="font-semibold text-lg">
+                        {level.name}
+                      </h3>
+                      <p className="mt-2 text-sm text-gray-600 dark:text-gray-300 transition-colors">
+                        {level.description}
                       </p>
                     </CardContent>
                   </Card>
@@ -301,7 +348,7 @@ duration-300
       </section>
 
       {/* How it Works */}
-      <section className="py-32 bg-white dark:bg-slate-950">
+      <section className="py-32 bg-white dark:bg-[#08131A]">
 
         <div className="max-w-7xl mx-auto px-8">
 
@@ -310,7 +357,7 @@ duration-300
               How Alvey works
             </h2>
 
-            <p className="mt-5 text-xl text-gray-500">
+            <p className="mt-5 text-xl text-gray-700 dark:text-gray-300">
               Getting started takes less than five minutes.
             </p>
           </div>
@@ -344,7 +391,7 @@ duration-300
 
                 <CardContent className="p-10">
 
-                  <p className="text-5xl font-black text-[#CFDFEF]">
+                  <p className="text-5xl font-black text-[#3D7F8F] dark:text-[#6FD4D8]">
                     {step.num}
                   </p>
 
@@ -352,7 +399,7 @@ duration-300
                     {step.title}
                   </h3>
 
-                  <p className="mt-4 text-gray-500 leading-7">
+                  <p className="mt-4 text-gray-700 dark:text-gray-300 leading-7">
                     {step.desc}
                   </p>
 
@@ -426,7 +473,8 @@ backdrop-blur
 text-[#164E5E]
 font-semibold
 shadow-lg
-hover:bg-[#164E5E]
+hover:bg-[#3D7F8F]
+hover:border-[#3D7F8F]
 hover:text-white
 hover:border-[#164E5E]
 hover:-translate-y-1
@@ -448,7 +496,7 @@ duration-300
         </div>
 
       </section>
-      <footer className="border-t bg-white dark:bg-slate-950 dark:border-slate-800">
+      <footer className="border-t bg-white dark:bg-[#08131A] dark:border-slate-800">
 
         <div className="max-w-7xl mx-auto px-8 py-16">
 
@@ -462,7 +510,7 @@ duration-300
                 Alvey
               </h2>
 
-              <p className="mt-4 text-gray-500 dark:text-slate-400 leading-7">
+              <p className="mt-4 text-gray-700 dark:text-gray-300 dark:text-slate-400 leading-7">
                 Helping students connect with trusted tutors across every subject.
               </p>
 
@@ -476,7 +524,7 @@ duration-300
                 Platform
               </h3>
 
-              <div className="space-y-3 text-gray-500">
+              <div className="space-y-3 text-gray-700 dark:text-gray-300">
 
                 <Link
                   to="/find-a-tutor"
@@ -484,23 +532,16 @@ duration-300
                     level: "",
                     subject: "",
                   }}
-                  className="block hover:text-[#164E5E] transition-colors"
+                  className="block hover:text-[#3D7F8F] dark:hover:text-[#6FD4D8] transition-colors"
                 >
                   Find Tutor
                 </Link>
 
                 <Link
                   to="/apply"
-                  className="block hover:text-[#164E5E] transition-colors"
+                  className="block hover:text-[#3D7F8F] dark:hover:text-[#6FD4D8] transition-colors"
                 >
                   Become Tutor
-                </Link>
-
-                <Link
-                  to="/about"
-                  className="block hover:text-[#164E5E] transition-colors"
-                >
-                  About
                 </Link>
 
               </div>
@@ -515,32 +556,32 @@ duration-300
                 Support
               </h3>
 
-              <div className="space-y-3 text-gray-500">
+              <div className="space-y-3 text-gray-700 dark:text-gray-300">
 
                 <Link
                   to="/contact"
-                  className="block hover:text-[#164E5E] transition-colors"
+                  className="block hover:text-[#3D7F8F] dark:hover:text-[#6FD4D8] transition-colors"
                 >
                   Contact Us
                 </Link>
 
                 <a
                   href="mailto:support@alvey.study"
-                  className="block hover:text-[#164E5E] transition-colors"
+                  className="block hover:text-[#3D7F8F] dark:hover:text-[#6FD4D8] transition-colors"
                 >
                   support@alvey.study
                 </a>
 
                 <Link
                   to="/contact"
-                  className="block hover:text-[#164E5E] transition-colors"
+                  className="block hover:text-[#3D7F8F] dark:hover:text-[#6FD4D8] transition-colors"
                 >
                   Privacy Policy
                 </Link>
 
                 <Link
                   to="/contact"
-                  className="block hover:text-[#164E5E] transition-colors"
+                  className="block hover:text-[#3D7F8F] dark:hover:text-[#6FD4D8] transition-colors"
                 >
                   Terms of Service
                 </Link>
@@ -557,25 +598,25 @@ duration-300
                 Follow Us
               </h3>
 
-              <div className="space-y-3 text-gray-500">
+              <div className="space-y-3 text-gray-700 dark:text-gray-300">
 
                 <a
                   href="#"
-                  className="block hover:text-[#164E5E] transition-colors"
+                  className="block hover:text-[#3D7F8F] dark:hover:text-[#6FD4D8] transition-colors"
                 >
                   Instagram
                 </a>
 
                 <a
                   href="#"
-                  className="block hover:text-[#164E5E] transition-colors"
+                  className="block hover:text-[#3D7F8F] dark:hover:text-[#6FD4D8] transition-colors"
                 >
                   LinkedIn
                 </a>
 
                 <a
                   href="#"
-                  className="block hover:text-[#164E5E] transition-colors"
+                  className="block hover:text-[#3D7F8F] dark:hover:text-[#6FD4D8] transition-colors"
                 >
                   X (Twitter)
                 </a>
@@ -588,7 +629,7 @@ duration-300
 
           <hr className="my-10 border-gray-200" />
 
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-gray-500 text-sm">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-gray-700 dark:text-gray-300 text-sm">
 
             <p>
               © {new Date().getFullYear()} Alvey. All rights reserved.

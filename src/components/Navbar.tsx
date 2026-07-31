@@ -146,7 +146,7 @@ export function Navbar() {
               to={link.to}
               activeProps={{
                 className:
-                  "bg-blue-50/50 text-blue-600 dark:bg-blue-950/20 dark:text-blue-400 font-medium",
+                  "bg-[#164E5E]/10 text-[#164E5E] dark:bg-[#3D7F8F]/20 dark:text-[#6FD4D8] font-semibold",
               }}
               className="text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2 rounded-lg transition-colors duration-150"
             >

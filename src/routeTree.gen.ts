@@ -19,7 +19,6 @@ import { Route as PublicWorkWithUsRouteImport } from './routes/_public.work-with
 import { Route as PublicFindATutorRouteImport } from './routes/_public.find-a-tutor'
 import { Route as PublicContactRouteImport } from './routes/_public.contact'
 import { Route as PublicApplyRouteImport } from './routes/_public.apply'
-import { Route as PublicAboutRouteImport } from './routes/_public.about'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated.settings'
 import { Route as AuthenticatedScheduleRouteImport } from './routes/_authenticated.schedule'
 import { Route as AuthenticatedReviewsRouteImport } from './routes/_authenticated.reviews'
@@ -112,11 +111,6 @@ const PublicContactRoute = PublicContactRouteImport.update({
 const PublicApplyRoute = PublicApplyRouteImport.update({
   id: '/apply',
   path: '/apply',
-  getParentRoute: () => PublicRoute,
-} as any)
-const PublicAboutRoute = PublicAboutRouteImport.update({
-  id: '/about',
-  path: '/about',
   getParentRoute: () => PublicRoute,
 } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
@@ -390,7 +384,6 @@ export interface FileRoutesByFullPath {
   '/reviews': typeof AuthenticatedReviewsRoute
   '/schedule': typeof AuthenticatedScheduleRoute
   '/settings': typeof AuthenticatedSettingsRoute
-  '/about': typeof PublicAboutRoute
   '/apply': typeof PublicApplyRoute
   '/contact': typeof PublicContactRoute
   '/find-a-tutor': typeof PublicFindATutorRoute
@@ -446,7 +439,6 @@ export interface FileRoutesByTo {
   '/reviews': typeof AuthenticatedReviewsRoute
   '/schedule': typeof AuthenticatedScheduleRoute
   '/settings': typeof AuthenticatedSettingsRoute
-  '/about': typeof PublicAboutRoute
   '/apply': typeof PublicApplyRoute
   '/contact': typeof PublicContactRoute
   '/find-a-tutor': typeof PublicFindATutorRoute
@@ -504,7 +496,6 @@ export interface FileRoutesById {
   '/_authenticated/reviews': typeof AuthenticatedReviewsRoute
   '/_authenticated/schedule': typeof AuthenticatedScheduleRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
-  '/_public/about': typeof PublicAboutRoute
   '/_public/apply': typeof PublicApplyRoute
   '/_public/contact': typeof PublicContactRoute
   '/_public/find-a-tutor': typeof PublicFindATutorRoute
@@ -563,7 +554,6 @@ export interface FileRouteTypes {
     | '/reviews'
     | '/schedule'
     | '/settings'
-    | '/about'
     | '/apply'
     | '/contact'
     | '/find-a-tutor'
@@ -619,7 +609,6 @@ export interface FileRouteTypes {
     | '/reviews'
     | '/schedule'
     | '/settings'
-    | '/about'
     | '/apply'
     | '/contact'
     | '/find-a-tutor'
@@ -676,7 +665,6 @@ export interface FileRouteTypes {
     | '/_authenticated/reviews'
     | '/_authenticated/schedule'
     | '/_authenticated/settings'
-    | '/_public/about'
     | '/_public/apply'
     | '/_public/contact'
     | '/_public/find-a-tutor'
@@ -801,13 +789,6 @@ declare module '@tanstack/react-router' {
       path: '/apply'
       fullPath: '/apply'
       preLoaderRoute: typeof PublicApplyRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_public/about': {
-      id: '/_public/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof PublicAboutRouteImport
       parentRoute: typeof PublicRoute
     }
     '/_authenticated/settings': {
@@ -1233,7 +1214,6 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 )
 
 interface PublicRouteChildren {
-  PublicAboutRoute: typeof PublicAboutRoute
   PublicApplyRoute: typeof PublicApplyRoute
   PublicContactRoute: typeof PublicContactRoute
   PublicFindATutorRoute: typeof PublicFindATutorRoute
@@ -1243,7 +1223,6 @@ interface PublicRouteChildren {
 }
 
 const PublicRouteChildren: PublicRouteChildren = {
-  PublicAboutRoute: PublicAboutRoute,
   PublicApplyRoute: PublicApplyRoute,
   PublicContactRoute: PublicContactRoute,
   PublicFindATutorRoute: PublicFindATutorRoute,
