@@ -113,7 +113,6 @@ export function Navbar() {
     { label: "Find a Tutor", to: "/find-a-tutor" },
     { label: "Apply as a Tutor", to: "/apply" },
     { label: "Work With Us", to: "/work-with-us" },
-    { label: "About Us", to: "/about" },
     { label: "Contact", to: "/contact" },
   ];
 
@@ -123,8 +122,8 @@ export function Navbar() {
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5 group">
           <img
-            src="/logo.png"
-            className="w-10 h-10 rounded-xl shadow-lg transition-transform duration-300 group-hover:scale-110"
+            src="/logo.webp"
+            className="w-12 h-12 transition-transform duration-300 group-hover:scale-110"
           />
 
           <div className="leading-none">

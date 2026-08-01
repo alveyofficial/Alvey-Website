@@ -25,7 +25,6 @@ export function Footer() {
     {
       title: "Company",
       links: [
-        { label: "About Us", to: "/about" },
         { label: "Contact Us", to: "/contact" },
         { label: "FAQs", to: "/contact" }, // FAQs on contact page
       ],

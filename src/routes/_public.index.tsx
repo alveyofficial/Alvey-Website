@@ -236,23 +236,11 @@ duration-300
             transition={{ duration: 0.8 }}
             className="relative hidden lg:flex items-center justify-center"
           >
-            <div
-              className="relative w-[480px] h-[480px] rounded-[48px] bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-white/60 dark:border-slate-700 shadow-[0_40px_80px_rgba(22,78,94,.15)] flex flex-col items-center justify-center">
-
-
+            <div>
               <img
-                src="/logo.png"
-                className="w-40 drop-shadow-[0_30px_50px_rgba(22,78,94,.25)] mb-10 animate-float rounded-3xl"
+                src="/logo.webp"
+                className=" w-64 md:w-80 lg:w-[490px] object-contain drop-shadow-[0_30px_50px_rgba(22,78,94,.25)] animate-float"
               />
-
-              <h1 className="text-6xl font-black tracking-tight text-[#164E5E] dark:text-white">
-                Alvey
-              </h1>
-
-              <p className="text-xl font-medium text-[#7D868C] dark:text-slate-400 mt-2">
-                Connecting students with
-                trusted tutors.
-              </p>
             </div>
           </motion.div>
 
