@@ -561,14 +561,14 @@ duration-300
                 </a>
 
                 <Link
-                  to="/contact"
+                  to="/privacy-policy"
                   className="block hover:text-[#3D7F8F] dark:hover:text-[#6FD4D8] transition-colors"
                 >
                   Privacy Policy
                 </Link>
 
                 <Link
-                  to="/contact"
+                  to="/terms-of-service"
                   className="block hover:text-[#3D7F8F] dark:hover:text-[#6FD4D8] transition-colors"
                 >
                   Terms of Service
@@ -589,25 +589,57 @@ duration-300
               <div className="space-y-3 text-gray-700 dark:text-gray-300">
 
                 <a
-                  href="#"
+                  href="https://www.instagram.com/alveyofficial/"
+                  target="_blank"
+                  rel="noreferrer"
                   className="block hover:text-[#3D7F8F] dark:hover:text-[#6FD4D8] transition-colors"
                 >
                   Instagram
                 </a>
 
                 <a
-                  href="#"
+                  href="https://www.linkedin.com/company/alveyofficial"
+                  target="_blank"
+                  rel="noreferrer"
                   className="block hover:text-[#3D7F8F] dark:hover:text-[#6FD4D8] transition-colors"
                 >
                   LinkedIn
                 </a>
 
                 <a
-                  href="#"
+                  href="https://x.com/AlveyOfficialX"
+                  target="_blank"
+                  rel="noreferrer"
                   className="block hover:text-[#3D7F8F] dark:hover:text-[#6FD4D8] transition-colors"
                 >
                   X (Twitter)
                 </a>
+
+                <a
+                  href="https://www.tiktok.com/@alveyofficialtt"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block hover:text-[#3D7F8F] dark:hover:text-[#6FD4D8] transition-colors"
+                >
+                  TikTok
+                </a>
+
+                <a
+                  href="https://www.youtube.com/@AlveyOfficial"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block hover:text-[#3D7F8F] dark:hover:text-[#6FD4D8] transition-colors"
+                >
+                  YouTube
+                </a>
+
+                <span className="block text-gray-400 dark:text-gray-500">
+                  Facebook (coming soon)
+                </span>
+
+                <span className="block text-gray-400 dark:text-gray-500">
+                  Reddit (coming soon)
+                </span>
 
               </div>
 

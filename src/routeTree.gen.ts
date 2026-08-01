@@ -19,6 +19,8 @@ import { Route as PublicWorkWithUsRouteImport } from './routes/_public.work-with
 import { Route as PublicFindATutorRouteImport } from './routes/_public.find-a-tutor'
 import { Route as PublicContactRouteImport } from './routes/_public.contact'
 import { Route as PublicApplyRouteImport } from './routes/_public.apply'
+import { Route as PublicPrivacyPolicyRouteImport } from './routes/_public.privacy-policy'
+import { Route as PublicTermsOfServiceRouteImport } from './routes/_public.terms-of-service'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated.settings'
 import { Route as AuthenticatedScheduleRouteImport } from './routes/_authenticated.schedule'
 import { Route as AuthenticatedReviewsRouteImport } from './routes/_authenticated.reviews'
@@ -64,6 +66,7 @@ import { Route as AuthenticatedAdminHomepageRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin/analytics'
 import { Route as AuthenticatedAdminAiAssistantRouteImport } from './routes/_authenticated/admin/ai-assistant'
 import { Route as AuthenticatedAdminAdvertisementsRouteImport } from './routes/_authenticated/admin/advertisements'
+import { Route as ApiPublicStatsRouteImport } from './routes/api/public/stats'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -111,6 +114,16 @@ const PublicContactRoute = PublicContactRouteImport.update({
 const PublicApplyRoute = PublicApplyRouteImport.update({
   id: '/apply',
   path: '/apply',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicPrivacyPolicyRoute = PublicPrivacyPolicyRouteImport.update({
+  id: '/privacy-policy',
+  path: '/privacy-policy',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicTermsOfServiceRoute = PublicTermsOfServiceRouteImport.update({
+  id: '/terms-of-service',
+  path: '/terms-of-service',
   getParentRoute: () => PublicRoute,
 } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
@@ -173,6 +186,11 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
 const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
   id: '/api/public/health',
   path: '/api/public/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicStatsRoute = ApiPublicStatsRouteImport.update({
+  id: '/api/public/stats',
+  path: '/api/public/stats',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PublicTutorsTutorIdRoute = PublicTutorsTutorIdRouteImport.update({
@@ -387,7 +405,9 @@ export interface FileRoutesByFullPath {
   '/apply': typeof PublicApplyRoute
   '/contact': typeof PublicContactRoute
   '/find-a-tutor': typeof PublicFindATutorRoute
+  '/privacy-policy': typeof PublicPrivacyPolicyRoute
   '/work-with-us': typeof PublicWorkWithUsRoute
+  '/terms-of-service': typeof PublicTermsOfServiceRoute
   '/api/chatbot': typeof ApiChatbotRoute
   '/admin/advertisements': typeof AuthenticatedAdminAdvertisementsRoute
   '/admin/ai-assistant': typeof AuthenticatedAdminAiAssistantRoute
@@ -423,6 +443,7 @@ export interface FileRoutesByFullPath {
   '/tutor/students': typeof AuthenticatedTutorStudentsRoute
   '/tutors/$tutorId': typeof PublicTutorsTutorIdRoute
   '/api/public/health': typeof ApiPublicHealthRoute
+  '/api/public/stats': typeof ApiPublicStatsRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/recruitment/': typeof AuthenticatedRecruitmentIndexRoute
   '/tutor/': typeof AuthenticatedTutorIndexRoute
@@ -442,7 +463,9 @@ export interface FileRoutesByTo {
   '/apply': typeof PublicApplyRoute
   '/contact': typeof PublicContactRoute
   '/find-a-tutor': typeof PublicFindATutorRoute
+  '/privacy-policy': typeof PublicPrivacyPolicyRoute
   '/work-with-us': typeof PublicWorkWithUsRoute
+  '/terms-of-service': typeof PublicTermsOfServiceRoute
   '/api/chatbot': typeof ApiChatbotRoute
   '/admin/advertisements': typeof AuthenticatedAdminAdvertisementsRoute
   '/admin/ai-assistant': typeof AuthenticatedAdminAiAssistantRoute
@@ -499,7 +522,9 @@ export interface FileRoutesById {
   '/_public/apply': typeof PublicApplyRoute
   '/_public/contact': typeof PublicContactRoute
   '/_public/find-a-tutor': typeof PublicFindATutorRoute
+  '/_public/privacy-policy': typeof PublicPrivacyPolicyRoute
   '/_public/work-with-us': typeof PublicWorkWithUsRoute
+  '/_public/terms-of-service': typeof PublicTermsOfServiceRoute
   '/api/chatbot': typeof ApiChatbotRoute
   '/_public/': typeof PublicIndexRoute
   '/_authenticated/admin/advertisements': typeof AuthenticatedAdminAdvertisementsRoute
@@ -536,6 +561,7 @@ export interface FileRoutesById {
   '/_authenticated/tutor/students': typeof AuthenticatedTutorStudentsRoute
   '/_public/tutors/$tutorId': typeof PublicTutorsTutorIdRoute
   '/api/public/health': typeof ApiPublicHealthRoute
+  '/api/public/stats': typeof ApiPublicStatsRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/recruitment/': typeof AuthenticatedRecruitmentIndexRoute
   '/_authenticated/tutor/': typeof AuthenticatedTutorIndexRoute
@@ -705,6 +731,7 @@ export interface FileRouteTypes {
     | '/_authenticated/tutor/students'
     | '/_public/tutors/$tutorId'
     | '/api/public/health'
+    | '/api/public/stats'
     | '/_authenticated/admin/'
     | '/_authenticated/recruitment/'
     | '/_authenticated/tutor/'
@@ -717,6 +744,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   ApiChatbotRoute: typeof ApiChatbotRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
+  ApiPublicStatsRoute: typeof ApiPublicStatsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -873,6 +901,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/health'
       fullPath: '/api/public/health'
       preLoaderRoute: typeof ApiPublicHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/stats': {
+      id: '/api/public/stats'
+      path: '/api/public/stats'
+      fullPath: '/api/public/stats'
+      preLoaderRoute: typeof ApiPublicStatsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_public/tutors/$tutorId': {
@@ -1217,7 +1252,9 @@ interface PublicRouteChildren {
   PublicApplyRoute: typeof PublicApplyRoute
   PublicContactRoute: typeof PublicContactRoute
   PublicFindATutorRoute: typeof PublicFindATutorRoute
+  PublicPrivacyPolicyRoute: typeof PublicPrivacyPolicyRoute
   PublicWorkWithUsRoute: typeof PublicWorkWithUsRoute
+  PublicTermsOfServiceRoute: typeof PublicTermsOfServiceRoute
   PublicIndexRoute: typeof PublicIndexRoute
   PublicTutorsTutorIdRoute: typeof PublicTutorsTutorIdRoute
 }
@@ -1226,7 +1263,9 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicApplyRoute: PublicApplyRoute,
   PublicContactRoute: PublicContactRoute,
   PublicFindATutorRoute: PublicFindATutorRoute,
+  PublicPrivacyPolicyRoute: PublicPrivacyPolicyRoute,
   PublicWorkWithUsRoute: PublicWorkWithUsRoute,
+  PublicTermsOfServiceRoute: PublicTermsOfServiceRoute,
   PublicIndexRoute: PublicIndexRoute,
   PublicTutorsTutorIdRoute: PublicTutorsTutorIdRoute,
 }
@@ -1241,6 +1280,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   ApiChatbotRoute: ApiChatbotRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
+  ApiPublicStatsRoute: ApiPublicStatsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

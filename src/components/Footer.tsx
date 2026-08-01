@@ -2,12 +2,12 @@ import { Link } from "@tanstack/react-router";
 import {
   GraduationCap,
   Mail,
-  ArrowRight,
   Instagram,
   Linkedin,
+  Youtube,
   MessageSquare,
   Twitter,
-  Disc,
+  Facebook,
 } from "lucide-react";
 
 export function Footer() {
@@ -32,8 +32,8 @@ export function Footer() {
     {
       title: "Legal",
       links: [
-        { label: "Privacy Policy", to: "/about" }, // Standard static mappings
-        { label: "Terms of Service", to: "/about" },
+        { label: "Privacy Policy", to: "/privacy-policy" },
+        { label: "Terms of Service", to: "/terms-of-service" },
       ],
     },
   ];
@@ -60,7 +60,7 @@ export function Footer() {
             {/* Socials */}
             <div className="flex items-center gap-3 pt-2">
               <a
-                href="https://instagram.com"
+                href="https://www.instagram.com/alveyofficial/"
                 target="_blank"
                 rel="noreferrer"
                 className="bg-slate-800 hover:bg-blue-600 hover:text-white p-2 rounded-lg transition-all text-slate-400"
@@ -69,7 +69,7 @@ export function Footer() {
                 <Instagram className="h-4 w-4" />
               </a>
               <a
-                href="https://linkedin.com"
+                href="https://www.linkedin.com/company/alveyofficial"
                 target="_blank"
                 rel="noreferrer"
                 className="bg-slate-800 hover:bg-blue-600 hover:text-white p-2 rounded-lg transition-all text-slate-400"
@@ -78,7 +78,7 @@ export function Footer() {
                 <Linkedin className="h-4 w-4" />
               </a>
               <a
-                href="https://twitter.com"
+                href="https://x.com/AlveyOfficialX"
                 target="_blank"
                 rel="noreferrer"
                 className="bg-slate-800 hover:bg-blue-600 hover:text-white p-2 rounded-lg transition-all text-slate-400"
@@ -87,14 +87,29 @@ export function Footer() {
                 <Twitter className="h-4 w-4" />
               </a>
               <a
-                href="https://discord.com"
+                href="https://www.tiktok.com/@alveyofficialtt"
                 target="_blank"
                 rel="noreferrer"
                 className="bg-slate-800 hover:bg-blue-600 hover:text-white p-2 rounded-lg transition-all text-slate-400"
-                aria-label="Discord"
+                aria-label="TikTok"
               >
-                <Disc className="h-4 w-4" />
+                <MessageSquare className="h-4 w-4" />
               </a>
+              <a
+                href="https://www.youtube.com/@AlveyOfficial"
+                target="_blank"
+                rel="noreferrer"
+                className="bg-slate-800 hover:bg-blue-600 hover:text-white p-2 rounded-lg transition-all text-slate-400"
+                aria-label="YouTube"
+              >
+                <Youtube className="h-4 w-4" />
+              </a>
+              <span
+                className="bg-slate-800 p-2 rounded-lg transition-all text-slate-500 cursor-not-allowed"
+                aria-label="Facebook coming soon"
+              >
+                <Facebook className="h-4 w-4" />
+              </span>
             </div>
           </div>
 

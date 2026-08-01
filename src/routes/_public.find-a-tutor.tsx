@@ -95,6 +95,7 @@ function FindATutorPage() {
   const [filteredTutors, setFilteredTutors] = useState<Tutor[]>([]);
   const [subjects, setSubjects] = useState<string[]>([]);
   const [levels, setLevels] = useState<string[]>([]);
+  const [priceBounds, setPriceBounds] = useState({ min: 0, max: 0 });
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSubject, setSelectedSubject] = useState(searchParams.subject || "All");
@@ -103,7 +104,7 @@ function FindATutorPage() {
   const [subjectOpen, setSubjectOpen] = useState(false);
   const [levelOpen, setLevelOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
-  const [maxPrice, setMaxPrice] = useState<number>(100);
+  const [maxPrice, setMaxPrice] = useState<number>(0);
   const [onlyVerified, setOnlyVerified] = useState(false);
   const [sortBy, setSortBy] = useState("featured");
 
@@ -117,8 +118,29 @@ function FindATutorPage() {
       setTutors(tList);
       setSubjects(sList);
       setLevels(lList);
+
+      const rates = tList
+        .map((tutor) => Number(tutor.hourly_rate))
+        .filter((rate) => Number.isFinite(rate) && rate > 0);
+
+      if (rates.length > 0) {
+        const min = Math.min(...rates);
+        const max = Math.max(...rates);
+        setPriceBounds({ min, max });
+      } else {
+        setPriceBounds({ min: 0, max: 0 });
+      }
     })();
   }, []);
+
+  useEffect(() => {
+    if (priceBounds.max <= 0) return;
+
+    setMaxPrice((current) => {
+      if (current <= 0) return priceBounds.max;
+      return Math.min(Math.max(current, priceBounds.min), priceBounds.max);
+    });
+  }, [priceBounds.min, priceBounds.max]);
 
   useEffect(() => {
     if (searchParams.level) setSelectedLevel(searchParams.level);
@@ -191,7 +213,7 @@ function FindATutorPage() {
     setSelectedSubject("All");
     setSelectedLevel("All");
     setSelectedLanguage("All");
-    setMaxPrice(100);
+    setMaxPrice(priceBounds.max || 0);
     setOnlyVerified(false);
     setSortBy("featured");
   };
@@ -431,10 +453,11 @@ function FindATutorPage() {
               </div>
               <input
                 type="range"
-                min="30"
-                max="100"
-                step="5"
-                value={maxPrice}
+                min={priceBounds.min || 0}
+                max={priceBounds.max || 100}
+                step="1"
+                value={maxPrice || priceBounds.max || 0}
+                disabled={priceBounds.max <= 0}
                 onChange={(e) => setMaxPrice(Number(e.target.value))}
                 className="w-full accent-blue-600 cursor-pointer"
               />

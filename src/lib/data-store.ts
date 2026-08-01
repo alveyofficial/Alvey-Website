@@ -707,26 +707,32 @@ export const DataStore = {
   },
 
   getHomepageStats: async function () {
+    try {
+      const response = await fetch("/api/public/stats", {
+        headers: {
+          accept: "application/json",
+        },
+      });
+
+      if (response.ok) {
+        return await response.json();
+      }
+    } catch { }
+
     const tutors = await this.getAllTutors();
-    const docs = await listDocuments(COLLECTIONS.TUTOR_PROFILES);
+    const docs = await listDocuments(COLLECTIONS.USERS, [Query.equal("active", true)]);
     const subjectSet = new Set<string>();
 
     tutors.forEach((t: any) => {
       (t.subjects || []).forEach((s: string) => subjectSet.add(s));
     });
 
-    const rated = tutors.filter(
-      (t: any) => typeof t.rating_avg === "number"
-    );
+    const rated = tutors.filter((t: any) => typeof t.rating_avg === "number");
 
     const rating =
       rated.length > 0
-        ? rated.reduce(
-          (sum: number, t: Tutor) => sum + t.rating_avg,
-          0
-        ) / rated.length
+        ? rated.reduce((sum: number, t: Tutor) => sum + t.rating_avg, 0) / rated.length
         : 0;
-
 
     return {
       tutors: tutors.length,
@@ -739,6 +745,17 @@ export const DataStore = {
 
   // --- SUBJECTS & LEVELS ---
   getSubjects: async (): Promise<string[]> => {
+    try {
+      const tutors = await DataStore.getTutors();
+      const tutorSubjects = Array.from(
+        new Set(
+          tutors.flatMap((tutor) => tutor.subjects || []).filter((subject) => subject.trim()),
+        ),
+      ).sort((a, b) => a.localeCompare(b));
+
+      if (tutorSubjects.length > 0) return tutorSubjects;
+    } catch { }
+
     try {
       const docs = await listDocuments(COLLECTIONS.SUBJECTS, [Query.equal("active", true)]);
       if (docs.length > 0) return docs.map((d) => safeString(d.name)).filter(Boolean);
