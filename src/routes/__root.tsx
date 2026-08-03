@@ -76,13 +76,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Alvey" },
-      { name: "description", content: "Alvey tutoring platform" },
+      // Fallback title / description — individual routes override these
+      { title: "Alvey · Elite Private Tutoring" },
+      {
+        name: "description",
+        content:
+          "Connect with elite, verified private tutors for IGCSE, A-Level, IB, SAT, and university subjects. Personalised tutoring matched to your goals.",
+      },
       { name: "author", content: "Alvey" },
-      { property: "og:title", content: "Alvey" },
-      { property: "og:description", content: "Alvey tutoring platform" },
+      // Open Graph fallbacks
+      { property: "og:site_name", content: "Alvey" },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: "https://alvey.study/logo.webp" },
+      // Twitter / X fallbacks
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:site", content: "@alvey_study" },
     ],
     links: [
       {
@@ -110,6 +118,46 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "icon",
         href: "/favicon.ico",
         type: "image/x-icon",
+      },
+    ],
+    // Site-wide JSON-LD: Organization + WebSite
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "Alvey",
+          url: "https://alvey.study",
+          logo: "https://alvey.study/logo.webp",
+          email: "support@alvey.study",
+          contactPoint: {
+            "@type": "ContactPoint",
+            email: "support@alvey.study",
+            contactType: "customer support",
+            availableLanguage: "English",
+          },
+        }),
+      },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "Alvey",
+          url: "https://alvey.study",
+          description:
+            "Connect with elite, verified private tutors for IGCSE, A-Level, IB, SAT, and university subjects.",
+          potentialAction: {
+            "@type": "SearchAction",
+            target: {
+              "@type": "EntryPoint",
+              urlTemplate:
+                "https://alvey.study/find-a-tutor?subject={search_term_string}",
+            },
+            "query-input": "required name=search_term_string",
+          },
+        }),
       },
     ],
   }),

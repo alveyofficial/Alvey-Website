@@ -10,8 +10,18 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "motion/react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { seoMeta, seoLinks } from "@/lib/seo";
 
 export const Route = createFileRoute("/_public/work-with-us")({
+  head: () => ({
+    meta: seoMeta({
+      title: "Work With Us",
+      description:
+        "Join the Alvey team as a tutor support specialist, content creator, or community manager. Help us connect students with elite academic tutors.",
+      path: "/work-with-us",
+    }),
+    links: seoLinks("/work-with-us"),
+  }),
   component: WorkWithUs,
 });
 

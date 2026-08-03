@@ -3,21 +3,25 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataStore } from "@/lib/data-store";
+import { seoMeta, seoLinks, jsonLdScript, websiteSchema, organizationSchema, serviceSchema } from "@/lib/seo";
 import { motion } from "motion/react";
+
+const HOME_DESCRIPTION =
+  "Connect with elite, verified private tutors for IGCSE, A-Level, IB, SAT, and university subjects. Personalised tutoring matched to your goals.";
 
 export const Route = createFileRoute("/_public/")({
   head: () => ({
-    meta: [
-      { title: "Alvey · Find the right tutor" },
-      {
-        name: "description",
-        content: "A modern tutoring platform connecting students with qualified tutors.",
-      },
-      { property: "og:title", content: "Alvey" },
-      {
-        property: "og:description",
-        content: "A modern tutoring platform connecting students with qualified tutors.",
-      },
+    meta: seoMeta({
+      title: "Alvey · Elite Private Tutoring",
+      description: HOME_DESCRIPTION,
+      path: "/",
+      exactTitle: true,
+    }),
+    links: seoLinks("/"),
+    scripts: [
+      jsonLdScript(websiteSchema()),
+      jsonLdScript(organizationSchema()),
+      jsonLdScript(serviceSchema()),
     ],
   }),
   component: Index,

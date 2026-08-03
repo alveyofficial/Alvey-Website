@@ -1,14 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { seoMeta, seoLinks } from "@/lib/seo";
 
 export const Route = createFileRoute("/_public/privacy-policy")({
   head: () => ({
-    meta: [
-      { title: "Privacy Policy · Alvey" },
-      {
-        name: "description",
-        content: "How Alvey collects, uses, protects, and shares personal information.",
-      },
-    ],
+    meta: seoMeta({
+      title: "Privacy Policy",
+      description: "How Alvey collects, uses, protects, and shares personal information.",
+      path: "/privacy-policy",
+    }),
+    links: seoLinks("/privacy-policy"),
   }),
   component: PrivacyPolicyPage,
 });

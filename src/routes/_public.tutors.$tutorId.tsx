@@ -16,32 +16,55 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DataStore, Tutor, Review } from "@/lib/data-store";
+import { seoMeta, seoLinks, jsonLdScript, tutorPersonSchema, SITE } from "@/lib/seo";
 
 export const Route = createFileRoute("/_public/tutors/$tutorId")({
-  head: ({ params }) => ({
-    meta: [
-      { title: `Tutor Profile · Alvey` },
-      {
-        name: "description",
-        content:
-          "Learn more about this elite private academic tutor, including curriculum specialties, student reviews, and availability.",
-      },
-    ],
-  }),
+  loader: async ({ params }) => {
+    // Fetch tutor server-side so head() can use the real name/description.
+    try {
+      const tutor = await DataStore.getTutorById(params.tutorId);
+      return { tutor };
+    } catch {
+      return { tutor: null };
+    }
+  },
+  head: ({ loaderData, params }) => {
+    const tutor = loaderData?.tutor;
+    const name = tutor?.name ?? "Tutor Profile";
+    const headline = tutor?.headline ?? "";
+    const description = tutor
+      ? `${headline ? headline + " — " : ""}Learn more about ${name} on Alvey: subjects, levels, reviews, and availability.`
+      : "Learn more about this elite private academic tutor, including curriculum specialties, student reviews, and availability.";
+    const image = tutor?.avatar_url ?? SITE.ogImage;
+    const path = `/tutors/${params.tutorId}`;
+
+    return {
+      meta: seoMeta({
+        title: tutor ? `${name} · Private Tutor` : "Tutor Profile",
+        description,
+        path,
+        image,
+        type: "profile",
+      }),
+      links: seoLinks(path),
+      scripts: tutor ? [jsonLdScript(tutorPersonSchema(tutor))] : [],
+    };
+  },
   component: TutorProfilePage,
 });
 
 function TutorProfilePage() {
   const { tutorId } = useParams({ from: "/_public/tutors/$tutorId" });
-  const [tutor, setTutor] = useState<Tutor | null>(null);
+  const { tutor: initialTutor } = Route.useLoaderData();
+  const [tutor, setTutor] = useState<Tutor | null>(initialTutor ?? null);
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialTutor);
 
   useEffect(() => {
     (async () => {
       setLoading(true);
       const [tRecord, rList] = await Promise.all([
-        DataStore.getTutorById(tutorId),
+        initialTutor ? Promise.resolve(initialTutor) : DataStore.getTutorById(tutorId),
         DataStore.getReviews(tutorId),
       ]);
       setTutor(tRecord);

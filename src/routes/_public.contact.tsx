@@ -2,8 +2,18 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import { seoMeta, seoLinks } from "@/lib/seo";
 
 export const Route = createFileRoute("/_public/contact")({
+  head: () => ({
+    meta: seoMeta({
+      title: "Contact Us",
+      description:
+        "Have a question about tutoring on Alvey? Send us a message and our support team will get back to you shortly.",
+      path: "/contact",
+    }),
+    links: seoLinks("/contact"),
+  }),
   component: Contact,
 });
 

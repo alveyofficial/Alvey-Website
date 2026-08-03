@@ -1,14 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { seoMeta, seoLinks } from "@/lib/seo";
 
 export const Route = createFileRoute("/_public/terms-of-service")({
   head: () => ({
-    meta: [
-      { title: "Terms of Service · Alvey" },
-      {
-        name: "description",
-        content: "Terms that govern tutors, students, payments, refunds, and platform use on Alvey.",
-      },
-    ],
+    meta: seoMeta({
+      title: "Terms of Service",
+      description:
+        "Terms that govern tutors, students, payments, refunds, and platform use on Alvey.",
+      path: "/terms-of-service",
+    }),
+    links: seoLinks("/terms-of-service"),
   }),
   component: TermsOfServicePage,
 });

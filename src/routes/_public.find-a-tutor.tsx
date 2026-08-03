@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { DataStore, Tutor } from "@/lib/data-store";
+import { seoMeta, seoLinks, jsonLdScript, serviceSchema } from "@/lib/seo";
 
 const languageOptions = [
   "Afrikaans",
@@ -66,14 +67,14 @@ const languageOptions = [
 
 export const Route = createFileRoute("/_public/find-a-tutor")({
   head: () => ({
-    meta: [
-      { title: "Find a Tutor · Alvey" },
-      {
-        name: "description",
-        content:
-          "Search and filter our elite marketplace to find your perfect, verified private academic tutor.",
-      },
-    ],
+    meta: seoMeta({
+      title: "Find a Tutor",
+      description:
+        "Search and filter our elite marketplace to find your perfect, verified private academic tutor for IGCSE, A-Level, IB, SAT, university, and more.",
+      path: "/find-a-tutor",
+    }),
+    links: seoLinks("/find-a-tutor"),
+    scripts: [jsonLdScript(serviceSchema())],
   }),
   validateSearch: (search: Record<string, unknown>) => ({
     level:

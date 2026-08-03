@@ -11,8 +11,18 @@ import { ID, appwrite } from "@/integrations/appwrite/client";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "motion/react";
+import { seoMeta, seoLinks } from "@/lib/seo";
 
 export const Route = createFileRoute("/_public/apply")({
+  head: () => ({
+    meta: seoMeta({
+      title: "Apply as a Tutor",
+      description:
+        "Join Alvey as a verified private tutor. Apply with your academic credentials, subject specialties, and teaching experience.",
+      path: "/apply",
+    }),
+    links: seoLinks("/apply"),
+  }),
   component: Apply,
 });
 
