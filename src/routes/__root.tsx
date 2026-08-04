@@ -77,7 +77,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       // Fallback title / description — individual routes override these
-      { title: "Alvey · Elite Private Tutoring" },
+      { title: "Alvey | Find the Right Tutor" },
       {
         name: "description",
         content:
