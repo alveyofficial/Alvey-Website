@@ -12,7 +12,7 @@ const HOME_DESCRIPTION =
 export const Route = createFileRoute("/_public/")({
   head: () => ({
     meta: seoMeta({
-      title: "Alvey · Elite Private Tutoring",
+      title: "Alvey | Find the Right Tutor",
       description: HOME_DESCRIPTION,
       path: "/",
       exactTitle: true,
@@ -30,43 +30,43 @@ export const Route = createFileRoute("/_public/")({
 const FALLBACK_LEVELS = [
   {
     name: "Primary",
-    description: "",
+    description: "Primary school level subjects. (Kindergarten to grade 5-6)",
     slug: "primary",
   },
   {
-    name: "Secondary",
-    description: "",
-    slug: "secondary",
+    name: "Middle School",
+    description: "Middle school level subjects (grades 6-8)",
+    slug: "middle school",
   },
   {
-    name: "IGCSE",
-    description: "",
-    slug: "igcse",
+    name: "High School",
+    description: "High school/Upper Secondary/IGCSE-GCSE",
+    slug: "high school",
   },
   {
-    name: "GCSE",
-    description: "",
-    slug: "gcse",
+    name: "College/A-Levels",
+    description: "College/High school/A-Levels",
+    slug: "College",
   },
   {
-    name: "A-Level",
-    description: "",
-    slug: "a-level",
-  },
-  {
-    name: "SAT",
-    description: "",
-    slug: "sat",
+    name: "Test Prep",
+    description: "SAT/ACT/IELTS/TOEFL etc",
+    slug: "Test Prep",
   },
   {
     name: "University",
-    description: "",
+    description: "Bachelor's/Master's/PhD",
     slug: "university",
   },
   {
-    name: "Professional",
-    description: "",
+    name: "Professional Certificates",
+    description: "ACCA/CFA/PMP/AWS etc",
     slug: "professional",
+  },
+  {
+    name: "Languages",
+    description: "Languages",
+    slug: "Languages",
   },
 ];
 type Level = {
