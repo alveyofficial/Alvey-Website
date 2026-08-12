@@ -222,7 +222,7 @@ function FindATutorPage() {
   return (
     <>
       {/* Hero Header */}
-      <section className="bg-slate-50 dark:bg-slate-900/10 py-12 border-b border-border/40">
+      <section className="section-blend bg-slate-50 dark:bg-slate-900/10 py-12 border-b border-border/40 [--section-blend-color:#f8fafc] dark:[--section-blend-color:#0f172a1a]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-3 text-center md:text-left md:flex md:items-center md:justify-between">
           <div className="space-y-1">
             <h1 className="text-3xl font-extrabold tracking-tight">Find the Right Tutor</h1>

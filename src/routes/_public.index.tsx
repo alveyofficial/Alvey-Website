@@ -243,7 +243,7 @@ duration-300
             <div>
               <img
                 src="/logo.webp"
-                className=" w-64 md:w-80 lg:w-[490px] object-contain drop-shadow-[0_30px_50px_rgba(22,78,94,.25)] animate-float"
+                className="w-64 md:w-80 lg:w-[490px] object-contain drop-shadow-[0_30px_50px_rgba(22,78,94,.25)] animate-float dark:[filter:brightness(0)_saturate(100%)_invert(90%)_sepia(30%)_saturate(684%)_hue-rotate(145deg)_brightness(102%)_contrast(101%)]"
               />
             </div>
           </motion.div>
@@ -253,7 +253,7 @@ duration-300
       </section>
 
       {/* Statistics Section */}
-      <section className="py-20 bg-white dark:bg-[#08131A]">
+      <section className="section-blend py-20 bg-white dark:bg-[#08131A] [--section-blend-color:white] dark:[--section-blend-color:#08131A]">
         <motion.div
           initial="hidden"
           whileInView="visible"
@@ -340,7 +340,7 @@ duration-300
       </section>
 
       {/* How it Works */}
-      <section className="py-32 bg-white dark:bg-[#08131A]">
+      <section className="section-blend py-32 bg-white dark:bg-[#08131A] [--section-blend-color:white] dark:[--section-blend-color:#08131A]">
 
         <div className="max-w-7xl mx-auto px-8">
 
@@ -488,7 +488,7 @@ duration-300
         </div>
 
       </section>
-      <footer className="border-t bg-white dark:bg-[#08131A] dark:border-slate-800">
+      <footer className="section-blend border-t bg-white dark:bg-[#08131A] dark:border-slate-800 [--section-blend-color:white] dark:[--section-blend-color:#08131A]">
 
         <div className="max-w-7xl mx-auto px-8 py-16">
 
