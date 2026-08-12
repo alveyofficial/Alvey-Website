@@ -161,6 +161,27 @@ h6 {
   }
 }
 
+@layer components {
+  .section-blend {
+    position: relative;
+  }
+
+  .section-blend::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(-1 * var(--section-blend-height, 4rem));
+    height: var(--section-blend-height, 4rem);
+    pointer-events: none;
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      var(--section-blend-color, transparent) 100%
+    );
+  }
+}
+
 @keyframes float {
 
   0% {

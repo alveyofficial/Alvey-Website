@@ -127,7 +127,7 @@ export function Navbar() {
           />
 
           <div className="leading-none">
-            <h1 className="font-black text-xl tracking-tight text-[#164E5E]">
+            <h1 className="font-black text-xl tracking-tight text-[#164E5E] dark:text-cyan-300">
               ALVEY
             </h1>
 
