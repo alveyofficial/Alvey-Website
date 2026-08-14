@@ -1,4 +1,13 @@
-import { Account, Client, Databases, ID, OAuthProvider, Storage, Teams } from "appwrite";
+import {
+  Account,
+  Client,
+  Databases,
+  ID,
+  OAuthProvider,
+  Storage,
+  Teams,
+  Functions,
+} from "appwrite";
 
 const viteEnv =
   typeof import.meta !== "undefined"
@@ -46,6 +55,7 @@ function createClientInstance() {
     databases: new Databases(client),
     storage: new Storage(client),
     teams: new Teams(client),
+    functions: new Functions(client),
   };
 }
 
@@ -136,7 +146,10 @@ export const appwrite = {
     }: {
       email: string;
       password: string;
-      options?: { emailRedirectTo?: string; data?: Record<string, unknown> };
+      options?: {
+        emailRedirectTo?: string;
+        data?: Record<string, unknown>;
+      };
     }) {
       try {
         const name = String(
@@ -145,15 +158,42 @@ export const appwrite = {
           email.split("@")[0] ??
           "Alvey User"
         );
-        await getClient().account.create(ID.unique(), email, password, name);
-        await getClient().account.createEmailPasswordSession(email, password);
+
+        await getClient().account.create(
+          ID.unique(),
+          email,
+          password,
+          name
+        );
+
+        // Create session so we can send the verification email.
+        await getClient().account.createEmailPasswordSession(
+          email,
+          password
+        );
+
+        await getClient().account.createVerification(
+          options?.emailRedirectTo ??
+          `${window.location.origin}/verify-email`
+        );
+
         const user = await getCurrentUser();
+
         emitAuthChange(user ? { user } : null);
-        return { data: { session: user ? { user } : null }, error: null };
+
+        return {
+          data: {
+            session: user ? { user } : null,
+          },
+          error: null,
+        };
       } catch (error) {
         return {
           data: { session: null },
-          error: error instanceof Error ? error : new Error(String(error)),
+          error:
+            error instanceof Error
+              ? error
+              : new Error(String(error)),
         };
       }
     },
@@ -180,6 +220,20 @@ export const appwrite = {
         return { error: null };
       } catch (error) {
         return { error: error instanceof Error ? error : new Error(String(error)) };
+      }
+    },
+    async updateVerification(userId: string, secret: string) {
+      try {
+        await getClient().account.updateVerification(userId, secret);
+
+        return { error: null };
+      } catch (error) {
+        return {
+          error:
+            error instanceof Error
+              ? error
+              : new Error(String(error)),
+        };
       }
     },
     async signInWithOAuth(
@@ -222,6 +276,9 @@ export const appwrite = {
       };
     },
   },
+  get functions() {
+    return getClient().functions;
+  }
 };
 
 export { ID };
