@@ -15,8 +15,8 @@ export const SITE = {
   name: "Alvey",
   url: "https://alvey.study",
   description:
-    "Connect with elite, verified private tutors for IGCSE, A-Level, IB, SAT, and university subjects. Personalised tutoring matched to your goals.",
-  twitterHandle: "@alvey_study",
+    "Find a tutor or Find Students. Alvey makes it easy for both! We connect studetns and tutors all over the world!",
+  twitterHandle: "@AlveyOfficialX",
   ogImage: "https://alvey.study/logo.webp",
   email: "support@alvey.study",
 } as const;

@@ -103,16 +103,16 @@ function AuthPage() {
       if (error) throw error;
 
       const user = await getCurrentUser();
-      if (!user) throw new Error("Failed to load user.");
+      if (!user) throw new Error("Failed to load user.. this isnt supposed to happen..");
       await ensureUserRecord();
 
       const uid = (user as any).$id || (user as any).id;
       const roles = await DataStore.getUserRoles(uid);
       redirectByRole(roles, navigate);
-      toast.success("Welcome back!");
+      toast.success("Yippiee Welcome backk!!");
     } catch (err: any) {
       console.error(err);
-      toast.error(err?.message || "Invalid email or password.");
+      toast.error(err?.message || "Are you typing too fast? Invalid email or password! :(");
     } finally {
       setLoading(false);
     }
@@ -336,7 +336,7 @@ function AuthPage() {
                 <span className="mr-2 flex h-5 w-5 items-center justify-center rounded bg-[#0A66C2] text-xs font-bold text-white">
                   in
                 </span>
-                Continue with LinkedIn
+                Continue with LinkedIn (wait this doesnt work...)
               </Button>
 
               <Button
@@ -398,9 +398,9 @@ function ForgotPasswordForm({
           <ArrowLeft className="h-4 w-4" />
           Back to sign in
         </button>
-        <CardTitle className="text-xl">Forgot your password?</CardTitle>
+        <CardTitle className="text-xl">Forgot your password? Really...?</CardTitle>
         <CardDescription>
-          Enter the email address linked to your account and we'll send you a password reset link.
+          Enter the email address linked to your account and we'll send you a password reset link. ... maybe.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -449,7 +449,7 @@ function ForgotSentCard({ onBack }: { onBack: () => void }) {
         </div>
         <CardTitle className="text-xl">Check your inbox</CardTitle>
         <CardDescription className="mt-1">
-          We've sent a password reset link to your email. The link expires in 1 hour.
+          Hmm Okay..We've sent a password reset link to your email. The link expires in 1 hour.
           <br />
           <span className="text-xs mt-2 block text-muted-foreground/70">
             Didn't receive it? Check your spam folder.

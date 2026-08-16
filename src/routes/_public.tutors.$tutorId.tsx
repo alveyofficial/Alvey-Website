@@ -34,10 +34,10 @@ export const Route = createFileRoute("/_public/tutors/$tutorId")({
     const headline = tutor?.headline ?? "";
     const description = tutor
       ? `${headline ? headline + " — " : ""}Learn more about ${name} on Alvey: subjects, levels, reviews, and availability.`
-      : "Learn more about this elite private academic tutor, including curriculum specialties, student reviews, and availability.";
+;
     const image = tutor?.avatar_url ?? SITE.ogImage;
     const path = `/tutors/${params.tutorId}`;
-
+      : "Learn more about this elite private academic tutor, including curriculum specialties, student reviews, and availability."
     return {
       meta: seoMeta({
         title: tutor ? `${name} · Private Tutor` : "Tutor Profile",
@@ -307,14 +307,13 @@ function TutorProfilePage() {
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl h-11 shadow-md shadow-blue-500/10"
               >
                 <Link to="/contact" search={{ tutorId: tutor.id }}>
-                  Book Lesson Package
+                  I .. I want! Book now!!!
                 </Link>
               </Button>
             </div>
 
             <div className="text-[10px] text-center text-muted-foreground leading-relaxed">
-              *Package lessons include 24/7 student chat support, shared learning boards, and
-              syllabus alignments.
+              Make sure to review our policies, you can contact us for any issues you face.
             </div>
           </Card>
         </div>

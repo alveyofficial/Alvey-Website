@@ -70,7 +70,7 @@ export const Route = createFileRoute("/_public/find-a-tutor")({
     meta: seoMeta({
       title: "Find a Tutor",
       description:
-        "Search and filter our elite marketplace to find your perfect, verified private academic tutor for IGCSE, A-Level, IB, SAT, university, and more.",
+        "Find an online Tutor, A Private tutor just for you!IGCSE Tutors, A-Level Tutors, IB Tutors, SAT Tutors, University Tutors, and more!",
       path: "/find-a-tutor",
     }),
     links: seoLinks("/find-a-tutor"),

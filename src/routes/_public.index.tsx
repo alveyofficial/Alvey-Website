@@ -7,7 +7,7 @@ import { seoMeta, seoLinks, jsonLdScript, websiteSchema, organizationSchema, ser
 import { motion } from "motion/react";
 
 const HOME_DESCRIPTION =
-  "Connect with elite, verified private tutors for IGCSE, A-Level, IB, SAT, and university subjects. Personalised tutoring matched to your goals.";
+  "Find a tutor or Find Students. Alvey makes it easy for both! We connect studetns and tutors all over the world, Weather youre doing IGCSE, GCSE, A-Level, IB, SAT, or University subjects, Alvey has you covered!";
 
 export const Route = createFileRoute("/_public/")({
   head: () => ({
@@ -164,8 +164,8 @@ function Index() {
               variants={fadeInUp}
               className="text-xl text-muted-foreground dark:text-slate-300 max-w-xl leading-8"
             >
-              Learning shouldn't feel stressful.
-              Discover trusted tutors for every stage of your education.
+              Learning shouldn't feel stressful, BUT it does.. :(
+              Sooo... Find yourself a Tutor right away!
             </motion.p>
 
             <motion.div
@@ -263,7 +263,7 @@ duration-300
           {[
             {
               value: `${stats.tutors}`,
-              label: "Qualified Tutors",
+              label: "Peak Tutors",
             },
             {
               value: `${stats.members}`,
@@ -360,22 +360,22 @@ duration-300
               {
                 num: "01",
                 title: "Browse",
-                desc: "Search tutors by subject and level."
+                desc: "Search tutors by subject and level. Its easy.. Trust me!"
               },
               {
                 num: "02",
                 title: "Compare",
-                desc: "Read tutor profiles and reviews."
+                desc: "Read tutor profiles and reviews. Be judgy, its fun!"
               },
               {
                 num: "03",
                 title: "Connect",
-                desc: "Contact us and schedule lessons."
+                desc: "Contact us and schedule a demo. Test us and the tutor.."
               },
               {
                 num: "04",
-                title: "Learn",
-                desc: "Improve faster with expert guidance."
+                title: "Flex",
+                desc: "Now that you easily got a tutor, Flex to your friends know about us!"
               }
             ].map((step) => (
               <Card
