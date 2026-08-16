@@ -3,12 +3,16 @@
  *
  * Generates public/sitemap.xml at build time.
  *
- * Static routes are hard-coded below.
- * Dynamic tutor routes are fetched from Appwrite via the node-appwrite SDK;
- * if Appwrite is unreachable (e.g. no API key in CI) the script falls back to
- * the hard-coded default tutor IDs that ship with the app.
+ * Uses the Appwrite REST API directly (plain fetch) — no SDK dependency.
+ * Requires these environment variables, which should already be set in your
+ * Appwrite Sites build environment:
  *
- * Run:  bun run generate-sitemap   (or npx tsx scripts/generate-sitemap.ts)
+ *   APPWRITE_API_KEY          — server API key (required)
+ *   VITE_APPWRITE_PROJECT_ID  — project ID         (default: "tutorslink")
+ *   VITE_APPWRITE_DATABASE_ID — database ID        (default: "Database")
+ *   VITE_APPWRITE_ENDPOINT    — API endpoint       (default: https://fra.cloud.appwrite.io/v1)
+ *
+ * Run:  bun scripts/generate-sitemap.ts
  * Auto: called by `bun run build` via the "prebuild" hook in package.json.
  */
 
@@ -17,80 +21,77 @@ import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const ROOT = join(__dirname, "..");
-const OUTPUT = join(ROOT, "public", "sitemap.xml");
+const OUTPUT = join(__dirname, "..", "public", "sitemap.xml");
 
 const BASE_URL = "https://alvey.study";
 const NOW = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
 
+// ─── Config (read from env) ───────────────────────────────────────────────────
+
+const ENDPOINT =
+  process.env.VITE_APPWRITE_ENDPOINT ?? "https://fra.cloud.appwrite.io/v1";
+const PROJECT_ID = process.env.VITE_APPWRITE_PROJECT_ID ?? "tutorslink";
+const DATABASE_ID = process.env.VITE_APPWRITE_DATABASE_ID ?? "Database";
+const API_KEY = process.env.APPWRITE_API_KEY ?? "";
+
 // ─── Static routes ────────────────────────────────────────────────────────────
-// changefreq + priority follow standard SEO conventions:
-//   homepage: daily / 1.0   landing pages: weekly / 0.8   legal: monthly / 0.3
 
 const STATIC_ROUTES: { path: string; changefreq: string; priority: string }[] = [
-  { path: "/",                 changefreq: "daily",   priority: "1.0" },
-  { path: "/find-a-tutor",    changefreq: "daily",   priority: "0.9" },
-  { path: "/apply",           changefreq: "monthly", priority: "0.7" },
-  { path: "/work-with-us",    changefreq: "monthly", priority: "0.7" },
-  { path: "/contact",         changefreq: "monthly", priority: "0.6" },
-  { path: "/privacy-policy",  changefreq: "monthly", priority: "0.3" },
-  { path: "/terms-of-service",changefreq: "monthly", priority: "0.3" },
+  { path: "/",                  changefreq: "daily",   priority: "1.0" },
+  { path: "/find-a-tutor",     changefreq: "daily",   priority: "0.9" },
+  { path: "/apply",            changefreq: "monthly", priority: "0.7" },
+  { path: "/work-with-us",     changefreq: "monthly", priority: "0.7" },
+  { path: "/contact",          changefreq: "monthly", priority: "0.6" },
+  { path: "/privacy-policy",   changefreq: "monthly", priority: "0.3" },
+  { path: "/terms-of-service", changefreq: "monthly", priority: "0.3" },
 ];
 
-// ─── Default / fallback tutor IDs ─────────────────────────────────────────────
-// These match the defaultTutors array in src/lib/data-store.ts.
-const FALLBACK_TUTOR_IDS = ["tutor_1", "tutor_2", "tutor_3", "tutor_4"];
+// ─── Fetch tutor IDs via REST API ─────────────────────────────────────────────
 
-// ─── Fetch live tutor IDs from Appwrite ───────────────────────────────────────
 async function fetchTutorIds(): Promise<string[]> {
-  const endpoint =
-    process.env.APPWRITE_ENDPOINT || "https://fra.cloud.appwrite.io/v1";
-  const projectId =
-    process.env.VITE_APPWRITE_PROJECT_ID ||
-    process.env.APPWRITE_PROJECT_ID ||
-    "tutorslink";
-  const apiKey = process.env.APPWRITE_API_KEY || "";
-  const databaseId =
-    process.env.VITE_APPWRITE_DATABASE_ID ||
-    process.env.APPWRITE_DATABASE_ID ||
-    "Database";
-
-  if (!apiKey) {
-    console.warn(
-      "[sitemap] APPWRITE_API_KEY not set — using fallback tutor IDs.",
+  if (!API_KEY) {
+    throw new Error(
+      "[sitemap] APPWRITE_API_KEY is not set. " +
+      "Add it as a build environment variable in Appwrite Sites.",
     );
-    return FALLBACK_TUTOR_IDS;
   }
 
-  try {
-    // Dynamically import to avoid hard-failing when the package isn't installed.
-    const { Client, Databases, Query } = await import("node-appwrite");
+  const url = new URL(
+    `${ENDPOINT}/databases/${DATABASE_ID}/collections/tutor_profiles/documents`,
+  );
+  url.searchParams.set("queries[]", JSON.stringify(["equal", "active", [true]]));
+  url.searchParams.set("queries[]", JSON.stringify(["limit", 500]));
 
-    const client = new Client()
-      .setEndpoint(endpoint)
-      .setProject(projectId)
-      .setKey(apiKey);
+  const res = await fetch(url.toString(), {
+    headers: {
+      "X-Appwrite-Project": PROJECT_ID,
+      "X-Appwrite-Key": API_KEY,
+      "Content-Type": "application/json",
+    },
+  });
 
-    const databases = new Databases(client);
-    const result = await databases.listDocuments(databaseId, "tutor_profiles", [
-      Query.equal("active", true),
-      Query.limit(500),
-    ]);
-
-    const ids = result.documents.map((d) => d.$id as string).filter(Boolean);
-    if (ids.length === 0) {
-      console.warn("[sitemap] No active tutors returned — using fallback IDs.");
-      return FALLBACK_TUTOR_IDS;
-    }
-    console.log(`[sitemap] Found ${ids.length} active tutor(s) in Appwrite.`);
-    return ids;
-  } catch (err) {
-    console.warn("[sitemap] Appwrite fetch failed — using fallback IDs.", err);
-    return FALLBACK_TUTOR_IDS;
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(
+      `[sitemap] Appwrite API returned ${res.status}: ${body}`,
+    );
   }
+
+  const data = (await res.json()) as { documents: { $id: string }[] };
+  const ids = data.documents.map((d) => d.$id).filter(Boolean);
+
+  if (ids.length === 0) {
+    throw new Error(
+      "[sitemap] Appwrite returned 0 active tutors. " +
+      "Check that the tutor_profiles collection has documents with active=true.",
+    );
+  }
+
+  console.log(`[sitemap] Found ${ids.length} active tutor(s).`);
+  return ids;
 }
 
-// ─── XML builders ─────────────────────────────────────────────────────────────
+// ─── XML builder ──────────────────────────────────────────────────────────────
 
 function urlEntry(
   loc: string,
@@ -115,23 +116,12 @@ async function main() {
 
   const entries: string[] = [];
 
-  // Static pages
   for (const route of STATIC_ROUTES) {
-    entries.push(
-      urlEntry(
-        `${BASE_URL}${route.path}`,
-        NOW,
-        route.changefreq,
-        route.priority,
-      ),
-    );
+    entries.push(urlEntry(`${BASE_URL}${route.path}`, NOW, route.changefreq, route.priority));
   }
 
-  // Dynamic tutor profile pages
   for (const id of tutorIds) {
-    entries.push(
-      urlEntry(`${BASE_URL}/tutors/${id}`, NOW, "weekly", "0.8"),
-    );
+    entries.push(urlEntry(`${BASE_URL}/tutors/${id}`, NOW, "weekly", "0.8"));
   }
 
   const xml = [
@@ -139,7 +129,7 @@ async function main() {
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
     ...entries,
     "</urlset>",
-    "", // trailing newline
+    "",
   ].join("\n");
 
   writeFileSync(OUTPUT, xml, "utf-8");
@@ -147,6 +137,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error("[sitemap] Fatal error:", err);
+  console.error(err instanceof Error ? err.message : err);
   process.exit(1);
 });
