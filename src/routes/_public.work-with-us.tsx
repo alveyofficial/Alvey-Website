@@ -92,6 +92,20 @@ function WorkWithUs() {
           updatedAt: now,
         },
       });
+
+      await appwrite.functions.createExecution(
+        "website-notifications",
+        JSON.stringify({
+          type: "recruitment_application",
+          fullName,
+          emailAddress,
+          discordUsername,
+          countryOfResidence,
+          currentEducationLevel: education,
+          role,
+          hoursPerWeek,
+        }),
+      );
       setSuccess(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err: any) {

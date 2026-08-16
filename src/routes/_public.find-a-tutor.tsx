@@ -28,42 +28,6 @@ import { cn } from "@/lib/utils";
 import { DataStore, Tutor } from "@/lib/data-store";
 import { seoMeta, seoLinks, jsonLdScript, serviceSchema } from "@/lib/seo";
 
-const languageOptions = [
-  "Afrikaans",
-  "Amharic",
-  "Arabic",
-  "Bengali",
-  "Chinese (Cantonese)",
-  "Chinese (Mandarin)",
-  "Dutch",
-  "English",
-  "Filipino",
-  "French",
-  "German",
-  "Greek",
-  "Gujarati",
-  "Hindi",
-  "Indonesian",
-  "Italian",
-  "Japanese",
-  "Korean",
-  "Malay",
-  "Malayalam",
-  "Mandarin",
-  "Marathi",
-  "Persian",
-  "Portuguese",
-  "Punjabi",
-  "Russian",
-  "Spanish",
-  "Swahili",
-  "Tamil",
-  "Telugu",
-  "Thai",
-  "Turkish",
-  "Urdu",
-  "Vietnamese",
-].sort((a, b) => a.localeCompare(b));
 
 export const Route = createFileRoute("/_public/find-a-tutor")({
   head: () => ({
@@ -96,6 +60,7 @@ function FindATutorPage() {
   const [filteredTutors, setFilteredTutors] = useState<Tutor[]>([]);
   const [subjects, setSubjects] = useState<string[]>([]);
   const [levels, setLevels] = useState<string[]>([]);
+  const [languages, setLanguages] = useState<string[]>([]);
   const [priceBounds, setPriceBounds] = useState({ min: 0, max: 0 });
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -105,20 +70,31 @@ function FindATutorPage() {
   const [subjectOpen, setSubjectOpen] = useState(false);
   const [levelOpen, setLevelOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
+  const [minPrice, setMinPrice] = useState<number>(0);
   const [maxPrice, setMaxPrice] = useState<number>(0);
   const [onlyVerified, setOnlyVerified] = useState(false);
   const [sortBy, setSortBy] = useState("featured");
 
   useEffect(() => {
     (async () => {
-      const [tList, sList, lList] = await Promise.all([
+      const [tList, sList] = await Promise.all([
         DataStore.getTutors(),
         DataStore.getSubjects(),
-        DataStore.getLevels(),
       ]);
+
       setTutors(tList);
       setSubjects(sList);
-      setLevels(lList);
+
+      const availableLevels = Array.from(
+        new Set(tList.flatMap((tutor) => tutor.levels))
+      ).sort((a, b) => a.localeCompare(b));
+
+      setLevels(availableLevels);
+      const availableLanguages = Array.from(
+        new Set(tList.flatMap((tutor) => tutor.languages))
+      ).sort((a, b) => a.localeCompare(b));
+
+      setLanguages(availableLanguages);
 
       const rates = tList
         .map((tutor) => Number(tutor.hourly_rate))
@@ -137,10 +113,8 @@ function FindATutorPage() {
   useEffect(() => {
     if (priceBounds.max <= 0) return;
 
-    setMaxPrice((current) => {
-      if (current <= 0) return priceBounds.max;
-      return Math.min(Math.max(current, priceBounds.min), priceBounds.max);
-    });
+    setMinPrice(priceBounds.min);
+    setMaxPrice(priceBounds.max);
   }, [priceBounds.min, priceBounds.max]);
 
   useEffect(() => {
@@ -177,8 +151,9 @@ function FindATutorPage() {
       );
     }
 
-    result = result.filter((t) => t.hourly_rate <= maxPrice);
-
+    result = result.filter(
+      (t) => t.hourly_rate >= minPrice && t.hourly_rate <= maxPrice
+    );
     if (onlyVerified) {
       result = result.filter((t) => t.is_verified);
     }
@@ -204,6 +179,7 @@ function FindATutorPage() {
     selectedSubject,
     selectedLevel,
     selectedLanguage,
+    minPrice,
     maxPrice,
     onlyVerified,
     sortBy,
@@ -214,6 +190,7 @@ function FindATutorPage() {
     setSelectedSubject("All");
     setSelectedLevel("All");
     setSelectedLanguage("All");
+    setMinPrice(priceBounds.min || 0);
     setMaxPrice(priceBounds.max || 0);
     setOnlyVerified(false);
     setSortBy("featured");
@@ -419,7 +396,7 @@ function FindATutorPage() {
                           />
                           All Languages
                         </CommandItem>
-                        {languageOptions.map((language) => (
+                        {languages.map((language) => (
                           <CommandItem
                             key={language}
                             value={language}
@@ -448,20 +425,71 @@ function FindATutorPage() {
             <div className="space-y-3">
               <div className="flex justify-between text-xs font-semibold">
                 <span className="text-muted-foreground uppercase tracking-wider">
-                  Max Hourly Rate
+                  Hourly Rate
                 </span>
-                <span className="text-primary">${maxPrice}/hr</span>
+
+                <span className="text-primary">
+                  ${minPrice} - ${maxPrice}/hr
+                </span>
               </div>
-              <input
-                type="range"
-                min={priceBounds.min || 0}
-                max={priceBounds.max || 100}
-                step="1"
-                value={maxPrice || priceBounds.max || 0}
-                disabled={priceBounds.max <= 0}
-                onChange={(e) => setMaxPrice(Number(e.target.value))}
-                className="w-full accent-[#164E5E] cursor-pointer"
-              />
+
+              <div className="relative h-6">
+                {/* Track */}
+                <div className="absolute top-1/2 left-0 right-0 h-2 -translate-y-1/2 rounded-full bg-muted" />
+
+                {/* Selected range */}
+                <div
+                  className="absolute top-1/2 h-2 -translate-y-1/2 rounded-full bg-[#164E5E]"
+                  style={{
+                    left: `${priceBounds.max > priceBounds.min
+                      ? ((minPrice - priceBounds.min) /
+                        (priceBounds.max - priceBounds.min)) *
+                      100
+                      : 0}%`,
+                    right: `${priceBounds.max > priceBounds.min
+                      ? 100 -
+                      ((maxPrice - priceBounds.min) /
+                        (priceBounds.max - priceBounds.min)) *
+                      100
+                      : 0}%`,
+                  }}
+                />
+
+                {/* Minimum handle */}
+                <input
+                  type="range"
+                  min={priceBounds.min || 0}
+                  max={priceBounds.max || 100}
+                  step="1"
+                  value={minPrice}
+                  disabled={priceBounds.max <= 0}
+                  onChange={(e) => {
+                    const value = Number(e.target.value);
+                    setMinPrice(Math.min(value, maxPrice));
+                  }}
+                  className="absolute inset-0 w-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#164E5E] [&::-webkit-slider-thumb]:cursor-pointer"
+                />
+
+                {/* Maximum handle */}
+                <input
+                  type="range"
+                  min={priceBounds.min || 0}
+                  max={priceBounds.max || 100}
+                  step="1"
+                  value={maxPrice}
+                  disabled={priceBounds.max <= 0}
+                  onChange={(e) => {
+                    const value = Number(e.target.value);
+                    setMaxPrice(Math.max(value, minPrice));
+                  }}
+                  className="absolute inset-0 w-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#164E5E] [&::-webkit-slider-thumb]:cursor-pointer"
+                />
+              </div>
+
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>${priceBounds.min}</span>
+                <span>${priceBounds.max}</span>
+              </div>
             </div>
 
             {/* Checkbox verification status */}

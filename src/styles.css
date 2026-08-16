@@ -201,3 +201,13 @@ h6 {
 .animate-float {
   animation: float 4s ease-in-out infinite;
 }
+
+::selection {
+  background-color: #164E5E;
+  color: white;
+}
+
+.dark ::selection {
+  background-color: #3D7F8F;
+  color: white;
+}

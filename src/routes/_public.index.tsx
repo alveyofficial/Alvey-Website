@@ -155,7 +155,7 @@ function Index() {
               Find a tutor
               <br />
 
-              <span className="text-[#164E5E] dark:text-cyan-300">
+              <span className="text-[#164E5E] dark:text-[#6FD4D8]">
                 that actually fits you.
               </span>
             </motion.h1>

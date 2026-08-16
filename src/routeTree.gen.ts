@@ -9,18 +9,20 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as PublicRouteImport } from './routes/_public'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as PublicIndexRouteImport } from './routes/_public.index'
+import { Route as ApiSitemapRouteImport } from './routes/api/sitemap'
 import { Route as ApiChatbotRouteImport } from './routes/api/chatbot'
 import { Route as PublicWorkWithUsRouteImport } from './routes/_public.work-with-us'
+import { Route as PublicTermsOfServiceRouteImport } from './routes/_public.terms-of-service'
+import { Route as PublicPrivacyPolicyRouteImport } from './routes/_public.privacy-policy'
 import { Route as PublicFindATutorRouteImport } from './routes/_public.find-a-tutor'
 import { Route as PublicContactRouteImport } from './routes/_public.contact'
 import { Route as PublicApplyRouteImport } from './routes/_public.apply'
-import { Route as PublicPrivacyPolicyRouteImport } from './routes/_public.privacy-policy'
-import { Route as PublicTermsOfServiceRouteImport } from './routes/_public.terms-of-service'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated.settings'
 import { Route as AuthenticatedScheduleRouteImport } from './routes/_authenticated.schedule'
 import { Route as AuthenticatedReviewsRouteImport } from './routes/_authenticated.reviews'
@@ -32,6 +34,7 @@ import { Route as AuthenticatedCmsRouteImport } from './routes/_authenticated.cm
 import { Route as AuthenticatedTutorIndexRouteImport } from './routes/_authenticated/tutor/index'
 import { Route as AuthenticatedRecruitmentIndexRouteImport } from './routes/_authenticated/recruitment/index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
+import { Route as ApiPublicStatsRouteImport } from './routes/api/public/stats'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as PublicTutorsTutorIdRouteImport } from './routes/_public.tutors.$tutorId'
 import { Route as AuthenticatedTutorStudentsRouteImport } from './routes/_authenticated/tutor/students'
@@ -66,8 +69,12 @@ import { Route as AuthenticatedAdminHomepageRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin/analytics'
 import { Route as AuthenticatedAdminAiAssistantRouteImport } from './routes/_authenticated/admin/ai-assistant'
 import { Route as AuthenticatedAdminAdvertisementsRouteImport } from './routes/_authenticated/admin/advertisements'
-import { Route as ApiPublicStatsRouteImport } from './routes/api/public/stats'
 
+const VerifyEmailRoute = VerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -91,6 +98,11 @@ const PublicIndexRoute = PublicIndexRouteImport.update({
   path: '/',
   getParentRoute: () => PublicRoute,
 } as any)
+const ApiSitemapRoute = ApiSitemapRouteImport.update({
+  id: '/api/sitemap',
+  path: '/api/sitemap',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiChatbotRoute = ApiChatbotRouteImport.update({
   id: '/api/chatbot',
   path: '/api/chatbot',
@@ -99,6 +111,16 @@ const ApiChatbotRoute = ApiChatbotRouteImport.update({
 const PublicWorkWithUsRoute = PublicWorkWithUsRouteImport.update({
   id: '/work-with-us',
   path: '/work-with-us',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicTermsOfServiceRoute = PublicTermsOfServiceRouteImport.update({
+  id: '/terms-of-service',
+  path: '/terms-of-service',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicPrivacyPolicyRoute = PublicPrivacyPolicyRouteImport.update({
+  id: '/privacy-policy',
+  path: '/privacy-policy',
   getParentRoute: () => PublicRoute,
 } as any)
 const PublicFindATutorRoute = PublicFindATutorRouteImport.update({
@@ -114,16 +136,6 @@ const PublicContactRoute = PublicContactRouteImport.update({
 const PublicApplyRoute = PublicApplyRouteImport.update({
   id: '/apply',
   path: '/apply',
-  getParentRoute: () => PublicRoute,
-} as any)
-const PublicPrivacyPolicyRoute = PublicPrivacyPolicyRouteImport.update({
-  id: '/privacy-policy',
-  path: '/privacy-policy',
-  getParentRoute: () => PublicRoute,
-} as any)
-const PublicTermsOfServiceRoute = PublicTermsOfServiceRouteImport.update({
-  id: '/terms-of-service',
-  path: '/terms-of-service',
   getParentRoute: () => PublicRoute,
 } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
@@ -183,14 +195,14 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/admin/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
-  id: '/api/public/health',
-  path: '/api/public/health',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiPublicStatsRoute = ApiPublicStatsRouteImport.update({
   id: '/api/public/stats',
   path: '/api/public/stats',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
+  id: '/api/public/health',
+  path: '/api/public/health',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PublicTutorsTutorIdRoute = PublicTutorsTutorIdRouteImport.update({
@@ -394,6 +406,7 @@ export interface FileRoutesByFullPath {
   '/': typeof PublicIndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/cms': typeof AuthenticatedCmsRoute
   '/lessons': typeof AuthenticatedLessonsRoute
   '/my-tutors': typeof AuthenticatedMyTutorsRoute
@@ -406,9 +419,10 @@ export interface FileRoutesByFullPath {
   '/contact': typeof PublicContactRoute
   '/find-a-tutor': typeof PublicFindATutorRoute
   '/privacy-policy': typeof PublicPrivacyPolicyRoute
-  '/work-with-us': typeof PublicWorkWithUsRoute
   '/terms-of-service': typeof PublicTermsOfServiceRoute
+  '/work-with-us': typeof PublicWorkWithUsRoute
   '/api/chatbot': typeof ApiChatbotRoute
+  '/api/sitemap': typeof ApiSitemapRoute
   '/admin/advertisements': typeof AuthenticatedAdminAdvertisementsRoute
   '/admin/ai-assistant': typeof AuthenticatedAdminAiAssistantRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
@@ -452,6 +466,7 @@ export interface FileRoutesByTo {
   '/': typeof PublicIndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/cms': typeof AuthenticatedCmsRoute
   '/lessons': typeof AuthenticatedLessonsRoute
   '/my-tutors': typeof AuthenticatedMyTutorsRoute
@@ -464,9 +479,10 @@ export interface FileRoutesByTo {
   '/contact': typeof PublicContactRoute
   '/find-a-tutor': typeof PublicFindATutorRoute
   '/privacy-policy': typeof PublicPrivacyPolicyRoute
-  '/work-with-us': typeof PublicWorkWithUsRoute
   '/terms-of-service': typeof PublicTermsOfServiceRoute
+  '/work-with-us': typeof PublicWorkWithUsRoute
   '/api/chatbot': typeof ApiChatbotRoute
+  '/api/sitemap': typeof ApiSitemapRoute
   '/admin/advertisements': typeof AuthenticatedAdminAdvertisementsRoute
   '/admin/ai-assistant': typeof AuthenticatedAdminAiAssistantRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
@@ -501,6 +517,7 @@ export interface FileRoutesByTo {
   '/tutor/students': typeof AuthenticatedTutorStudentsRoute
   '/tutors/$tutorId': typeof PublicTutorsTutorIdRoute
   '/api/public/health': typeof ApiPublicHealthRoute
+  '/api/public/stats': typeof ApiPublicStatsRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/recruitment': typeof AuthenticatedRecruitmentIndexRoute
   '/tutor': typeof AuthenticatedTutorIndexRoute
@@ -511,6 +528,7 @@ export interface FileRoutesById {
   '/_public': typeof PublicRouteWithChildren
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/_authenticated/cms': typeof AuthenticatedCmsRoute
   '/_authenticated/lessons': typeof AuthenticatedLessonsRoute
   '/_authenticated/my-tutors': typeof AuthenticatedMyTutorsRoute
@@ -523,9 +541,10 @@ export interface FileRoutesById {
   '/_public/contact': typeof PublicContactRoute
   '/_public/find-a-tutor': typeof PublicFindATutorRoute
   '/_public/privacy-policy': typeof PublicPrivacyPolicyRoute
-  '/_public/work-with-us': typeof PublicWorkWithUsRoute
   '/_public/terms-of-service': typeof PublicTermsOfServiceRoute
+  '/_public/work-with-us': typeof PublicWorkWithUsRoute
   '/api/chatbot': typeof ApiChatbotRoute
+  '/api/sitemap': typeof ApiSitemapRoute
   '/_public/': typeof PublicIndexRoute
   '/_authenticated/admin/advertisements': typeof AuthenticatedAdminAdvertisementsRoute
   '/_authenticated/admin/ai-assistant': typeof AuthenticatedAdminAiAssistantRoute
@@ -572,6 +591,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/reset-password'
+    | '/verify-email'
     | '/cms'
     | '/lessons'
     | '/my-tutors'
@@ -583,8 +603,11 @@ export interface FileRouteTypes {
     | '/apply'
     | '/contact'
     | '/find-a-tutor'
+    | '/privacy-policy'
+    | '/terms-of-service'
     | '/work-with-us'
     | '/api/chatbot'
+    | '/api/sitemap'
     | '/admin/advertisements'
     | '/admin/ai-assistant'
     | '/admin/analytics'
@@ -619,6 +642,7 @@ export interface FileRouteTypes {
     | '/tutor/students'
     | '/tutors/$tutorId'
     | '/api/public/health'
+    | '/api/public/stats'
     | '/admin/'
     | '/recruitment/'
     | '/tutor/'
@@ -627,6 +651,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/reset-password'
+    | '/verify-email'
     | '/cms'
     | '/lessons'
     | '/my-tutors'
@@ -638,8 +663,11 @@ export interface FileRouteTypes {
     | '/apply'
     | '/contact'
     | '/find-a-tutor'
+    | '/privacy-policy'
+    | '/terms-of-service'
     | '/work-with-us'
     | '/api/chatbot'
+    | '/api/sitemap'
     | '/admin/advertisements'
     | '/admin/ai-assistant'
     | '/admin/analytics'
@@ -674,6 +702,7 @@ export interface FileRouteTypes {
     | '/tutor/students'
     | '/tutors/$tutorId'
     | '/api/public/health'
+    | '/api/public/stats'
     | '/admin'
     | '/recruitment'
     | '/tutor'
@@ -683,6 +712,7 @@ export interface FileRouteTypes {
     | '/_public'
     | '/auth'
     | '/reset-password'
+    | '/verify-email'
     | '/_authenticated/cms'
     | '/_authenticated/lessons'
     | '/_authenticated/my-tutors'
@@ -694,8 +724,11 @@ export interface FileRouteTypes {
     | '/_public/apply'
     | '/_public/contact'
     | '/_public/find-a-tutor'
+    | '/_public/privacy-policy'
+    | '/_public/terms-of-service'
     | '/_public/work-with-us'
     | '/api/chatbot'
+    | '/api/sitemap'
     | '/_public/'
     | '/_authenticated/admin/advertisements'
     | '/_authenticated/admin/ai-assistant'
@@ -742,13 +775,22 @@ export interface RootRouteChildren {
   PublicRoute: typeof PublicRouteWithChildren
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  VerifyEmailRoute: typeof VerifyEmailRoute
   ApiChatbotRoute: typeof ApiChatbotRoute
+  ApiSitemapRoute: typeof ApiSitemapRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicStatsRoute: typeof ApiPublicStatsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/verify-email': {
+      id: '/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof VerifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -784,6 +826,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicIndexRouteImport
       parentRoute: typeof PublicRoute
     }
+    '/api/sitemap': {
+      id: '/api/sitemap'
+      path: '/api/sitemap'
+      fullPath: '/api/sitemap'
+      preLoaderRoute: typeof ApiSitemapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/chatbot': {
       id: '/api/chatbot'
       path: '/api/chatbot'
@@ -796,6 +845,20 @@ declare module '@tanstack/react-router' {
       path: '/work-with-us'
       fullPath: '/work-with-us'
       preLoaderRoute: typeof PublicWorkWithUsRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/terms-of-service': {
+      id: '/_public/terms-of-service'
+      path: '/terms-of-service'
+      fullPath: '/terms-of-service'
+      preLoaderRoute: typeof PublicTermsOfServiceRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/privacy-policy': {
+      id: '/_public/privacy-policy'
+      path: '/privacy-policy'
+      fullPath: '/privacy-policy'
+      preLoaderRoute: typeof PublicPrivacyPolicyRouteImport
       parentRoute: typeof PublicRoute
     }
     '/_public/find-a-tutor': {
@@ -896,18 +959,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/api/public/health': {
-      id: '/api/public/health'
-      path: '/api/public/health'
-      fullPath: '/api/public/health'
-      preLoaderRoute: typeof ApiPublicHealthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/stats': {
       id: '/api/public/stats'
       path: '/api/public/stats'
       fullPath: '/api/public/stats'
       preLoaderRoute: typeof ApiPublicStatsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/health': {
+      id: '/api/public/health'
+      path: '/api/public/health'
+      fullPath: '/api/public/health'
+      preLoaderRoute: typeof ApiPublicHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_public/tutors/$tutorId': {
@@ -1253,8 +1316,8 @@ interface PublicRouteChildren {
   PublicContactRoute: typeof PublicContactRoute
   PublicFindATutorRoute: typeof PublicFindATutorRoute
   PublicPrivacyPolicyRoute: typeof PublicPrivacyPolicyRoute
-  PublicWorkWithUsRoute: typeof PublicWorkWithUsRoute
   PublicTermsOfServiceRoute: typeof PublicTermsOfServiceRoute
+  PublicWorkWithUsRoute: typeof PublicWorkWithUsRoute
   PublicIndexRoute: typeof PublicIndexRoute
   PublicTutorsTutorIdRoute: typeof PublicTutorsTutorIdRoute
 }
@@ -1264,8 +1327,8 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicContactRoute: PublicContactRoute,
   PublicFindATutorRoute: PublicFindATutorRoute,
   PublicPrivacyPolicyRoute: PublicPrivacyPolicyRoute,
-  PublicWorkWithUsRoute: PublicWorkWithUsRoute,
   PublicTermsOfServiceRoute: PublicTermsOfServiceRoute,
+  PublicWorkWithUsRoute: PublicWorkWithUsRoute,
   PublicIndexRoute: PublicIndexRoute,
   PublicTutorsTutorIdRoute: PublicTutorsTutorIdRoute,
 }
@@ -1278,7 +1341,9 @@ const rootRouteChildren: RootRouteChildren = {
   PublicRoute: PublicRouteWithChildren,
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  VerifyEmailRoute: VerifyEmailRoute,
   ApiChatbotRoute: ApiChatbotRoute,
+  ApiSitemapRoute: ApiSitemapRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicStatsRoute: ApiPublicStatsRoute,
 }

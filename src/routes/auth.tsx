@@ -65,7 +65,7 @@ function useTheme() {
 
 // ─── Views ────────────────────────────────────────────────────────────────────
 
-type View = "auth" | "forgot" | "forgot-sent";
+type View = "auth" | "forgot" | "forgot-sent" | "verify-email";
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
@@ -119,24 +119,34 @@ function AuthPage() {
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const name = displayName.trim() || email.split("@")[0];
-      const { error } = await appwrite.auth.signUp({
-        email,
-        password,
-        options: { data: { display_name: name } },
-      });
-      if (error) throw error;
-      await ensureUserRecord(name);
-    } catch (err: any) {
-      console.error(err);
-      toast.error("Failed to create account.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  e.preventDefault();
+  setLoading(true);
+
+  try {
+    const name = displayName.trim() || email.split("@")[0];
+
+    const { error } = await appwrite.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { display_name: name },
+        emailRedirectTo: `${window.location.origin}/verify-email`,
+      },
+    });
+
+    if (error) throw error;
+
+    await ensureUserRecord(name);
+
+    toast.success("Account created! Check your email to verify your account.");
+    setView("verify-email");
+  } catch (err: any) {
+    console.error(err);
+    toast.error(err?.message || "Failed to create account.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleGoogle = () => {
     const origin = window.location.origin;
@@ -179,6 +189,13 @@ function AuthPage() {
       {/* ── Forgot Password: email sent confirmation ── */}
       {view === "forgot-sent" && (
         <ForgotSentCard onBack={() => setView("auth")} />
+      )}
+
+      {view === "verify-email" && (
+        <VerifyEmailCard
+          email={email}
+          onBack={() => setView("auth")}
+        />
       )}
 
       {/* ── Main auth card (sign in / sign up) ── */}
@@ -479,4 +496,45 @@ function redirectByRole(roles: string[], navigate: ReturnType<typeof useNavigate
   } else {
     navigate({ to: "/" });
   }
+}
+
+function VerifyEmailCard({
+  email,
+  onBack,
+}: {
+  email: string;
+  onBack: () => void;
+}) {
+  return (
+    <Card className="w-full max-w-md text-center">
+      <CardHeader>
+        <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950/30">
+          <span className="text-2xl">✉️</span>
+        </div>
+
+        <CardTitle className="text-xl">Verify your email</CardTitle>
+
+        <CardDescription className="mt-1">
+          We've sent a verification email to{" "}
+          <strong>{email}</strong>.
+          <br />
+          Open it and follow the verification link to activate your account.
+        </CardDescription>
+      </CardHeader>
+
+      <CardContent className="space-y-3">
+        <p className="text-xs text-muted-foreground">
+          Didn't receive it? Check your spam or junk folder.
+        </p>
+
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={onBack}
+        >
+          Back to sign in
+        </Button>
+      </CardContent>
+    </Card>
+  );
 }
