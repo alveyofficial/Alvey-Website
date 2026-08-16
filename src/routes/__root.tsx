@@ -77,11 +77,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       // Fallback title / description — individual routes override these
-      { title: "Alvey · Elite Private Tutoring" },
+      { title: "Alvey | Find the Right Tutor" },
       {
         name: "description",
         content:
-          "Connect with elite, verified private tutors for IGCSE, A-Level, IB, SAT, and university subjects. Personalised tutoring matched to your goals.",
+          "Find a tutor or Find Students. Alvey makes it easy for both! We connect studetns and tutors all over the world, Weather youre doing IGCSE, GCSE, A-Level, IB, SAT, or University subjects, Alvey has you covered!",
       },
       { name: "author", content: "Alvey" },
       // Open Graph fallbacks
@@ -116,6 +116,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
       {
         rel: "icon",
+        href: "/favicon%20A.png",
+        type: "image/png",
+      },
+      {
+        rel: "apple-touch-icon",
+        href: "/favicon%20A.png",
+      },
+      {
+        rel: "icon",
         href: "/favicon.ico",
         type: "image/x-icon",
       },
@@ -147,7 +156,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           name: "Alvey",
           url: "https://alvey.study",
           description:
-            "Connect with elite, verified private tutors for IGCSE, A-Level, IB, SAT, and university subjects.",
+            "Find a tutor or Find Students. Alvey makes it easy for both! We connect studetns and tutors all over the world, Weather youre doing IGCSE, GCSE, A-Level, IB, SAT, or University subjects, Alvey has you covered!",
           potentialAction: {
             "@type": "SearchAction",
             target: {

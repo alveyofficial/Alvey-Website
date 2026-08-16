@@ -65,7 +65,7 @@ function useTheme() {
 
 // ─── Views ────────────────────────────────────────────────────────────────────
 
-type View = "auth" | "forgot" | "forgot-sent";
+type View = "auth" | "forgot" | "forgot-sent" | "verify-email";
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
@@ -103,40 +103,50 @@ function AuthPage() {
       if (error) throw error;
 
       const user = await getCurrentUser();
-      if (!user) throw new Error("Failed to load user.");
+      if (!user) throw new Error("Failed to load user.. this isnt supposed to happen..");
       await ensureUserRecord();
 
       const uid = (user as any).$id || (user as any).id;
       const roles = await DataStore.getUserRoles(uid);
       redirectByRole(roles, navigate);
-      toast.success("Welcome back!");
+      toast.success("Yippiee Welcome backk!!");
     } catch (err: any) {
       console.error(err);
-      toast.error(err?.message || "Invalid email or password.");
+      toast.error(err?.message || "Are you typing too fast? Invalid email or password! :(");
     } finally {
       setLoading(false);
     }
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const name = displayName.trim() || email.split("@")[0];
-      const { error } = await appwrite.auth.signUp({
-        email,
-        password,
-        options: { data: { display_name: name } },
-      });
-      if (error) throw error;
-      await ensureUserRecord(name);
-    } catch (err: any) {
-      console.error(err);
-      toast.error("Failed to create account.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  e.preventDefault();
+  setLoading(true);
+
+  try {
+    const name = displayName.trim() || email.split("@")[0];
+
+    const { error } = await appwrite.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { display_name: name },
+        emailRedirectTo: `${window.location.origin}/verify-email`,
+      },
+    });
+
+    if (error) throw error;
+
+    await ensureUserRecord(name);
+
+    toast.success("Account created! Check your email to verify your account.");
+    setView("verify-email");
+  } catch (err: any) {
+    console.error(err);
+    toast.error(err?.message || "Failed to create account.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleGoogle = () => {
     const origin = window.location.origin;
@@ -179,6 +189,13 @@ function AuthPage() {
       {/* ── Forgot Password: email sent confirmation ── */}
       {view === "forgot-sent" && (
         <ForgotSentCard onBack={() => setView("auth")} />
+      )}
+
+      {view === "verify-email" && (
+        <VerifyEmailCard
+          email={email}
+          onBack={() => setView("auth")}
+        />
       )}
 
       {/* ── Main auth card (sign in / sign up) ── */}
@@ -336,7 +353,7 @@ function AuthPage() {
                 <span className="mr-2 flex h-5 w-5 items-center justify-center rounded bg-[#0A66C2] text-xs font-bold text-white">
                   in
                 </span>
-                Continue with LinkedIn
+                Continue with LinkedIn (wait this doesnt work...)
               </Button>
 
               <Button
@@ -398,9 +415,9 @@ function ForgotPasswordForm({
           <ArrowLeft className="h-4 w-4" />
           Back to sign in
         </button>
-        <CardTitle className="text-xl">Forgot your password?</CardTitle>
+        <CardTitle className="text-xl">Forgot your password? Really...?</CardTitle>
         <CardDescription>
-          Enter the email address linked to your account and we'll send you a password reset link.
+          Enter the email address linked to your account and we'll send you a password reset link. ... maybe.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -449,7 +466,7 @@ function ForgotSentCard({ onBack }: { onBack: () => void }) {
         </div>
         <CardTitle className="text-xl">Check your inbox</CardTitle>
         <CardDescription className="mt-1">
-          We've sent a password reset link to your email. The link expires in 1 hour.
+          Hmm Okay..We've sent a password reset link to your email. The link expires in 1 hour.
           <br />
           <span className="text-xs mt-2 block text-muted-foreground/70">
             Didn't receive it? Check your spam folder.
@@ -479,4 +496,45 @@ function redirectByRole(roles: string[], navigate: ReturnType<typeof useNavigate
   } else {
     navigate({ to: "/" });
   }
+}
+
+function VerifyEmailCard({
+  email,
+  onBack,
+}: {
+  email: string;
+  onBack: () => void;
+}) {
+  return (
+    <Card className="w-full max-w-md text-center">
+      <CardHeader>
+        <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950/30">
+          <span className="text-2xl">✉️</span>
+        </div>
+
+        <CardTitle className="text-xl">Verify your email</CardTitle>
+
+        <CardDescription className="mt-1">
+          We've sent a verification email to{" "}
+          <strong>{email}</strong>.
+          <br />
+          Open it and follow the verification link to activate your account.
+        </CardDescription>
+      </CardHeader>
+
+      <CardContent className="space-y-3">
+        <p className="text-xs text-muted-foreground">
+          Didn't receive it? Check your spam or junk folder.
+        </p>
+
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={onBack}
+        >
+          Back to sign in
+        </Button>
+      </CardContent>
+    </Card>
+  );
 }

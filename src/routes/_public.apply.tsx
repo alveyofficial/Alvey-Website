@@ -29,7 +29,7 @@ export const Route = createFileRoute("/_public/apply")({
 function Apply() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  
+
   // Section 1
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
@@ -41,7 +41,7 @@ function Apply() {
   const [highestQualificationLink, setHighestQualificationLink] = useState("");
   const [countryOfResidence, setCountryOfResidence] = useState("");
   const [languagesSpoken, setLanguagesSpoken] = useState("");
-  
+
   // Section 2
   const [subjectName, setSubjectName] = useState("");
   const [subjectCode, setSubjectCode] = useState("");
@@ -50,7 +50,7 @@ function Apply() {
   const [examResultSummary, setExamResultSummary] = useState("");
   const [resultDocumentLink, setResultDocumentLink] = useState("");
   const [teachingExperience, setTeachingExperience] = useState("");
-  
+
   // Section 3
   const [teachingFormat, setTeachingFormat] = useState("online");
   const [oneOnOneRateUsd, setOneOnOneRateUsd] = useState("0");
@@ -73,11 +73,11 @@ function Apply() {
       toast.error("Please select your highest qualification.");
       return;
     }
-    
+
     setLoading(true);
     try {
       const languages = languagesSpoken.split(",").map(l => l.trim()).filter(Boolean);
-      
+
       const payload = {
         email,
         fullName,
@@ -118,7 +118,22 @@ function Apply() {
         documentId: ID.unique(),
         data: payload,
       });
-      
+
+      await appwrite.functions.createExecution(
+        "website-notifications",
+        JSON.stringify({
+          type: "tutor_application",
+          fullName,
+          email,
+          discordUsername,
+          countryOfResidence,
+          subjectName,
+          teachingLevel,
+          teachingFormat,
+          highestQualification,
+        }),
+      );
+
       setSuccess(true);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err: any) {
@@ -155,13 +170,13 @@ function Apply() {
         {/* Section 1: Personal Details */}
         <div className="bg-card border rounded-2xl p-8 shadow-sm space-y-6">
           <h2 className="text-2xl font-semibold border-b pb-4">1. Personal Details</h2>
-          
+
           <div className="space-y-4">
             <div>
               <Label>Email <span className="text-destructive">*</span></Label>
               <Input type="email" required value={email} onChange={e => setEmail(e.target.value)} />
             </div>
-            
+
             <div>
               <Label>What is your full name? <span className="text-destructive">*</span></Label>
               <p className="text-xs text-muted-foreground mb-2">To be shown on your profile once you're accepted as a tutor.</p>
@@ -228,14 +243,14 @@ function Apply() {
         <div className="bg-card border rounded-2xl p-8 shadow-sm space-y-6">
           <h2 className="text-2xl font-semibold border-b pb-4">2. Subject Details</h2>
           <p className="text-sm text-muted-foreground mb-4">The details of the subject you wish to teach.</p>
-          
+
           <div className="space-y-4">
             <div>
               <Label>What subject do you wish to teach? <span className="text-destructive">*</span></Label>
               <p className="text-xs text-muted-foreground mb-2">For example: Accounting</p>
               <Input required value={subjectName} onChange={e => setSubjectName(e.target.value)} />
             </div>
-            
+
             <div>
               <Label>What is the subject code? <span className="text-destructive">*</span></Label>
               <p className="text-xs text-muted-foreground mb-2">For example: 0452</p>
@@ -277,7 +292,7 @@ function Apply() {
         <div className="bg-card border rounded-2xl p-8 shadow-sm space-y-6">
           <h2 className="text-2xl font-semibold border-b pb-4">3. Classes & Commission Policies</h2>
           <p className="text-sm text-muted-foreground mb-4">Details of the classes and Alvey's commission policies.</p>
-          
+
           <div className="space-y-6">
             <div>
               <Label>Will you be teaching one-on-one, group classes, or both? <span className="text-destructive">*</span></Label>

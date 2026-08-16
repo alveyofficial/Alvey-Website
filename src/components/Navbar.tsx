@@ -127,7 +127,7 @@ export function Navbar() {
           />
 
           <div className="leading-none">
-            <h1 className="font-black text-xl tracking-tight text-[#164E5E]">
+            <h1 className="font-black text-xl tracking-tight text-[#164E5E] dark:text-cyan-300">
               ALVEY
             </h1>
 
@@ -197,7 +197,7 @@ export function Navbar() {
               <Button
                 asChild
                 size="sm"
-                className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 shadow-md shadow-blue-500/10 rounded-xl"
+                className="bg-[#164E5E] hover:bg-[#3D7F8F] text-white font-medium px-4 shadow-md shadow-[#164E5E]/10 rounded-xl"
               >
                 <Link to="/auth">Sign Up</Link>
               </Button>
@@ -224,7 +224,7 @@ export function Navbar() {
           )}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="text-muted-foreground hover:text-foreground p-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg"
+            className="text-muted-foreground hover:text-foreground p-1.5 focus:outline-none focus:ring-2 focus:ring-[#3D7F8F] rounded-lg"
             aria-label="Toggle Navigation Menu"
           >
             {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -243,7 +243,7 @@ export function Navbar() {
                 onClick={() => setIsOpen(false)}
                 activeProps={{
                   className:
-                    "bg-blue-50 text-blue-600 dark:bg-blue-950/20 dark:text-blue-400 font-semibold",
+                    "bg-[#164E5E]/10 text-[#164E5E] dark:bg-[#3D7F8F]/20 dark:text-[#6FD4D8] font-semibold",
                 }}
                 className="block text-base font-medium text-muted-foreground hover:text-foreground px-4 py-2.5 rounded-xl transition-colors"
               >
@@ -294,7 +294,7 @@ export function Navbar() {
                   </Button>
                   <Button
                     asChild
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl"
+                    className="w-full bg-[#164E5E] hover:bg-[#3D7F8F] text-white rounded-xl"
                     onClick={() => setIsOpen(false)}
                   >
                     <Link to="/auth">Sign Up</Link>

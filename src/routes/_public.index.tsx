@@ -7,12 +7,12 @@ import { seoMeta, seoLinks, jsonLdScript, websiteSchema, organizationSchema, ser
 import { motion } from "motion/react";
 
 const HOME_DESCRIPTION =
-  "Connect with elite, verified private tutors for IGCSE, A-Level, IB, SAT, and university subjects. Personalised tutoring matched to your goals.";
+  "Find a tutor or Find Students. Alvey makes it easy for both! We connect studetns and tutors all over the world, Weather youre doing IGCSE, GCSE, A-Level, IB, SAT, or University subjects, Alvey has you covered!";
 
 export const Route = createFileRoute("/_public/")({
   head: () => ({
     meta: seoMeta({
-      title: "Alvey · Elite Private Tutoring",
+      title: "Alvey | Find the Right Tutor",
       description: HOME_DESCRIPTION,
       path: "/",
       exactTitle: true,
@@ -30,43 +30,43 @@ export const Route = createFileRoute("/_public/")({
 const FALLBACK_LEVELS = [
   {
     name: "Primary",
-    description: "",
+    description: "Primary school level subjects. (Kindergarten to grade 5-6)",
     slug: "primary",
   },
   {
-    name: "Secondary",
-    description: "",
-    slug: "secondary",
+    name: "Middle School",
+    description: "Middle school level subjects (grades 6-8)",
+    slug: "middle school",
   },
   {
-    name: "IGCSE",
-    description: "",
-    slug: "igcse",
+    name: "High School",
+    description: "High school/Upper Secondary/IGCSE-GCSE",
+    slug: "high school",
   },
   {
-    name: "GCSE",
-    description: "",
-    slug: "gcse",
+    name: "College/A-Levels",
+    description: "College/High school/A-Levels",
+    slug: "College",
   },
   {
-    name: "A-Level",
-    description: "",
-    slug: "a-level",
-  },
-  {
-    name: "SAT",
-    description: "",
-    slug: "sat",
+    name: "Test Prep",
+    description: "SAT/ACT/IELTS/TOEFL etc",
+    slug: "Test Prep",
   },
   {
     name: "University",
-    description: "",
+    description: "Bachelor's/Master's/PhD",
     slug: "university",
   },
   {
-    name: "Professional",
-    description: "",
+    name: "Professional Certificates",
+    description: "ACCA/CFA/PMP/AWS etc",
     slug: "professional",
+  },
+  {
+    name: "Languages",
+    description: "Languages",
+    slug: "Languages",
   },
 ];
 type Level = {
@@ -155,7 +155,7 @@ function Index() {
               Find a tutor
               <br />
 
-              <span className="text-[#164E5E] dark:text-cyan-300">
+              <span className="text-[#164E5E] dark:text-[#6FD4D8]">
                 that actually fits you.
               </span>
             </motion.h1>
@@ -164,8 +164,8 @@ function Index() {
               variants={fadeInUp}
               className="text-xl text-muted-foreground dark:text-slate-300 max-w-xl leading-8"
             >
-              Learning shouldn't feel stressful.
-              Discover trusted tutors for every stage of your education.
+              Learning shouldn't feel stressful, BUT it does.. :(
+              Sooo... Find yourself a Tutor right away!
             </motion.p>
 
             <motion.div
@@ -243,7 +243,7 @@ duration-300
             <div>
               <img
                 src="/logo.webp"
-                className=" w-64 md:w-80 lg:w-[490px] object-contain drop-shadow-[0_30px_50px_rgba(22,78,94,.25)] animate-float"
+                className="w-64 md:w-80 lg:w-[490px] object-contain drop-shadow-[0_30px_50px_rgba(22,78,94,.25)] animate-float dark:[filter:brightness(0)_saturate(100%)_invert(90%)_sepia(30%)_saturate(684%)_hue-rotate(145deg)_brightness(102%)_contrast(101%)]"
               />
             </div>
           </motion.div>
@@ -253,7 +253,7 @@ duration-300
       </section>
 
       {/* Statistics Section */}
-      <section className="py-20 bg-white dark:bg-[#08131A]">
+      <section className="section-blend py-20 bg-white dark:bg-[#08131A] [--section-blend-color:white] dark:[--section-blend-color:#08131A]">
         <motion.div
           initial="hidden"
           whileInView="visible"
@@ -263,7 +263,7 @@ duration-300
           {[
             {
               value: `${stats.tutors}`,
-              label: "Qualified Tutors",
+              label: "Peak Tutors",
             },
             {
               value: `${stats.members}`,
@@ -340,7 +340,7 @@ duration-300
       </section>
 
       {/* How it Works */}
-      <section className="py-32 bg-white dark:bg-[#08131A]">
+      <section className="section-blend py-32 bg-white dark:bg-[#08131A] [--section-blend-color:white] dark:[--section-blend-color:#08131A]">
 
         <div className="max-w-7xl mx-auto px-8">
 
@@ -360,22 +360,22 @@ duration-300
               {
                 num: "01",
                 title: "Browse",
-                desc: "Search tutors by subject and level."
+                desc: "Search tutors by subject and level. Its easy.. Trust me!"
               },
               {
                 num: "02",
                 title: "Compare",
-                desc: "Read tutor profiles and reviews."
+                desc: "Read tutor profiles and reviews. Be judgy, its fun!"
               },
               {
                 num: "03",
                 title: "Connect",
-                desc: "Contact us and schedule lessons."
+                desc: "Contact us and schedule a demo. Test us and the tutor.."
               },
               {
                 num: "04",
-                title: "Learn",
-                desc: "Improve faster with expert guidance."
+                title: "Flex",
+                desc: "Now that you easily got a tutor, Flex to your friends know about us!"
               }
             ].map((step) => (
               <Card
@@ -488,7 +488,7 @@ duration-300
         </div>
 
       </section>
-      <footer className="border-t bg-white dark:bg-[#08131A] dark:border-slate-800">
+      <footer className="section-blend border-t bg-white dark:bg-[#08131A] dark:border-slate-800 [--section-blend-color:white] dark:[--section-blend-color:#08131A]">
 
         <div className="max-w-7xl mx-auto px-8 py-16">
 
