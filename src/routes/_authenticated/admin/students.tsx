@@ -76,6 +76,7 @@ function CreateStudentModal({
     setLoading(true);
     try {
       const newId = ID.unique();
+
       await DataStore.saveUserRecord({
         id: newId,
         email: email.trim(),
@@ -83,15 +84,18 @@ function CreateStudentModal({
         role,
       });
 
-      // Add to Students team when role is student
-      if (role === "student") {
-        await DataStore.addToTeam("Students", email.trim(), newId);
+      if (role === "Student") {
+        await DataStore.addToTeam(
+          "Students",
+          email.trim(),
+          newId,
+          ["Student"]
+        );
       }
-
       toast.success("Student created successfully.");
       setName("");
       setEmail("");
-      setRole("student");
+      setRole("Student");
       onCreated();
       onClose();
     } catch (err: any) {

@@ -116,7 +116,7 @@ function CreateTutorModal({
       await DataStore.saveTutor(tutor);
       // Add to Tutors team
       if (email.trim()) {
-        await DataStore.addToTeam("tutors", email.trim(), tutorId);
+       await DataStore.addToTeam("tutors", email.trim());
       }
       await DataStore.logAction("admin_create_tutor", null, { name: fullName, email });
       toast.success("Tutor created successfully.");

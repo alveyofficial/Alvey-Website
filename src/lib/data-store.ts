@@ -1114,7 +1114,7 @@ export const DataStore = {
     try {
       const { teams } = await appwrite.teams.list();
 
-      console.log("USER TEAMS:", teams);
+      console.log("USER TEAMS FULL:", JSON.stringify(teams, null, 2));
 
       return teams.map(team => team.$id);
     } catch (err) {
@@ -1384,7 +1384,12 @@ export const DataStore = {
     setLocal("tl_audit_logs", list);
     await createDocument(
       COLLECTIONS.AUDIT_LOGS,
-      { action, actorId, metadata: details, createdAt: new Date().toISOString() },
+      {
+        action,
+        actorId,
+        metadata: JSON.stringify(details),
+        createdAt: new Date().toISOString(),
+      },
       entry.id,
     );
   },
@@ -1768,20 +1773,70 @@ export const DataStore = {
   },
 
   // --- TEAM MEMBERSHIP ---
-  addToTeam: async (teamId: string, email: string, userId?: string): Promise<void> => {
+  addToTeam: async (
+    teamId: string,
+    email: string,
+    userId?: string
+  ): Promise<void> => {
     try {
-      // Prefer memberId lookup when we have a userId so we can add without email invite
-      await appwrite.teams.createMembership(
+      console.log("=== APPWRITE DEBUG ===");
+      console.log("Endpoint:", appwrite.client.config?.endpoint);
+      console.log("Project:", appwrite.client.config?.project);
+      console.log("Team ID:", teamId);
+      console.log("Email:", email);
+      console.log("User ID:", userId);
+      try {
+        const user = await appwrite.account.get();
+        console.log("AUTH USER:", user);
+      } catch (e) {
+        console.error("AUTH ERROR:", e);
+      }
+      console.log("Getting team:", teamId);
+      const team = await appwrite.teams.get({
         teamId,
-        [], // roles array (empty = default member)
-        email,
-        userId,
-        undefined, // url (not needed for server-side)
-        undefined, // name
-      );
+      });
+      console.log("TEAM FOUND:", team);
+      addToTeam: async (
+        teamId: string,
+        email: string,
+        userId?: string,
+        roles: string[] = ["tutor"]
+      ): Promise<void> => {
+        try {
+          console.log("=== APPWRITE DEBUG ===");
+          console.log("Team ID:", teamId);
+          console.log("Email:", email);
+          console.log("User ID:", userId);
+          console.log("Roles:", roles);
+
+          const team = await appwrite.teams.get({
+            teamId,
+          });
+
+          console.log("TEAM FOUND:", team);
+
+          await appwrite.teams.createMembership({
+            teamId,
+            roles,
+            email: userId ? undefined : email,
+            userId: userId || undefined,
+            url: window.location.origin,
+          });
+
+          console.log(`Added user to team: ${teamId}`);
+        } catch (e: any) {
+          if (e?.code !== 409) {
+            console.warn("addToTeam:", e);
+            throw e;
+          }
+        }
+      },
+        console.log(`Added user to team: ${teamId}`);
     } catch (e: any) {
-      // 409 = already a member — treat as success
-      if (e?.code !== 409) console.warn("addToTeam:", e);
+      if (e?.code !== 409) {
+        console.warn("addToTeam:", e);
+        throw e;
+      }
     }
   },
 

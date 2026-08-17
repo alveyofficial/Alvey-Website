@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import {
   FileText,
   CheckCircle,
@@ -172,7 +172,7 @@ function ReviewModal({
     }
   };
 
-  const field = (label: string, value: unknown, mono = false) => {
+  const field = (label: string, value: unknown, mono = false): JSX.Element | null => {
     if (!value && value !== 0) return null;
     return (
       <div className="space-y-1">
@@ -184,7 +184,7 @@ function ReviewModal({
     );
   };
 
-  const arrayField = (label: string, value: unknown) => {
+  const arrayField = (label: string, value: unknown): JSX.Element | null => {
     const arr = Array.isArray(value) ? value : value ? [value] : [];
     if (arr.length === 0) return null;
     return (

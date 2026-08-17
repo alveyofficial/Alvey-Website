@@ -5,6 +5,29 @@ import { Button } from "@/components/ui/button";
 import { appwrite } from "@/integrations/appwrite/client";
 import { DataStore } from "@/lib/data-store";
 
+function getDashboardRoute(roles: string[]): string | null {
+  if (roles.includes("admin") || roles.includes("website")) {
+    return "/admin";
+  }
+
+  if (roles.includes("tutor")) {
+    return "/tutor-dashboard";
+  }
+
+  if (roles.includes("recruitment")) {
+    return "/recruitment";
+  }
+
+  if (roles.includes("student")) {
+    return "/student/dashboard";
+  }
+
+  if (roles.includes("guest")) {
+    return "/profile";
+  }
+
+  return null;
+}
 export function Navbar() {
   const [dashboardRoute, setDashboardRoute] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -12,6 +35,8 @@ export function Navbar() {
   const [canAccessDashboard, setCanAccessDashboard] = useState(false);
   const [isDark, setIsDark] = useState(false);
   const navigate = useNavigate();
+  const isGuestProfile = dashboardRoute === "/profile";
+
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
@@ -32,60 +57,56 @@ export function Navbar() {
     appwrite.auth.getSession().then(async ({ data }) => {
       setSession(data.session);
 
-      if (data.session?.user) {
+      if (!data.session?.user) {
+        setDashboardRoute(null);
+        setCanAccessDashboard(false);
+        return;
+      }
+
+      try {
         const uid =
           (data.session.user as any).$id ||
           (data.session.user as any).id;
 
-        const roles = await DataStore.getUserRoles(uid);
+        const fetchedRoles = await DataStore.getUserRoles(uid);
+        const roles = fetchedRoles.length ? fetchedRoles : ["guest"];
 
-        let route: string | null = null;
+        const route = getDashboardRoute(roles);
 
-        if (roles.includes("admin") || roles.includes("website")) {
-          route = "/admin";
-        } else if (roles.includes("tutor")) {
-          route = "/tutor";
-        } else if (roles.includes("recruitment")) {
-          route = "/recruitment";
-        } else if (roles.includes("student")) {
-          route = "/student/dashboard";
-        }
+
+        console.log("Navbar roles:", roles);
+        console.log("Navbar dashboard route:", route);
+
         setDashboardRoute(route);
         setCanAccessDashboard(route !== null);
-      } else {
+      } catch (error) {
+        console.error("Failed to load user roles:", error);
         setDashboardRoute(null);
         setCanAccessDashboard(false);
       }
     });
-    const { data: authSub } = appwrite.auth.onAuthStateChange(async (_e, sesh) => {
-      setSession(sesh);
+    const { data: authSub } = appwrite.auth.onAuthStateChange(
+      async (_e, sesh) => {
+        setSession(sesh);
 
-      if (sesh?.user) {
-        const uid =
-          (sesh.user as any).$id ||
-          (sesh.user as any).id;
+        if (sesh?.user) {
+          const uid =
+            (sesh.user as any).F$id ||
+            (sesh.user as any).id;
 
-        const roles = await DataStore.getUserRoles(uid);
+          const rolesFromStore = await DataStore.getUserRoles(uid);
+          const roles = rolesFromStore.length ? rolesFromStore : ["guest"];
 
-        let route: string | null = null;
+          const route = getDashboardRoute(roles);
 
-        if (roles.includes("admin") || roles.includes("website")) {
-          route = "/admin";
-        } else if (roles.includes("tutor")) {
-          route = "/tutor";
-        } else if (roles.includes("recruitment")) {
-          route = "/recruitment";
-        } else if (roles.includes("student")) {
-          route = "/student/dashboard";
+          setDashboardRoute(route);
+          setCanAccessDashboard(route !== null);
+        } else {
+          setDashboardRoute(null);
+          setCanAccessDashboard(false);
         }
-
-        setDashboardRoute(route);
-        setCanAccessDashboard(route !== null);
-      } else {
-        setDashboardRoute(null);
-        setCanAccessDashboard(false);
       }
-    });
+    );
 
     return () => authSub.subscription.unsubscribe();
   }, []);
@@ -170,7 +191,7 @@ export function Navbar() {
                 >
                   <Link to={dashboardRoute!}>
                     <LayoutDashboard className="h-4 w-4" />
-                    Dashboard
+                    {isGuestProfile ? "Profile" : "Dashboard"}
                   </Link>
                 </Button>
               )}
@@ -217,7 +238,7 @@ export function Navbar() {
               size="icon"
               className="h-9 w-9 text-muted-foreground hover:text-foreground"
             >
-              <Link to={dashboardRoute!} title="Dashboard">
+              <Link to={dashboardRoute!} title={isGuestProfile ? "Profile" : "Dashboard"}>
                 <LayoutDashboard className="h-5 w-5" />
               </Link>
             </Button>

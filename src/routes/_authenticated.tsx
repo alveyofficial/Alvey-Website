@@ -1,8 +1,9 @@
-import { createFileRoute, Outlet, redirect, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { appwrite } from "@/integrations/appwrite/client";
 import { DataStore } from "@/lib/data-store";
 import { PortalLayout, type NavItem } from "@/components/portal-layout";
+
 import {
   LayoutDashboard,
   Users,
@@ -23,23 +24,51 @@ import {
   MessageSquare,
   BarChart3,
   Archive,
-  WalletCards,
-  ShieldCheck,
-  LogOut,
+  Home,
 } from "lucide-react";
 
-type Role = "student" | "tutor" | "recruitment" | "website" | "admin";
+type Role =
+  | "guest"
+  | "student"
+  | "tutor"
+  | "recruitment"
+  | "website"
+  | "admin";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
+
   beforeLoad: async () => {
     const { data } = await appwrite.auth.getSession();
+
     if (!data.session) {
       throw redirect({ to: "/auth" });
     }
   },
+
   component: AuthLayout,
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GUEST NAV
+// ─────────────────────────────────────────────────────────────────────────────
+
+const guestNav: NavItem[] = [
+  {
+    name: "Home",
+    href: "/",
+    icon: Home,
+  },
+  {
+    name: "Profile",
+    href: "/profile",
+    icon: User,
+  },
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STUDENT NAV
+// ─────────────────────────────────────────────────────────────────────────────
 
 const studentNav: NavItem[] = [
   { name: "Dashboard", href: "/student/dashboard", icon: LayoutDashboard },
@@ -51,6 +80,10 @@ const studentNav: NavItem[] = [
   { name: "Profile", href: "/profile", icon: User },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TUTOR NAV
+// ─────────────────────────────────────────────────────────────────────────────
 
 const tutorNav: NavItem[] = [
   { name: "Dashboard", href: "/tutor-dashboard", icon: LayoutDashboard },
@@ -66,6 +99,10 @@ const tutorNav: NavItem[] = [
   { name: "Settings", href: "/tutor-settings", icon: Settings },
 ];
 
+// ─────────────────────────────────────────────────────────────────────────────
+// RECRUITMENT NAV
+// ─────────────────────────────────────────────────────────────────────────────
+
 const recruitmentNav: NavItem[] = [
   { name: "Dashboard", href: "/recruitment", icon: LayoutDashboard },
   { name: "Applications", href: "/recruitment/applications", icon: FileText },
@@ -76,14 +113,34 @@ const recruitmentNav: NavItem[] = [
   { name: "Activity Log", href: "/recruitment/activity", icon: Clock },
 ];
 
+// ─────────────────────────────────────────────────────────────────────────────
+// ADMIN NAV
+// ─────────────────────────────────────────────────────────────────────────────
+
 const adminNav: NavItem[] = [
   { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { name: "Students", href: "/admin/students", icon: Users },
   { name: "Tutors", href: "/admin/tutors", icon: GraduationCap },
-  { name: "Tutor Applications", href: "/admin/tutor-applications", icon: FileText },
-  { name: "↳ Archived Tutor Apps", href: "/admin/tutor-applications-archived", icon: Archive },
-  { name: "Recruitment Applications", href: "/admin/recruitment-applications", icon: Briefcase },
-  { name: "↳ Archived Recruit Apps", href: "/admin/recruitment-applications-archived", icon: Archive },
+  {
+    name: "Tutor Applications",
+    href: "/admin/tutor-applications",
+    icon: FileText,
+  },
+  {
+    name: "↳ Archived Tutor Apps",
+    href: "/admin/tutor-applications-archived",
+    icon: Archive,
+  },
+  {
+    name: "Recruitment Applications",
+    href: "/admin/recruitment-applications",
+    icon: Briefcase,
+  },
+  {
+    name: "↳ Archived Recruit Apps",
+    href: "/admin/recruitment-applications-archived",
+    icon: Archive,
+  },
   { name: "Advertisements", href: "/admin/advertisements", icon: Megaphone },
   { name: "Reviews", href: "/admin/reviews", icon: Star },
   { name: "Scheduling", href: "/admin/scheduling", icon: Calendar },
@@ -95,58 +152,107 @@ const adminNav: NavItem[] = [
   { name: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
-const ownerNav: NavItem[] = [
-  ...adminNav,
-];
+const ownerNav: NavItem[] = [...adminNav];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AUTH LAYOUT
+// ─────────────────────────────────────────────────────────────────────────────
 
 function AuthLayout() {
   const navigate = useNavigate();
+
   const [email, setEmail] = useState<string | null>(null);
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+
     (async () => {
-      const { data: userData } = await appwrite.auth.getUser();
-      const uid = userData.user?.id;
-      setEmail(userData.user?.email ?? null);
-      if (!uid) {
-        setLoading(false);
-        return;
+      try {
+        const { data: userData } = await appwrite.auth.getUser();
+
+        const uid = userData.user?.id;
+
+        if (!uid) {
+          if (mounted) setLoading(false);
+          return;
+        }
+
+        if (mounted) {
+          setEmail(userData.user?.email ?? null);
+        }
+
+        const userRoles = (await DataStore.getUserRoles(uid)) as Role[];
+
+        if (mounted) {
+          setRoles(userRoles.length ? userRoles : ["guest"]);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error("Failed to load authenticated user:", error);
+
+        if (mounted) {
+          setRoles(["guest"]);
+          setLoading(false);
+        }
       }
-      const userRoles = (await DataStore.getUserRoles(uid)) as Role[];
-      setRoles(userRoles);
-      setLoading(false);
     })();
 
-    const { data: sub } = appwrite.auth.onAuthStateChange((_e, session) => {
-      if (!session) navigate({ to: "/auth", replace: true });
-      else setEmail((session as any)?.user?.email ?? null);
-    });
-    return () => sub.subscription.unsubscribe();
+    const { data: sub } = appwrite.auth.onAuthStateChange(
+      (_event, session) => {
+        if (!session) {
+          navigate({
+            to: "/auth",
+            replace: true,
+          });
+
+          return;
+        }
+
+        setEmail((session as any)?.user?.email ?? null);
+      },
+    );
+
+    return () => {
+      mounted = false;
+      sub.subscription.unsubscribe();
+    };
   }, [navigate]);
 
   const signOut = async () => {
-    await appwrite.auth.signOut();
-    navigate({ to: "/auth", replace: true });
+    try {
+      await appwrite.auth.signOut();
+
+      navigate({
+        to: "/auth",
+        replace: true,
+      });
+    } catch (error) {
+      console.error("Failed to sign out:", error);
+    }
   };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="h-8 w-8 rounded-full border-4 border-blue-600 border-t-transparent animate-spin" />
+        <div className="relative">
+          <div className="h-10 w-10 rounded-full border-4 border-blue-600/20" />
+          <div className="absolute inset-0 h-10 w-10 rounded-full border-4 border-blue-600 border-t-transparent animate-spin" />
+        </div>
       </div>
     );
   }
 
+  const isGuest = roles.includes("guest");
   const isTutor = roles.includes("tutor");
   const isRecruitment = roles.includes("recruitment");
   const isManager = roles.includes("website");
   const isOwner = roles.includes("admin");
-  const isAdmin = isManager || isOwner;
 
-  let navItems = studentNav;
-  let roleLabel = "Student Portal";
+  let navItems: NavItem[] = guestNav;
+  let roleLabel = "Guest Account";
+
   if (isOwner) {
     navItems = ownerNav;
     roleLabel = "Owner Dashboard";
@@ -159,10 +265,18 @@ function AuthLayout() {
   } else if (isTutor) {
     navItems = tutorNav;
     roleLabel = "Tutor Portal";
+  } else if (!isGuest) {
+    navItems = studentNav;
+    roleLabel = "Student Portal";
   }
 
   return (
-    <PortalLayout email={email} roleLabel={roleLabel} navItems={navItems} onSignOut={signOut}>
+    <PortalLayout
+      email={email}
+      roleLabel={roleLabel}
+      navItems={navItems}
+      onSignOut={signOut}
+    >
       <Outlet />
     </PortalLayout>
   );
