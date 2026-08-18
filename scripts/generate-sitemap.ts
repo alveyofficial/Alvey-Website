@@ -37,12 +37,12 @@ const API_KEY = process.env.APPWRITE_API_KEY ?? "";
 // ─── Static routes ────────────────────────────────────────────────────────────
 
 const STATIC_ROUTES: { path: string; changefreq: string; priority: string }[] = [
-  { path: "/",                  changefreq: "daily",   priority: "1.0" },
-  { path: "/find-a-tutor",     changefreq: "daily",   priority: "0.9" },
-  { path: "/apply",            changefreq: "monthly", priority: "0.7" },
-  { path: "/work-with-us",     changefreq: "monthly", priority: "0.7" },
-  { path: "/contact",          changefreq: "monthly", priority: "0.6" },
-  { path: "/privacy-policy",   changefreq: "monthly", priority: "0.3" },
+  { path: "/", changefreq: "daily", priority: "1.0" },
+  { path: "/find-a-tutor", changefreq: "daily", priority: "0.9" },
+  { path: "/apply", changefreq: "monthly", priority: "0.7" },
+  { path: "/work-with-us", changefreq: "monthly", priority: "0.7" },
+  { path: "/contact", changefreq: "monthly", priority: "0.6" },
+  { path: "/privacy-policy", changefreq: "monthly", priority: "0.3" },
   { path: "/terms-of-service", changefreq: "monthly", priority: "0.3" },
 ];
 
@@ -59,8 +59,22 @@ async function fetchTutorIds(): Promise<string[]> {
   const url = new URL(
     `${ENDPOINT}/databases/${DATABASE_ID}/collections/tutor_profiles/documents`,
   );
-  url.searchParams.set("queries[]", JSON.stringify(["equal", "active", [true]]));
-  url.searchParams.set("queries[]", JSON.stringify(["limit", 500]));
+  url.searchParams.append(
+    "queries[]",
+    JSON.stringify({
+      method: "equal",
+      column: "active",
+      values: [true],
+    })
+  );
+
+  url.searchParams.append(
+    "queries[]",
+    JSON.stringify({
+      method: "limit",
+      values: [500],
+    })
+  );
 
   const res = await fetch(url.toString(), {
     headers: {
