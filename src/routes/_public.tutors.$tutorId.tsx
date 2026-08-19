@@ -32,12 +32,14 @@ export const Route = createFileRoute("/_public/tutors/$tutorId")({
     const tutor = loaderData?.tutor;
     const name = tutor?.name ?? "Tutor Profile";
     const headline = tutor?.headline ?? "";
+
     const description = tutor
       ? `${headline ? headline + " — " : ""}Learn more about ${name} on Alvey: subjects, levels, reviews, and availability.`
-;
+      : "Learn more about this elite private academic tutor, including curriculum specialties, student reviews, and availability.";
+
     const image = tutor?.avatar_url ?? SITE.ogImage;
     const path = `/tutors/${params.tutorId}`;
-      : "Learn more about this elite private academic tutor, including curriculum specialties, student reviews, and availability."
+
     return {
       meta: seoMeta({
         title: tutor ? `${name} · Private Tutor` : "Tutor Profile",
@@ -50,7 +52,11 @@ export const Route = createFileRoute("/_public/tutors/$tutorId")({
       scripts: tutor ? [jsonLdScript(tutorPersonSchema(tutor))] : [],
     };
   },
-  component: TutorProfilePage,
+  links: seoLinks(path),
+  scripts: tutor ? [jsonLdScript(tutorPersonSchema(tutor))] : [],
+};
+  },
+component: TutorProfilePage,
 });
 
 function TutorProfilePage() {
