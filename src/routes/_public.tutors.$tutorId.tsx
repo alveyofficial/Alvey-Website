@@ -20,7 +20,6 @@ import { seoMeta, seoLinks, jsonLdScript, tutorPersonSchema, SITE } from "@/lib/
 
 export const Route = createFileRoute("/_public/tutors/$tutorId")({
   loader: async ({ params }) => {
-    // Fetch tutor server-side so head() can use the real name/description.
     try {
       const tutor = await DataStore.getTutorById(params.tutorId);
       return { tutor };
@@ -28,6 +27,7 @@ export const Route = createFileRoute("/_public/tutors/$tutorId")({
       return { tutor: null };
     }
   },
+
   head: ({ loaderData, params }) => {
     const tutor = loaderData?.tutor;
     const name = tutor?.name ?? "Tutor Profile";
@@ -52,11 +52,8 @@ export const Route = createFileRoute("/_public/tutors/$tutorId")({
       scripts: tutor ? [jsonLdScript(tutorPersonSchema(tutor))] : [],
     };
   },
-  links: seoLinks(path),
-  scripts: tutor ? [jsonLdScript(tutorPersonSchema(tutor))] : [],
-};
-  },
-component: TutorProfilePage,
+
+  component: TutorProfilePage,
 });
 
 function TutorProfilePage() {
