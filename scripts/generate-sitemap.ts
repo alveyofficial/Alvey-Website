@@ -63,7 +63,7 @@ async function fetchTutorIds(): Promise<string[]> {
     "queries[]",
     JSON.stringify({
       method: "equal",
-      column: "active",
+      attribute: "active",
       values: [true],
     }),
   );
