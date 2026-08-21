@@ -461,44 +461,62 @@ async function createDocument(
 }
 
 function mapTutorDoc(doc: any): Tutor {
-  const name = safeString(
-    doc.displayName || doc.name || doc.fullName || doc.authUserId,
-    "Certified Tutor",
-  );
-  const rate = safeNumber(doc.hourlyRate ?? doc.hourly_rate, 40);
-  const rating = safeNumber(doc.rating ?? doc.rating_avg, 5);
-  const reviews = safeNumber(doc.reviewCount ?? doc.rating_count, 0);
-  const years = safeNumber(doc.experienceYears ?? doc.years_experience, 5);
-
   return {
-    id: doc.$id,
-    name: doc.displayName ?? "Certified Tutor",
+    id: doc.$id || doc.id,
+
+    name: safeString(
+      doc.displayName || doc.name || doc.fullName,
+      "Certified Tutor",
+    ),
+
     avatar_url:
-      doc.avatarUrl ??
-      avatarFor(doc.displayName ?? "Tutor"),
-    headline: doc.headline ?? "",
-    about:
-      doc.fullBio ??
-      doc.shortBio ??
+      doc.avatarUrl ||
+      avatarFor(doc.displayName || doc.name || "Tutor"),
+
+    headline: safeString(doc.headline, ""),
+
+    about: safeString(
+      doc.fullBio || doc.shortBio,
       "",
-    hourly_rate: Number(doc.hourlyRate ?? 0),
-    rating_avg: Number(doc.rating ?? 0),
-    rating_count: Number(doc.reviewCount ?? 0),
-    years_experience: Number(doc.experienceYears ?? 0),
+    ),
+
+    hourly_rate: safeNumber(
+      doc.hourlyRate ?? doc.hourly_rate,
+      0,
+    ),
+
+    rating_avg: safeNumber(
+      doc.rating ?? doc.rating_avg,
+      0,
+    ),
+
+    rating_count: safeNumber(
+      doc.reviewCount ?? doc.rating_count,
+      0,
+    ),
+
+    years_experience: safeNumber(
+      doc.experienceYears ?? doc.years_experience,
+      0,
+    ),
+
     languages: Array.isArray(doc.languages)
       ? doc.languages
       : [],
+
     subjects: Array.isArray(doc.subjects)
       ? doc.subjects
       : [],
+
     levels: Array.isArray(doc.levels)
       ? doc.levels
       : [],
+
     is_featured: Boolean(doc.featured),
     is_verified: Boolean(doc.verified),
+
     availability:
-      doc.availability ??
-      "Contact tutor",
+      doc.availability || "Contact tutor",
   };
 }
 
@@ -628,10 +646,20 @@ export const DataStore = {
   // --- TUTORS ---
   getTutors: async (): Promise<Tutor[]> => {
     try {
-      const docs = await listDocuments(COLLECTIONS.TUTOR_PROFILES, [Query.equal("active", true)]);
-      if (docs.length > 0) return docs.map(mapTutorDoc);
-    } catch { }
-    return getLocal<Tutor[]>(KEYS.TUTORS, defaultTutors);
+      const docs = await listDocuments(
+        COLLECTIONS.TUTOR_PROFILES,
+        [Query.equal("active", true)]
+      );
+
+      console.log("APPWRITE TUTOR DOCS:", docs);
+      console.log("APPWRITE TUTOR COUNT:", docs.length);
+
+      return docs.map(mapTutorDoc);
+    } catch (error) {
+      console.error("FAILED TO LOAD TUTORS FROM APPWRITE:", error);
+
+      return getLocal<Tutor[]>(KEYS.TUTORS, defaultTutors);
+    }
   },
 
   getTutorById: async (id: string): Promise<Tutor | null> => {
@@ -1774,71 +1802,45 @@ export const DataStore = {
 
   // --- TEAM MEMBERSHIP ---
   addToTeam: async (
-    teamId: string,
-    email: string,
-    userId?: string
-  ): Promise<void> => {
-    try {
-      console.log("=== APPWRITE DEBUG ===");
-      console.log("Endpoint:", appwrite.client.config?.endpoint);
-      console.log("Project:", appwrite.client.config?.project);
-      console.log("Team ID:", teamId);
-      console.log("Email:", email);
-      console.log("User ID:", userId);
-      try {
-        const user = await appwrite.account.get();
-        console.log("AUTH USER:", user);
-      } catch (e) {
-        console.error("AUTH ERROR:", e);
-      }
-      console.log("Getting team:", teamId);
-      const team = await appwrite.teams.get({
-        teamId,
-      });
-      console.log("TEAM FOUND:", team);
-      addToTeam: async (
-        teamId: string,
-        email: string,
-        userId?: string,
-        roles: string[] = ["tutor"]
-      ): Promise<void> => {
-        try {
-          console.log("=== APPWRITE DEBUG ===");
-          console.log("Team ID:", teamId);
-          console.log("Email:", email);
-          console.log("User ID:", userId);
-          console.log("Roles:", roles);
+  teamId: string,
+  email: string,
+  userId?: string,
+  roles: string[] = ["tutor"]
+): Promise<void> => {
+  try {
+    console.log("=== APPWRITE TEAM DEBUG ===");
+    console.log("Endpoint:", appwrite.client.config?.endpoint);
+    console.log("Project:", appwrite.client.config?.project);
+    console.log("Team ID:", teamId);
+    console.log("Email:", email);
+    console.log("User ID:", userId);
+    console.log("Roles:", roles);
 
-          const team = await appwrite.teams.get({
-            teamId,
-          });
+    const team = await appwrite.teams.get({
+      teamId,
+    });
 
-          console.log("TEAM FOUND:", team);
+    console.log("TEAM FOUND:", team);
 
-          await appwrite.teams.createMembership({
-            teamId,
-            roles,
-            email: userId ? undefined : email,
-            userId: userId || undefined,
-            url: window.location.origin,
-          });
+    await appwrite.teams.createMembership({
+      teamId,
+      roles,
+      email: userId ? undefined : email,
+      userId: userId || undefined,
+      url: window.location.origin,
+    });
 
-          console.log(`Added user to team: ${teamId}`);
-        } catch (e: any) {
-          if (e?.code !== 409) {
-            console.warn("addToTeam:", e);
-            throw e;
-          }
-        }
-      },
-        console.log(`Added user to team: ${teamId}`);
-    } catch (e: any) {
-      if (e?.code !== 409) {
-        console.warn("addToTeam:", e);
-        throw e;
-      }
+    console.log(`Added user to team: ${teamId}`);
+  } catch (e: any) {
+    if (e?.code === 409) {
+      console.log("User is already a member of the team.");
+      return;
     }
-  },
+
+    console.error("addToTeam failed:", e);
+    throw e;
+  }
+},
 
   removeFromTeam: async (teamId: string, membershipId: string): Promise<void> => {
     try {

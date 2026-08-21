@@ -55,7 +55,9 @@ export const Route = createFileRoute("/_public/find-a-tutor")({
 });
 
 function FindATutorPage() {
+
   const searchParams = useSearch({ from: "/_public/find-a-tutor" });
+  const [isLoading, setIsLoading] = useState(true);
   const [tutors, setTutors] = useState<Tutor[]>([]);
   const [filteredTutors, setFilteredTutors] = useState<Tutor[]>([]);
   const [subjects, setSubjects] = useState<string[]>([]);
@@ -64,62 +66,78 @@ function FindATutorPage() {
   const [priceBounds, setPriceBounds] = useState({ min: 0, max: 0 });
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedSubject, setSelectedSubject] = useState(searchParams.subject || "All");
-  const [selectedLevel, setSelectedLevel] = useState(searchParams.level || "All");
+  const [selectedSubject, setSelectedSubject] = useState(
+    searchParams.subject || "All"
+  );
+  const [selectedLevel, setSelectedLevel] = useState(
+    searchParams.level || "All"
+  );
   const [selectedLanguage, setSelectedLanguage] = useState("All");
   const [subjectOpen, setSubjectOpen] = useState(false);
   const [levelOpen, setLevelOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
-  const [minPrice, setMinPrice] = useState<number>(0);
-  const [maxPrice, setMaxPrice] = useState<number>(0);
+  const [minPrice, setMinPrice] = useState(0);
+  const [maxPrice, setMaxPrice] = useState(0);
   const [onlyVerified, setOnlyVerified] = useState(false);
   const [sortBy, setSortBy] = useState("featured");
 
   useEffect(() => {
     (async () => {
-      const [tList, sList] = await Promise.all([
-        DataStore.getTutors(),
-        DataStore.getSubjects(),
-      ]);
+      setIsLoading(true);
 
-      setTutors(tList);
-      setSubjects(sList);
+      try {
+        const [tList, sList] = await Promise.all([
+          DataStore.getTutors(),
+          DataStore.getSubjects(),
+        ]);
 
-      const availableLevels = Array.from(
-        new Set(tList.flatMap((tutor) => tutor.levels))
-      ).sort((a, b) => a.localeCompare(b));
+        console.log("TUTORS FROM DATABASE:", tList);
 
-      setLevels(availableLevels);
-      const availableLanguages = Array.from(
-        new Set(tList.flatMap((tutor) => tutor.languages))
-      ).sort((a, b) => a.localeCompare(b));
+        setTutors(tList);
+        setSubjects(sList);
 
-      setLanguages(availableLanguages);
+        const availableLevels = Array.from(
+          new Set(tList.flatMap((tutor) => tutor.levels))
+        ).sort((a, b) => a.localeCompare(b));
 
-      const rates = tList
-        .map((tutor) => Number(tutor.hourly_rate))
-        .filter((rate) => Number.isFinite(rate) && rate > 0);
+        setLevels(availableLevels);
 
-      if (rates.length > 0) {
-        const min = Math.min(...rates);
-        const max = Math.max(...rates);
-        setPriceBounds({ min, max });
-      } else {
-        setPriceBounds({ min: 0, max: 0 });
+        const availableLanguages = Array.from(
+          new Set(tList.flatMap((tutor) => tutor.languages))
+        ).sort((a, b) => a.localeCompare(b));
+
+        setLanguages(availableLanguages);
+
+        const rates = tList
+          .map((tutor) => Number(tutor.hourly_rate))
+          .filter((rate) => Number.isFinite(rate) && rate > 0);
+
+        console.log("VALID RATES:", rates);
+
+        if (rates.length > 0) {
+          const min = Math.min(...rates);
+          const max = Math.max(...rates);
+
+          setPriceBounds({ min, max });
+          setMinPrice(min);
+          setMaxPrice(max);
+        }
+      } catch (error) {
+        console.error("FAILED TO LOAD PAGE DATA:", error);
+      } finally {
+        setIsLoading(false);
       }
     })();
   }, []);
 
   useEffect(() => {
-    if (priceBounds.max <= 0) return;
+    if (searchParams.level) {
+      setSelectedLevel(searchParams.level);
+    }
 
-    setMinPrice(priceBounds.min);
-    setMaxPrice(priceBounds.max);
-  }, [priceBounds.min, priceBounds.max]);
-
-  useEffect(() => {
-    if (searchParams.level) setSelectedLevel(searchParams.level);
-    if (searchParams.subject) setSelectedSubject(searchParams.subject);
+    if (searchParams.subject) {
+      setSelectedSubject(searchParams.subject);
+    }
   }, [searchParams]);
 
   useEffect(() => {
@@ -127,33 +145,46 @@ function FindATutorPage() {
 
     if (searchQuery.trim() !== "") {
       const q = searchQuery.toLowerCase();
+
       result = result.filter(
         (t) =>
           t.name.toLowerCase().includes(q) ||
           t.headline.toLowerCase().includes(q) ||
           t.about.toLowerCase().includes(q) ||
-          t.subjects.some((s) => s.toLowerCase().includes(q)),
+          t.subjects.some((s) => s.toLowerCase().includes(q))
       );
     }
 
     if (selectedSubject !== "All") {
-      result = result.filter((t) => t.subjects.includes(selectedSubject));
+      result = result.filter((t) =>
+        t.subjects.includes(selectedSubject)
+      );
     }
 
     if (selectedLevel !== "All") {
-      result = result.filter((t) => t.levels.includes(selectedLevel));
+      result = result.filter((t) =>
+        t.levels.includes(selectedLevel)
+      );
     }
 
     if (selectedLanguage !== "All") {
       const selected = selectedLanguage.toLowerCase();
+
       result = result.filter((t) =>
-        t.languages.some((language) => language.toLowerCase() === selected),
+        t.languages.some(
+          (language) => language.toLowerCase() === selected
+        )
       );
     }
 
-    result = result.filter(
-      (t) => t.hourly_rate >= minPrice && t.hourly_rate <= maxPrice
-    );
+    if (priceBounds.max > 0) {
+      result = result.filter(
+        (t) =>
+          t.hourly_rate >= minPrice &&
+          t.hourly_rate <= maxPrice
+      );
+    }
+
     if (onlyVerified) {
       result = result.filter((t) => t.is_verified);
     }
@@ -165,12 +196,19 @@ function FindATutorPage() {
     } else if (sortBy === "highest_price") {
       result.sort((a, b) => b.hourly_rate - a.hourly_rate);
     } else if (sortBy === "experience") {
-      result.sort((a, b) => b.years_experience - a.years_experience);
+      result.sort(
+        (a, b) => b.years_experience - a.years_experience
+      );
     } else if (sortBy === "alphabetical") {
       result.sort((a, b) => a.name.localeCompare(b.name));
     } else {
-      result.sort((a, b) => (b.is_featured ? 1 : 0) - (a.is_featured ? 1 : 0));
+      result.sort(
+        (a, b) =>
+          Number(b.is_featured) - Number(a.is_featured)
+      );
     }
+
+    console.log("FILTERED TUTORS:", result);
 
     setFilteredTutors(result);
   }, [
@@ -181,6 +219,7 @@ function FindATutorPage() {
     selectedLanguage,
     minPrice,
     maxPrice,
+    priceBounds.max,
     onlyVerified,
     sortBy,
   ]);
@@ -516,12 +555,18 @@ function FindATutorPage() {
           {/* Search Inputs & Sort */}
           <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
             <div className="relative w-full sm:max-w-md">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
+
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search tutor names, keywords, or bio..."
-                className="pl-10 h-10 bg-slate-50/50 focus-visible:ring-[#3D7F8F] rounded-xl"
+                placeholder="Search tutors..."
+                className="pl-10 pr-4 h-10 rounded-xl
+      bg-white dark:bg-[#0D2330]
+      border-slate-200 dark:border-[#264653]
+      text-slate-900 dark:text-white
+      placeholder:text-slate-400 dark:placeholder:text-slate-500
+      focus-visible:ring-[#6FD4D8]"
               />
             </div>
 
@@ -603,24 +648,34 @@ function FindATutorPage() {
             )}
 
           {/* Tutors Grid Results */}
-          {filteredTutors.length === 0 ? (
-            <div className="text-center py-20 bg-slate-50/40 border border-dashed border-border rounded-2xl space-y-4">
-              <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto text-slate-400">
-                <Search className="h-6 w-6" />
+          {/* Tutors Grid Results */}
+          {isLoading ? (
+            <div className="min-h-[55vh] w-full flex items-center justify-center">
+              <div className="text-center space-y-5">
+                <div className="mx-auto h-12 w-12 rounded-full border-4 border-[#164E5E]/20 border-t-[#164E5E] dark:border-[#6FD4D8]/20 dark:border-t-[#6FD4D8] animate-spin" />
+
+                <div>
+                  <h2 className="text-2xl font-bold text-[#164E5E] dark:text-[#6FD4D8]">
+                    Eeee please waittttt 😭
+                  </h2>
+
+                  <p className="mt-2 text-muted-foreground">
+                    The tutors are loading... trust me!
+                  </p>
+                </div>
               </div>
-              <div className="space-y-1">
-                <h4 className="font-bold text-lg">No Tutors Match Your Criteria</h4>
-                <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                  Try broadening your pricing scale, selecting "All Subjects", or resetting filters.
+            </div>
+          ) : filteredTutors.length === 0 ? (
+            <div className="min-h-[55vh] w-full flex items-center justify-center">
+              <div className="text-center">
+                <h2 className="text-xl font-bold">
+                  No tutors found
+                </h2>
+
+                <p className="mt-2 text-muted-foreground">
+                  Try changing your search or filters.
                 </p>
               </div>
-              <Button
-                onClick={handleResetFilters}
-                variant="outline"
-                className="text-xs h-9 rounded-xl"
-              >
-                Reset Filters
-              </Button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -635,36 +690,42 @@ function FindATutorPage() {
                       alt={tutor.name}
                       className="h-14 w-14 rounded-xl object-cover shrink-0 border border-slate-100 dark:border-slate-800"
                     />
+
                     <div className="space-y-1">
                       <div className="flex items-center gap-1.5">
                         <CardTitle className="text-base font-bold text-slate-900 dark:text-slate-100 m-0">
                           {tutor.name}
                         </CardTitle>
+
                         {tutor.is_verified && (
                           <CheckCircle
                             className="h-4 w-4 text-[#3D7F8F] fill-blue-50 shrink-0"
                           />
                         )}
+
                         {tutor.is_featured && (
-                          <Award
-                            className="h-4 w-4 text-amber-500 shrink-0"
-                          />
+                          <Award className="h-4 w-4 text-amber-500 shrink-0" />
                         )}
                       </div>
+
                       <div className="flex items-center gap-1 text-xs text-amber-500 font-semibold">
                         <Star className="h-3.5 w-3.5 fill-amber-500" />
+
                         <span>{tutor.rating_avg.toFixed(2)}</span>
+
                         <span className="text-muted-foreground font-normal">
                           ({tutor.rating_count} reviews)
                         </span>
                       </div>
                     </div>
                   </CardHeader>
+
                   <CardContent className="px-5 pb-5 pt-0 space-y-4 flex-1 flex flex-col justify-between">
                     <div className="space-y-2">
                       <h4 className="text-xs font-semibold text-[#164E5E] uppercase tracking-wider">
                         {tutor.headline}
                       </h4>
+
                       <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
                         {tutor.about}
                       </p>
@@ -681,6 +742,7 @@ function FindATutorPage() {
                             {sub}
                           </Badge>
                         ))}
+
                         {tutor.levels.map((lvl) => (
                           <Badge
                             key={lvl}
@@ -696,12 +758,14 @@ function FindATutorPage() {
                         <span className="text-muted-foreground">
                           Languages: {tutor.languages.join(", ")}
                         </span>
+
                         <span className="font-extrabold text-slate-900 dark:text-slate-100 text-sm">
                           ${tutor.hourly_rate}/hr
                         </span>
                       </div>
                     </div>
                   </CardContent>
+
                   <CardFooter className="p-4 bg-slate-50/50 dark:bg-slate-900/10 border-t border-border/40 grid grid-cols-2 gap-2">
                     <Button
                       asChild
@@ -709,16 +773,23 @@ function FindATutorPage() {
                       size="sm"
                       className="w-full text-xs font-medium rounded-lg"
                     >
-                      <Link to="/tutors/$tutorId" params={{ tutorId: tutor.id }}>
+                      <Link
+                        to="/tutors/$tutorId"
+                        params={{ tutorId: tutor.id }}
+                      >
                         View Profile
                       </Link>
                     </Button>
+
                     <Button
                       asChild
                       size="sm"
                       className="w-full bg-[#164E5E] hover:bg-[#3D7F8F] text-white text-xs font-semibold rounded-lg"
                     >
-                      <Link to="/contact" search={{ tutorId: tutor.id }}>
+                      <Link
+                        to="/contact"
+                        search={{ tutorId: tutor.id }}
+                      >
                         Contact & Book
                       </Link>
                     </Button>
@@ -726,7 +797,8 @@ function FindATutorPage() {
                 </Card>
               ))}
             </div>
-          )}
+          )
+          }
         </main>
       </div>
     </>

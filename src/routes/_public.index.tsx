@@ -407,6 +407,79 @@ duration-300
       </section>
 
       {/* Call to Action */}
+      {/* reviews */}
+      <section className="py-24 bg-[#F8FCFD] dark:bg-[#0D2330]">
+        <div className="max-w-7xl mx-auto px-8">
+
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={fadeInUp}
+            className="text-center mb-12"
+          >
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#3D7F8F] dark:text-[#6FD4D8]">
+              What people say
+            </p>
+
+            <h2 className="mt-3 text-4xl md:text-5xl font-black tracking-tight text-[#164E5E] dark:text-white">
+              Real people. Real experiences.
+            </h2>
+
+            <p className="mt-4 text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+              See what tutors and students have to say about their experience with Alvey.
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="flex justify-center"
+          >
+            <Card className="w-full max-w-2xl rounded-3xl border border-[#D8E7EB] dark:border-slate-700 bg-white dark:bg-slate-900 shadow-md hover:shadow-xl transition-all duration-300">
+              <CardContent className="p-8 md:p-10">
+                <div
+                  className="flex justify-center gap-1 mb-6"
+                  aria-label="5 out of 5 stars"
+                >
+                  {"★★★★★".split("").map((star, i) => (
+                    <span
+                      key={i}
+                      className="text-[#F4B942] text-xl"
+                    >
+                      {star}
+                    </span>
+                  ))}
+                </div>
+                <p className="text-lg md:text-xl leading-8 text-center text-gray-700 dark:text-gray-200">
+                  “Tutors Link is an awesome platform. As a tutor, I'd been
+                  struggling to find students since the Oct-Nov examination
+                  session finished, but just 1 week of me joining this platform
+                  and I already have a prospective student. 10/10.”
+                </p>
+                <div className="flex justify-center items-center gap-3 mt-8 pt-6 border-t border-gray-100 dark:border-slate-800">
+                  <div className="h-11 w-11 rounded-full bg-[#164E5E] text-white flex items-center justify-center font-bold">
+                    A
+                  </div>
+
+                  <div className="text-left">
+                    <p className="font-semibold text-[#164E5E] dark:text-white">
+                      Alvey Tutor
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Tutor
+                    </p>
+                  </div>
+                </div>
+
+              </CardContent>
+            </Card>
+          </motion.div>
+
+        </div>
+      </section>
       <section className="py-36">
 
         <div className="max-w-6xl mx-auto px-8">
