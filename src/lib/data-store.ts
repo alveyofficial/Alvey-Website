@@ -380,6 +380,7 @@ function initials(name: string): string {
   );
 }
 
+
 function avatarFor(name: string): string {
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0f172a&color=ffffff&size=256`;
 }
@@ -667,6 +668,8 @@ export const DataStore = {
     return tutors.find((t) => t.id === id) || null;
   },
 
+
+
   saveTutor: async (tutor: Tutor): Promise<void> => {
     const payload = {
       slug: tutor.id,
@@ -811,6 +814,128 @@ export const DataStore = {
       KEYS.TESTIMONIALS,
       testimonials.filter((t) => t.id !== id),
     );
+  },
+
+  // --- CREDITS ---
+
+  getCredits: async (): Promise<Credit[]> => {
+    try {
+      const response = await appwrite.databases.listDocuments({
+        databaseId: APPWRITE_DATABASE_ID,
+        collectionId: "credits",
+        queries: [
+          Query.orderAsc("order"),
+        ],
+      });
+
+      return response.documents.map((doc: any) => ({
+        id: doc.$id,
+        name: safeString(doc.name, "Unknown"),
+        role: safeString(doc.role, ""),
+        contribution: safeString(doc.contribution, ""),
+        order: safeNumber(doc.order, 0),
+      }));
+    } catch (error) {
+      console.error("Failed to load credits:", error);
+      return [];
+    }
+  },
+
+  getCreditById: async (id: string): Promise<Credit | null> => {
+    try {
+      const doc = await appwrite.databases.getDocument({
+        databaseId: APPWRITE_DATABASE_ID,
+        collectionId: "credits",
+        documentId: id,
+      });
+
+      return {
+        id: doc.$id,
+        name: safeString(doc.name, "Unknown"),
+        role: safeString(doc.role, ""),
+        contribution: safeString(doc.contribution, ""),
+        order: safeNumber(doc.order, 0),
+      };
+    } catch (error) {
+      console.error("Failed to load credit:", error);
+      return null;
+    }
+  },
+
+  createCredit: async (
+    credit: Omit<Credit, "id">,
+  ): Promise<Credit | null> => {
+    try {
+      const doc = await appwrite.databases.createDocument({
+        databaseId: APPWRITE_DATABASE_ID,
+        collectionId: "credits",
+        documentId: ID.unique(),
+        data: {
+          name: credit.name,
+          role: credit.role,
+          contribution: credit.contribution,
+          order: credit.order,
+        },
+      });
+
+      return {
+        id: doc.$id,
+        name: safeString(doc.name, "Unknown"),
+        role: safeString(doc.role, ""),
+        contribution: safeString(doc.contribution, ""),
+        order: safeNumber(doc.order, 0),
+      };
+    } catch (error) {
+      console.error("Failed to create credit:", error);
+      return null;
+    }
+  },
+
+  updateCredit: async (
+    id: string,
+    credit: Partial<Omit<Credit, "id">>,
+  ): Promise<Credit | null> => {
+    try {
+      const doc = await appwrite.databases.updateDocument({
+        databaseId: APPWRITE_DATABASE_ID,
+        collectionId: "credits",
+        documentId: id,
+        data: {
+          ...(credit.name !== undefined && { name: credit.name }),
+          ...(credit.role !== undefined && { role: credit.role }),
+          ...(credit.contribution !== undefined && {
+            contribution: credit.contribution,
+          }),
+          ...(credit.order !== undefined && { order: credit.order }),
+        },
+      });
+
+      return {
+        id: doc.$id,
+        name: safeString(doc.name, "Unknown"),
+        role: safeString(doc.role, ""),
+        contribution: safeString(doc.contribution, ""),
+        order: safeNumber(doc.order, 0),
+      };
+    } catch (error) {
+      console.error("Failed to update credit:", error);
+      return null;
+    }
+  },
+
+  deleteCredit: async (id: string): Promise<boolean> => {
+    try {
+      await appwrite.databases.deleteDocument({
+        databaseId: APPWRITE_DATABASE_ID,
+        collectionId: "credits",
+        documentId: id,
+      });
+
+      return true;
+    } catch (error) {
+      console.error("Failed to delete credit:", error);
+      return false;
+    }
   },
 
   // --- CMS ---
@@ -1801,46 +1926,47 @@ export const DataStore = {
   },
 
   // --- TEAM MEMBERSHIP ---
+
   addToTeam: async (
-  teamId: string,
-  email: string,
-  userId?: string,
-  roles: string[] = ["tutor"]
-): Promise<void> => {
-  try {
-    console.log("=== APPWRITE TEAM DEBUG ===");
-    console.log("Endpoint:", appwrite.client.config?.endpoint);
-    console.log("Project:", appwrite.client.config?.project);
-    console.log("Team ID:", teamId);
-    console.log("Email:", email);
-    console.log("User ID:", userId);
-    console.log("Roles:", roles);
+    teamId: string,
+    email: string,
+    userId?: string,
+    roles: string[] = ["tutor"]
+  ): Promise<void> => {
+    try {
+      console.log("=== APPWRITE TEAM DEBUG ===");
+      console.log("Endpoint:", appwrite.client.config?.endpoint);
+      console.log("Project:", appwrite.client.config?.project);
+      console.log("Team ID:", teamId);
+      console.log("Email:", email);
+      console.log("User ID:", userId);
+      console.log("Roles:", roles);
 
-    const team = await appwrite.teams.get({
-      teamId,
-    });
+      const team = await appwrite.teams.get({
+        teamId,
+      });
 
-    console.log("TEAM FOUND:", team);
+      console.log("TEAM FOUND:", team);
 
-    await appwrite.teams.createMembership({
-      teamId,
-      roles,
-      email: userId ? undefined : email,
-      userId: userId || undefined,
-      url: window.location.origin,
-    });
+      await appwrite.teams.createMembership({
+        teamId,
+        roles,
+        email: userId ? undefined : email,
+        userId: userId || undefined,
+        url: window.location.origin,
+      });
 
-    console.log(`Added user to team: ${teamId}`);
-  } catch (e: any) {
-    if (e?.code === 409) {
-      console.log("User is already a member of the team.");
-      return;
+      console.log(`Added user to team: ${teamId}`);
+    } catch (e: any) {
+      if (e?.code === 409) {
+        console.log("User is already a member of the team.");
+        return;
+      }
+
+      console.error("addToTeam failed:", e);
+      throw e;
     }
-
-    console.error("addToTeam failed:", e);
-    throw e;
-  }
-},
+  },
 
   removeFromTeam: async (teamId: string, membershipId: string): Promise<void> => {
     try {
@@ -2097,6 +2223,15 @@ export const DataStore = {
   archiveAdvertisement: async (id: string): Promise<void> => {
     await upsertDocument(COLLECTIONS.TUTOR_ADS, id, { isDeleted: true, status: "archived" });
   },
+
 };
 
 export type { Tutor as TutorData };
+
+export type Credit = {
+  id?: string;
+  name: string;
+  role: string;
+  contribution: string;
+  order: number;
+};

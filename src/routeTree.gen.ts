@@ -21,6 +21,7 @@ import { Route as PublicWorkWithUsRouteImport } from './routes/_public.work-with
 import { Route as PublicTermsOfServiceRouteImport } from './routes/_public.terms-of-service'
 import { Route as PublicPrivacyPolicyRouteImport } from './routes/_public.privacy-policy'
 import { Route as PublicFindATutorRouteImport } from './routes/_public.find-a-tutor'
+import { Route as PublicCreditsRouteImport } from './routes/_public.credits'
 import { Route as PublicContactRouteImport } from './routes/_public.contact'
 import { Route as PublicApplyRouteImport } from './routes/_public.apply'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated.settings'
@@ -126,6 +127,11 @@ const PublicPrivacyPolicyRoute = PublicPrivacyPolicyRouteImport.update({
 const PublicFindATutorRoute = PublicFindATutorRouteImport.update({
   id: '/find-a-tutor',
   path: '/find-a-tutor',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicCreditsRoute = PublicCreditsRouteImport.update({
+  id: '/credits',
+  path: '/credits',
   getParentRoute: () => PublicRoute,
 } as any)
 const PublicContactRoute = PublicContactRouteImport.update({
@@ -417,6 +423,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/apply': typeof PublicApplyRoute
   '/contact': typeof PublicContactRoute
+  '/credits': typeof PublicCreditsRoute
   '/find-a-tutor': typeof PublicFindATutorRoute
   '/privacy-policy': typeof PublicPrivacyPolicyRoute
   '/terms-of-service': typeof PublicTermsOfServiceRoute
@@ -477,6 +484,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/apply': typeof PublicApplyRoute
   '/contact': typeof PublicContactRoute
+  '/credits': typeof PublicCreditsRoute
   '/find-a-tutor': typeof PublicFindATutorRoute
   '/privacy-policy': typeof PublicPrivacyPolicyRoute
   '/terms-of-service': typeof PublicTermsOfServiceRoute
@@ -539,6 +547,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_public/apply': typeof PublicApplyRoute
   '/_public/contact': typeof PublicContactRoute
+  '/_public/credits': typeof PublicCreditsRoute
   '/_public/find-a-tutor': typeof PublicFindATutorRoute
   '/_public/privacy-policy': typeof PublicPrivacyPolicyRoute
   '/_public/terms-of-service': typeof PublicTermsOfServiceRoute
@@ -602,6 +611,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/apply'
     | '/contact'
+    | '/credits'
     | '/find-a-tutor'
     | '/privacy-policy'
     | '/terms-of-service'
@@ -662,6 +672,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/apply'
     | '/contact'
+    | '/credits'
     | '/find-a-tutor'
     | '/privacy-policy'
     | '/terms-of-service'
@@ -723,6 +734,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_public/apply'
     | '/_public/contact'
+    | '/_public/credits'
     | '/_public/find-a-tutor'
     | '/_public/privacy-policy'
     | '/_public/terms-of-service'
@@ -866,6 +878,13 @@ declare module '@tanstack/react-router' {
       path: '/find-a-tutor'
       fullPath: '/find-a-tutor'
       preLoaderRoute: typeof PublicFindATutorRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/credits': {
+      id: '/_public/credits'
+      path: '/credits'
+      fullPath: '/credits'
+      preLoaderRoute: typeof PublicCreditsRouteImport
       parentRoute: typeof PublicRoute
     }
     '/_public/contact': {
@@ -1314,6 +1333,7 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 interface PublicRouteChildren {
   PublicApplyRoute: typeof PublicApplyRoute
   PublicContactRoute: typeof PublicContactRoute
+  PublicCreditsRoute: typeof PublicCreditsRoute
   PublicFindATutorRoute: typeof PublicFindATutorRoute
   PublicPrivacyPolicyRoute: typeof PublicPrivacyPolicyRoute
   PublicTermsOfServiceRoute: typeof PublicTermsOfServiceRoute
@@ -1325,6 +1345,7 @@ interface PublicRouteChildren {
 const PublicRouteChildren: PublicRouteChildren = {
   PublicApplyRoute: PublicApplyRoute,
   PublicContactRoute: PublicContactRoute,
+  PublicCreditsRoute: PublicCreditsRoute,
   PublicFindATutorRoute: PublicFindATutorRoute,
   PublicPrivacyPolicyRoute: PublicPrivacyPolicyRoute,
   PublicTermsOfServiceRoute: PublicTermsOfServiceRoute,

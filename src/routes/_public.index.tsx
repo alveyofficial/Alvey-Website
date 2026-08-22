@@ -307,27 +307,38 @@ duration-300
           whileInView="visible"
           viewport={{ once: true, margin: "-50px" }}
           variants={staggerContainer}
-          className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6"
+          className="flex flex-wrap justify-center gap-4 md:gap-6"
         >
           {levelsLoading
             ? Array.from({ length: 8 }).map((_, i) => (
               <div
                 key={i}
-                className="h-24 rounded-2xl bg-muted animate-pulse"
+                className="h-24 w-full sm:w-[calc(50%-0.5rem)] md:w-[calc(25%-1.125rem)] max-w-sm rounded-2xl bg-muted animate-pulse"
               />
             ))
             : levels.map((level) => (
-              <motion.div key={level.name} variants={fadeInUp} whileHover={{ y: -5 }} >
-                <Link to="/find-a-tutor" search={{
-                  level: level.slug,
-                  subject: "",
-                }}>
+              <motion.div
+                key={level.name}
+                variants={fadeInUp}
+                whileHover={{ y: -5 }}
+                className="w-full sm:w-[calc(50%-0.5rem)] md:w-[280px] lg:w-[300px] max-w-sm flex"
+              >
+                <Link
+                  to="/find-a-tutor"
+                  search={{
+                    level: level.slug,
+                    subject: "",
+                  }}
+                  className="w-full"
+                >
                   <Card
-                    className="rounded-3xl border border-[#262345] bg-white dark:bg-slate-900 shadow-md hover:bg-gradient-to-br hover:from-[#164E5E] hover:to-[#3D7F8F] hover:text-white hover:text-white hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+                    className="h-full w-full rounded-3xl border border-[#262345] border-b-[3px] border-b-[#D1D5DB] dark:border-b-[#1F2937] bg-white dark:bg-slate-900 shadow-md hover:bg-gradient-to-br hover:from-[#164E5E] hover:to-[#3D7F8F] hover:text-white hover:shadow-2xl hover:-translate-y-2 transition-all duration-300"
+                  >
                     <CardContent className="py-8 px-6 flex flex-col items-center text-center">
                       <h3 className="font-semibold text-lg">
                         {level.name}
                       </h3>
+
                       <p className="mt-2 text-sm text-gray-600 dark:text-gray-300 transition-colors">
                         {level.description}
                       </p>
@@ -651,6 +662,13 @@ duration-300
                   Terms of Service
                 </Link>
 
+                <Link
+                  to="/credits"
+                  className="block hover:text-[#3D7F8F] dark:hover:text-[#6FD4D8] transition-colors"
+                >
+                  Credits
+                </Link>
+                
               </div>
 
             </div>

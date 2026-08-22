@@ -34,6 +34,7 @@ export function Footer() {
       links: [
         { label: "Privacy Policy", to: "/privacy-policy" },
         { label: "Terms of Service", to: "/terms-of-service" },
+        { label: "Credits", to: "/credits" },
       ],
     },
   ];
