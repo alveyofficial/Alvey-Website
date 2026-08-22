@@ -5,7 +5,6 @@ import { PageHeader } from "@/components/portal-shared";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/tutor/profile")({
@@ -14,23 +13,25 @@ export const Route = createFileRoute("/_authenticated/tutor/profile")({
 
 function TutorPublicProfile() {
   const [profile, setProfile] = useState({
-    headline: "Oxford Graduate & Experienced Mathematics Professor",
-    bio: "I hold a PhD in Mathematics from Oxford University and have spent over 12 years helping students master advanced calculus, algebra, and physics. My teaching style focuses on understanding core principles rather than memorization.",
-    philosophy:
-      "Every student has a unique way of learning. I adapt my approach to match each student's strengths, building confidence through structured practice and conceptual clarity.",
-    languages: ["English", "French"],
-    subjects: ["Mathematics", "Physics", "Calculus"],
-    levels: ["A-Level", "IB", "University", "IGCSE"],
-    yearsExperience: 12,
-    qualifications: "PhD Mathematics, Oxford University; MSc Applied Mathematics, Cambridge",
+    headline: "",
+    bio: "",
+    philosophy: "",
+    languages: [] as string[],
+    subjects: [] as string[],
+    levels: [] as string[],
+    yearsExperience: 0,
+    qualifications: "",
   });
   const [saving, setSaving] = useState(false);
 
+  // TODO: On mount, load the tutor's profile via DataStore.getTutorProfile(uid)
+  // and populate the fields above. On save, write back with DataStore.saveTutorProfile(uid, profile).
   const handleSave = () => {
     setSaving(true);
+    // TODO: Replace with a real DataStore.saveTutorProfile() call.
     setTimeout(() => {
       setSaving(false);
-      toast.success("Public profile updated. Some changes may require staff approval.");
+      toast.success("Connect DataStore.saveTutorProfile() to persist these changes.");
     }, 800);
   };
 
@@ -51,10 +52,7 @@ function TutorPublicProfile() {
         }
       />
 
-      <div className="flex items-center gap-2 mb-6">
-        <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200">Verified</Badge>
-        <Badge className="bg-amber-50 text-amber-700 border-amber-200">Featured</Badge>
-      </div>
+      {/* TODO: Render Verified / Featured badges once tutor_profiles fields are populated from Appwrite. */}
 
       <Card className="mb-6">
         <CardHeader>
@@ -173,11 +171,10 @@ function TutorPublicProfile() {
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-4">
-            <img
-              src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80"
-              alt="Profile"
-              className="h-20 w-20 rounded-2xl object-cover border"
-            />
+            {/* TODO: Load avatar from Appwrite Storage using the tutor's profile photo file ID. */}
+            <div className="h-20 w-20 rounded-2xl border bg-muted flex items-center justify-center text-xs text-muted-foreground">
+              No photo
+            </div>
             <Button variant="outline">
               <Upload className="h-4 w-4 mr-2" /> Upload New Photo
             </Button>

@@ -1,11 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { appwrite } from "@/integrations/appwrite/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { BookOpen, Calendar, Clock, Bell, ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { BookOpen, Calendar, Clock, Bell } from "lucide-react";
 import { DataStore } from "@/lib/data-store";
+import { EmptyState } from "@/components/portal-shared";
 
 type Role = "student" | "tutor" | "recruitment" | "website" | "admin";
 
@@ -79,7 +78,7 @@ function Dashboard() {
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Assigned Tutors</p>
-              <h3 className="text-2xl font-bold">2</h3>
+              <h3 className="text-2xl font-bold">—</h3>
             </div>
           </CardContent>
         </Card>
@@ -90,7 +89,7 @@ function Dashboard() {
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Upcoming Lessons</p>
-              <h3 className="text-2xl font-bold">3</h3>
+              <h3 className="text-2xl font-bold">—</h3>
             </div>
           </CardContent>
         </Card>
@@ -101,7 +100,7 @@ function Dashboard() {
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Remaining Classes</p>
-              <h3 className="text-2xl font-bold">8</h3>
+              <h3 className="text-2xl font-bold">—</h3>
             </div>
           </CardContent>
         </Card>
@@ -112,7 +111,7 @@ function Dashboard() {
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Notifications</p>
-              <h3 className="text-2xl font-bold">1</h3>
+              <h3 className="text-2xl font-bold">—</h3>
             </div>
           </CardContent>
         </Card>
@@ -123,43 +122,13 @@ function Dashboard() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-xl">Upcoming Lessons</CardTitle>
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/student/dashboard">
-                  View Schedule <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4 pt-4">
-                {[
-                  {
-                    tutor: "Sarah Jenkins",
-                    subject: "Mathematics",
-                    date: "Today",
-                    time: "4:00 PM - 5:00 PM",
-                  },
-                  {
-                    tutor: "Michael Chen",
-                    subject: "Computer Science",
-                    date: "Tomorrow",
-                    time: "3:30 PM - 4:30 PM",
-                  },
-                ].map((lesson, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:border-primary transition-colors"
-                  >
-                    <div className="flex flex-col">
-                      <span className="font-semibold">{lesson.subject}</span>
-                      <span className="text-sm text-muted-foreground">with {lesson.tutor}</span>
-                    </div>
-                    <div className="text-right flex flex-col">
-                      <span className="font-semibold text-primary">{lesson.date}</span>
-                      <span className="text-sm text-muted-foreground">{lesson.time}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <EmptyState
+                icon={Calendar}
+                title="Coming Soon"
+                description="Your upcoming lessons will appear here once scheduling is live."
+              />
             </CardContent>
           </Card>
         </div>
@@ -170,26 +139,11 @@ function Dashboard() {
               <CardTitle className="text-xl">Latest Updates</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="flex gap-4">
-                  <div className="mt-1 w-2 h-2 rounded-full bg-primary flex-shrink-0" />
-                  <div>
-                    <p className="text-sm font-medium">New Tutor Assigned</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Michael Chen has been assigned for Computer Science.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-4">
-                  <div className="mt-1 w-2 h-2 rounded-full bg-muted flex-shrink-0" />
-                  <div>
-                    <p className="text-sm font-medium">Lesson Rescheduled</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Mathematics lesson moved to 4:00 PM today.
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <EmptyState
+                icon={Bell}
+                title="Coming Soon"
+                description="Activity and updates will show here once your account is active."
+              />
             </CardContent>
           </Card>
         </div>

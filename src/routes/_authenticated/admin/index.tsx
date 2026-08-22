@@ -194,11 +194,15 @@ function AdminDashboard() {
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">Database Status</span>
-                    <span className="text-sm font-medium text-emerald-600">Healthy</span>
+                    <span className="text-sm font-medium text-muted-foreground italic">
+                      Connect an Appwrite health-check endpoint
+                    </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">Auth Service</span>
-                    <span className="text-sm font-medium text-emerald-600">Operational</span>
+                    <span className="text-sm font-medium text-muted-foreground italic">
+                      Poll Appwrite /health/db via server function
+                    </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">AI Assistant</span>
@@ -210,7 +214,9 @@ function AdminDashboard() {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">Edge Functions</span>
-                    <span className="text-sm font-medium text-emerald-600">Running</span>
+                    <span className="text-sm font-medium text-muted-foreground italic">
+                      Query Appwrite Functions API for execution logs
+                    </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">Pending Recruitment</span>

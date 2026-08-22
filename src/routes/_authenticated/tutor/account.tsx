@@ -13,20 +13,23 @@ export const Route = createFileRoute("/_authenticated/tutor/account")({
 
 function TutorAccount() {
   const [profile, setProfile] = useState({
-    fullName: "Dr. Alexander Sterling",
-    email: "alex.sterling@alvey.study",
-    phone: "+44 7911 123456",
-    country: "United Kingdom",
+    fullName: "",
+    email: "",
+    phone: "",
+    country: "",
     timezone: "GMT+0 (London)",
-    language: "English",
+    language: "",
   });
   const [saving, setSaving] = useState(false);
 
+  // TODO: On mount, load the current user's record via DataStore.getUserRecord(uid)
+  // and populate the fields above. On save, write back with DataStore.updateUserRecord(uid, profile).
   const handleSave = () => {
     setSaving(true);
+    // TODO: Replace with a real DataStore.updateUserRecord() call.
     setTimeout(() => {
       setSaving(false);
-      toast.success("Account profile updated.");
+      toast.success("Connect DataStore.updateUserRecord() to persist these changes.");
     }, 800);
   };
 

@@ -19,24 +19,7 @@ interface Note {
   date: string;
 }
 
-const initialNotes: Note[] = [
-  {
-    id: "n1",
-    title: "Laura Bennett - Initial Review",
-    content:
-      "Strong background in academic recruitment. Previous experience at Cambridge Admissions is a plus. Recommend moving to interview stage.",
-    author: "Recruitment Team",
-    date: "2026-07-11",
-  },
-  {
-    id: "n2",
-    title: "Tom Anderson - Technical Assessment",
-    content:
-      "Need to schedule a technical interview. Portfolio shows strong full-stack work but want to assess React/TanStack familiarity.",
-    author: "Recruitment Team",
-    date: "2026-07-10",
-  },
-];
+const initialNotes: Note[] = [];
 
 function InternalNotes() {
   const [notes, setNotes] = useState<Note[]>(initialNotes);
@@ -46,6 +29,8 @@ function InternalNotes() {
 
   const addNote = () => {
     if (!title.trim() || !content.trim()) return;
+    // TODO: Persist to Appwrite — create a recruitment_notes collection and call
+    // appwrite.databases.createDocument() here. Set author from the current session user.
     setNotes((prev) => [
       {
         id: "n" + Date.now(),
@@ -62,6 +47,7 @@ function InternalNotes() {
   };
 
   const deleteNote = (id: string) => {
+    // TODO: Also delete the corresponding Appwrite document when persistence is wired up.
     setNotes((prev) => prev.filter((n) => n.id !== id));
   };
 
@@ -106,8 +92,8 @@ function InternalNotes() {
       {notes.length === 0 ? (
         <EmptyState
           icon={StickyNote}
-          title="No Notes"
-          description="Internal notes will appear here."
+          title="No notes yet"
+          description="Notes are currently local to this session only. Create a recruitment_notes collection in Appwrite and wire addNote / deleteNote to persist and load them across sessions."
         />
       ) : (
         <div className="space-y-4">
