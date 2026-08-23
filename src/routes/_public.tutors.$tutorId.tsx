@@ -21,7 +21,7 @@ import { seoMeta, seoLinks, jsonLdScript, tutorPersonSchema, SITE } from "@/lib/
 export const Route = createFileRoute("/_public/tutors/$tutorId")({
   loader: async ({ params }) => {
     try {
-      const tutor = await DataStore.getTutorById(params.tutorId);
+      const tutor = await DataStore.getTutorBySlug(params.tutorId);
       return { tutor };
     } catch {
       return { tutor: null };
@@ -215,6 +215,20 @@ function TutorProfilePage() {
           {/* Student Reviews List */}
           <Card className="rounded-2xl border-border/80 bg-background p-6 space-y-6 shadow-sm">
             <h2 className="text-lg font-bold">Student Testimonials & Reviews</h2>
+            {tutor.testimonial && (
+              <div className="rounded-xl border border-border/60 bg-slate-50/50 dark:bg-slate-900/20 p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <User className="h-4 w-4 text-[#3D7F8F]" />
+                  <span className="text-sm font-semibold">
+                    Student Testimonial
+                  </span>
+                </div>
+
+                <p className="text-sm leading-relaxed text-muted-foreground italic">
+                  "{tutor.testimonial}"
+                </p>
+              </div>
+            )}
             <div className="border-t border-slate-100 dark:border-slate-800/60 pt-4 space-y-5">
               {reviews.length === 0 ? (
                 <div className="text-center py-8 text-sm text-muted-foreground">

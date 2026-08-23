@@ -5,20 +5,69 @@ import { appwrite, APPWRITE_DATABASE_ID, getCurrentUser } from "@/integrations/a
 
 export interface Tutor {
   id: string;
+
+  // Basic information
   name: string;
+  phone?: string;
+  discordUsername?: string;
+  dateOfBirth?: string;
+  countryOfResidence?: string;
+
+  // Public profile
   avatar_url: string;
   headline: string;
   about: string;
+  slug: string;
+
+  // Stats
   hourly_rate: number;
   rating_avg: number;
   rating_count: number;
   years_experience: number;
+
+  // Teaching
   languages: string[];
   subjects: string[];
   levels: string[];
+  availability: string;
+
+  // Qualification
+  highestQualification?: string;
+  highestQualificationLink?: string;
+  highestQualificationFileId?: string;
+  highestQualificationFileName?: string;
+  highestQualificationFileUrl?: string;
+
+  examBoard?: string;
+  examResultSummary?: string;
+
+  resultDocumentLink?: string;
+  resultDocumentFileId?: string;
+  resultDocumentFileName?: string;
+  resultDocumentFileUrl?: string;
+
+  teachingExperience?: string;
+  teachingFormat?: string;
+
+  // Pricing
+  oneOnOneRateUsd?: number;
+  groupRateUsd?: number;
+  maxGroupStudents?: number;
+  weeklyClassesPerStudent?: number;
+  classDurationMinutes?: number;
+
+  // Public/social
+  videoLink?: string;
+  instagramHandle?: string;
+  testimonial?: string;
+
+  responseTime?: string;
+
+  // Status
   is_featured: boolean;
   is_verified: boolean;
-  availability: string;
+
+  is_active?: boolean;
 }
 
 export interface Review {
@@ -64,10 +113,12 @@ export interface CMSContent {
   faqs: { question: string; answer: string; category: string }[];
 }
 
+
 const defaultTutors: Tutor[] = [
   {
     id: "tutor_1",
     name: "Dr. Alexander Sterling",
+    slug: tutorSlug("Dr. Alexander Sterling"),
     avatar_url:
       "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
     headline: "Oxford Graduate & Experienced Mathematics Professor",
@@ -87,6 +138,7 @@ const defaultTutors: Tutor[] = [
   {
     id: "tutor_2",
     name: "Sophia Martinez",
+    slug: tutorSlug("Sophia Martinez"),
     avatar_url:
       "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80",
     headline: "Bilingual Literature Scholar & English Essay Specialist",
@@ -106,6 +158,7 @@ const defaultTutors: Tutor[] = [
   {
     id: "tutor_3",
     name: "Marcus Chen",
+    slug: tutorSlug("Marcus Chen"),
     avatar_url:
       "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
     headline: "Software Engineer & Computer Science Tutor",
@@ -125,6 +178,7 @@ const defaultTutors: Tutor[] = [
   {
     id: "tutor_4",
     name: "Elena Rostova",
+    slug: tutorSlug("Elena Rostova"),
     avatar_url:
       "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80",
     headline: "Biochemistry Ph.D. & Pre-Med Mentor",
@@ -465,59 +519,78 @@ function mapTutorDoc(doc: any): Tutor {
   return {
     id: doc.$id || doc.id,
 
+    slug: safeString(doc.slug, ""),
+
     name: safeString(
       doc.displayName || doc.name || doc.fullName,
       "Certified Tutor",
     ),
 
+    phone: safeString(doc.phone || doc.phoneNumber),
+    dateOfBirth: safeString(doc.dateOfBirth),
+    countryOfResidence: safeString(doc.countryOfResidence),
+
     avatar_url:
       doc.avatarUrl ||
       avatarFor(doc.displayName || doc.name || "Tutor"),
 
-    headline: safeString(doc.headline, ""),
+    headline: safeString(doc.headline),
 
     about: safeString(
       doc.fullBio || doc.shortBio,
-      "",
     ),
 
     hourly_rate: safeNumber(
       doc.hourlyRate ?? doc.hourly_rate,
-      0,
     ),
 
     rating_avg: safeNumber(
       doc.rating ?? doc.rating_avg,
-      0,
     ),
 
     rating_count: safeNumber(
       doc.reviewCount ?? doc.rating_count,
-      0,
     ),
 
     years_experience: safeNumber(
       doc.experienceYears ?? doc.years_experience,
-      0,
     ),
 
-    languages: Array.isArray(doc.languages)
-      ? doc.languages
-      : [],
+    languages: asArray(doc.languages || doc.languagesSpoken),
+    subjects: asArray(doc.subjects),
+    levels: asArray(doc.levels || doc.teachingLevel),
 
-    subjects: Array.isArray(doc.subjects)
-      ? doc.subjects
-      : [],
+    availability: safeString(
+      doc.availability,
+      "Contact tutor",
+    ),
 
-    levels: Array.isArray(doc.levels)
-      ? doc.levels
-      : [],
+    is_featured: safeBool(doc.featured),
+    is_verified: safeBool(doc.verified),
 
-    is_featured: Boolean(doc.featured),
-    is_verified: Boolean(doc.verified),
+    highestQualification: safeString(doc.highestQualification),
+    highestQualificationLink: safeString(doc.highestQualificationLink),
+    highestQualificationFileId: safeString(doc.highestQualificationFileId),
+    highestQualificationFileName: safeString(doc.highestQualificationFileName),
+    highestQualificationFileUrl: safeString(doc.highestQualificationFileUrl),
 
-    availability:
-      doc.availability || "Contact tutor",
+    examBoard: safeString(doc.examBoard),
+    examResultSummary: safeString(doc.examResultSummary),
+
+    resultDocumentLink: safeString(doc.resultDocumentLink),
+    resultDocumentFileId: safeString(doc.resultDocumentFileId),
+    resultDocumentFileName: safeString(doc.resultDocumentFileName),
+    resultDocumentFileUrl: safeString(doc.resultDocumentFileUrl),
+
+    teachingExperience: safeString(doc.teachingExperience),
+    teachingFormat: safeString(doc.teachingFormat),
+
+    oneOnOneRateUsd: safeNumber(doc.oneOnOneRateUsd),
+    groupRateUsd: safeNumber(doc.groupRateUsd),
+    maxGroupStudents: safeNumber(doc.maxGroupStudents),
+    weeklyClassesPerStudent: safeNumber(doc.weeklyClassesPerStudent),
+
+    responseTime: safeString(doc.responseTime),
   };
 }
 
@@ -663,6 +736,11 @@ export const DataStore = {
     }
   },
 
+  getTutorBySlug: async (slug: string): Promise<Tutor | null> => {
+    const tutors = await DataStore.getTutors();
+    return tutors.find((t) => t.slug === slug) || null;
+  },
+
   getTutorById: async (id: string): Promise<Tutor | null> => {
     const tutors = await DataStore.getTutors();
     return tutors.find((t) => t.id === id) || null;
@@ -672,62 +750,348 @@ export const DataStore = {
 
   saveTutor: async (tutor: Tutor): Promise<void> => {
     const payload = {
-      slug: tutor.id,
+      // Basic
+      slug: tutorSlug(tutor.name),
       displayName: tutor.name,
+      phone: tutor.phone ?? null,
+      discordUsername: tutor.discordUsername ?? null,
+      dateOfBirth: tutor.dateOfBirth ?? null,
+      countryOfResidence: tutor.countryOfResidence ?? null,
+
+      // Profile
       headline: tutor.headline,
-      shortBio: tutor.about.slice(0, 240),
-      fullBio: tutor.about,
+      shortBio: tutor.about?.slice(0, 240) ?? "",
+      fullBio: tutor.about ?? "",
       avatarInitials: initials(tutor.name),
-      rating: tutor.rating_avg,
-      reviewCount: tutor.rating_count,
-      hourlyRate: Math.round(tutor.hourly_rate),
-      experienceYears: tutor.years_experience,
-      education: [],
-      languages: tutor.languages,
-      subjects: tutor.subjects,
-      levels: tutor.levels,
-      responseTime: "Within 24 hours",
-      availability: tutor.availability,
-      // removed duplicate properties abuve
-      publicBadges: tutor.is_verified ? ["Verified"] : [],
-      contactEmail: null,
-      contactUrl: null,
-      inquiryUrl: null,
-      featured: tutor.is_featured,
-      verified: tutor.is_verified,
-      active: true,
-      avatarUrl: tutor.avatar_url,
+      avatarUrl: tutor.avatar_url ?? null,
+
+      // Stats
+      rating: tutor.rating_avg ?? 0,
+      reviewCount: tutor.rating_count ?? 0,
+      hourlyRate: Math.round(tutor.hourly_rate ?? 0),
+      experienceYears: tutor.years_experience ?? 0,
+
+      // Teaching
+      languages: tutor.languages ?? [],
+      subjects: tutor.subjects ?? [],
+      levels: tutor.levels ?? [],
+
+      // Qualification
+      highestQualification:
+        tutor.highestQualification ?? null,
+
+      highestQualificationLink:
+        tutor.highestQualificationLink ?? null,
+
+      highestQualificationFileId:
+        tutor.highestQualificationFileId ?? null,
+
+      highestQualificationFileName:
+        tutor.highestQualificationFileName ?? null,
+
+      highestQualificationFileUrl:
+        tutor.highestQualificationFileUrl ?? null,
+
+      examBoard:
+        tutor.examBoard ?? null,
+
+      examResultSummary:
+        tutor.examResultSummary ?? null,
+
+      resultDocumentLink:
+        tutor.resultDocumentLink ?? null,
+
+      resultDocumentFileId:
+        tutor.resultDocumentFileId ?? null,
+
+      resultDocumentFileName:
+        tutor.resultDocumentFileName ?? null,
+
+      resultDocumentFileUrl:
+        tutor.resultDocumentFileUrl ?? null,
+
+      teachingExperience:
+        tutor.teachingExperience ?? null,
+
+      teachingFormat:
+        tutor.teachingFormat ?? "online",
+
+      // Pricing
+      oneOnOneRateUsd:
+        tutor.oneOnOneRateUsd ??
+        tutor.hourly_rate ??
+        0,
+
+      groupRateUsd:
+        tutor.groupRateUsd ?? 0,
+
+      maxGroupStudents:
+        tutor.maxGroupStudents ?? 1,
+
+      weeklyClassesPerStudent:
+        tutor.weeklyClassesPerStudent ?? 1,
+
+      classDurationMinutes:
+        tutor.classDurationMinutes ?? 60,
+
+      // Extra profile
+      videoLink:
+        tutor.videoLink ?? null,
+
+      instagramHandle:
+        tutor.instagramHandle ?? null,
+
+      testimonial:
+        tutor.testimonial ?? null,
+
+      responseTime:
+        tutor.responseTime ?? "Within 24 hours",
+
+      availability:
+        tutor.availability ?? "",
+
+      // Status
+      publicBadges:
+        tutor.is_verified ? ["Verified"] : [],
+
+      featured:
+        tutor.is_featured ?? false,
+
+      verified:
+        tutor.is_verified ?? false,
+
+      active:
+        tutor.is_active ?? true,
     };
-    const user = await getCurrentUser();
-    console.log(user);
-    await upsertDocument(COLLECTIONS.TUTOR_PROFILES, tutor.id, payload);
+
+    await upsertDocument(
+      COLLECTIONS.TUTOR_PROFILES,
+      tutor.id,
+      payload
+    );
+
     const tutors = await DataStore.getTutors();
-    const idx = tutors.findIndex((t) => t.id === tutor.id);
-    if (idx !== -1) tutors[idx] = tutor;
-    else tutors.push(tutor);
+
+    const idx = tutors.findIndex(
+      (t) => t.id === tutor.id
+    );
+
+    if (idx !== -1) {
+      tutors[idx] = tutor;
+    } else {
+      tutors.push(tutor);
+    }
+
     setLocal(KEYS.TUTORS, tutors);
   },
 
 
-  updateTutorProfile: async (tutor: Partial<Tutor> & { id: string }): Promise<void> => {
-    const existing = (await DataStore.getAllTutors()).find((t) => t.id === tutor.id);
+  updateTutorProfile: async (
+    tutor: Partial<Tutor> & { id: string }
+  ): Promise<void> => {
+    const existing = (await DataStore.getAllTutors()).find(
+      (t) => t.id === tutor.id
+    );
+
     const merged: Tutor = {
+      ...existing,
+      ...tutor,
+
       id: tutor.id,
-      name: tutor.name ?? existing?.name ?? "Certified Tutor",
-      avatar_url: tutor.avatar_url ?? existing?.avatar_url ?? avatarFor(tutor.name || "Tutor"),
-      headline: tutor.headline ?? existing?.headline ?? "Alvey Educator",
-      about: tutor.about ?? existing?.about ?? "",
-      hourly_rate: tutor.hourly_rate ?? existing?.hourly_rate ?? 40,
-      rating_avg: tutor.rating_avg ?? existing?.rating_avg ?? 5,
-      rating_count: tutor.rating_count ?? existing?.rating_count ?? 0,
-      years_experience: tutor.years_experience ?? existing?.years_experience ?? 0,
-      languages: tutor.languages ?? existing?.languages ?? ["English"],
-      subjects: tutor.subjects ?? existing?.subjects ?? [],
-      levels: tutor.levels ?? existing?.levels ?? defaultLevels,
-      is_featured: tutor.is_featured ?? existing?.is_featured ?? false,
-      is_verified: tutor.is_verified ?? existing?.is_verified ?? false,
-      availability: tutor.availability ?? existing?.availability ?? "Flexible schedule (contact us)",
+
+      name:
+        tutor.name ??
+        existing?.name ??
+        "Certified Tutor",
+
+      
+
+      phone:
+        tutor.phone ??
+        existing?.phone,
+
+      discordUsername:
+        tutor.discordUsername ??
+        existing?.discordUsername,
+
+      dateOfBirth:
+        tutor.dateOfBirth ??
+        existing?.dateOfBirth,
+
+      countryOfResidence:
+        tutor.countryOfResidence ??
+        existing?.countryOfResidence,
+
+      avatar_url:
+        tutor.avatar_url ??
+        existing?.avatar_url ??
+        avatarFor(tutor.name || existing?.name || "Tutor"),
+
+      headline:
+        tutor.headline ??
+        existing?.headline ??
+        "Alvey Educator",
+
+      about:
+        tutor.about ??
+        existing?.about ??
+        "",
+
+      hourly_rate:
+        tutor.hourly_rate ??
+        existing?.hourly_rate ??
+        40,
+
+      rating_avg:
+        tutor.rating_avg ??
+        existing?.rating_avg ??
+        5,
+
+      rating_count:
+        tutor.rating_count ??
+        existing?.rating_count ??
+        0,
+
+      years_experience:
+        tutor.years_experience ??
+        existing?.years_experience ??
+        0,
+
+      languages:
+        tutor.languages ??
+        existing?.languages ??
+        ["English"],
+
+      subjects:
+        tutor.subjects ??
+        existing?.subjects ??
+        [],
+
+      levels:
+        tutor.levels ??
+        existing?.levels ??
+        defaultLevels,
+
+      availability:
+        tutor.availability ??
+        existing?.availability ??
+        "Flexible schedule (contact us)",
+
+      is_featured:
+        tutor.is_featured ??
+        existing?.is_featured ??
+        false,
+
+      is_verified:
+        tutor.is_verified ??
+        existing?.is_verified ??
+        false,
+
+      highestQualification:
+        tutor.highestQualification ??
+        existing?.highestQualification,
+
+      highestQualificationLink:
+        tutor.highestQualificationLink ??
+        existing?.highestQualificationLink,
+
+      highestQualificationFileId:
+        tutor.highestQualificationFileId ??
+        existing?.highestQualificationFileId,
+
+      highestQualificationFileName:
+        tutor.highestQualificationFileName ??
+        existing?.highestQualificationFileName,
+
+      highestQualificationFileUrl:
+        tutor.highestQualificationFileUrl ??
+        existing?.highestQualificationFileUrl,
+
+      examBoard:
+        tutor.examBoard ??
+        existing?.examBoard,
+
+      examResultSummary:
+        tutor.examResultSummary ??
+        existing?.examResultSummary,
+
+      resultDocumentLink:
+        tutor.resultDocumentLink ??
+        existing?.resultDocumentLink,
+
+      resultDocumentFileId:
+        tutor.resultDocumentFileId ??
+        existing?.resultDocumentFileId,
+
+      resultDocumentFileName:
+        tutor.resultDocumentFileName ??
+        existing?.resultDocumentFileName,
+
+      resultDocumentFileUrl:
+        tutor.resultDocumentFileUrl ??
+        existing?.resultDocumentFileUrl,
+
+      teachingExperience:
+        tutor.teachingExperience ??
+        existing?.teachingExperience,
+
+      teachingFormat:
+        tutor.teachingFormat ??
+        existing?.teachingFormat ??
+        "online",
+
+      oneOnOneRateUsd:
+        tutor.oneOnOneRateUsd ??
+        existing?.oneOnOneRateUsd ??
+        0,
+
+      groupRateUsd:
+        tutor.groupRateUsd ??
+        existing?.groupRateUsd ??
+        0,
+
+      maxGroupStudents:
+        tutor.maxGroupStudents ??
+        existing?.maxGroupStudents ??
+        1,
+
+      weeklyClassesPerStudent:
+        tutor.weeklyClassesPerStudent ??
+        existing?.weeklyClassesPerStudent ??
+        1,
+
+      classDurationMinutes:
+        tutor.classDurationMinutes ??
+        existing?.classDurationMinutes ??
+        60,
+
+      videoLink:
+        tutor.videoLink ??
+        existing?.videoLink,
+
+      instagramHandle:
+        tutor.instagramHandle ??
+        existing?.instagramHandle,
+
+      testimonial:
+        tutor.testimonial ??
+        existing?.testimonial,
+
+      responseTime:
+        tutor.responseTime ??
+        existing?.responseTime ??
+        "Within 24 hours",
+
+      slug:
+        tutor.slug ??
+        existing?.slug ??
+        tutorSlug(
+          tutor.name ??
+          existing?.name ??
+          "tutor"
+        ),
     };
+
     await DataStore.saveTutor(merged);
   },
 
@@ -1165,6 +1529,7 @@ export const DataStore = {
           is_featured: false,
           is_verified: true,
           availability: "Available",
+          slug: tutorSlug(list[idx].full_name),
         });
       }
     }
@@ -1795,7 +2160,7 @@ export const DataStore = {
             student: student
               ? { display_name: student.name || student.display_name }
               : lesson.student,
-            tutor: tutor ? { display_name: tutor.name || tutor.display_name } : lesson.tutor,
+            tutor: tutor ? { display_name: tutor.name || tutor.name } : lesson.tutor,
           };
         });
       }
@@ -2053,31 +2418,20 @@ export const DataStore = {
     await upsertDocument(COLLECTIONS.USERS, id, { active: false });
   },
 
-  getAllTutors: async (): Promise<any[]> => {
+  getAllTutors: async (): Promise<Tutor[]> => {
     try {
-      const docs = await listDocuments(COLLECTIONS.TUTOR_PROFILES, [Query.equal("active", true)]);
-      if (docs.length > 0) {
-        return docs.map((t: any) => ({
-          id: t.$id || t.id,
-          name: t.displayName || "Certified Tutor",
-          email: t.contactEmail || null,
-          avatar_url: t.avatarUrl || avatarFor(t.displayName || "Tutor"),
-          headline: t.headline,
-          about: t.fullBio || t.shortBio || "",
-          hourly_rate: t.hourlyRate,
-          rating_avg: t.rating,
-          rating_count: t.reviewCount,
-          years_experience: t.experienceYears,
-          languages: t.languages || [],
-          subjects: t.subjects || [],   // <-- add this
-          is_featured: t.featured,
-          is_verified: t.verified,
-          is_active: t.active,
-          slug: t.slug,
-        }));
-      }
-    } catch { }
-    return getLocal<Tutor[]>(KEYS.TUTORS, defaultTutors);
+      const docs = await listDocuments(
+        COLLECTIONS.TUTOR_PROFILES,
+        [Query.equal("active", true)]
+      );
+
+      console.log("ALL TUTORS:", docs);
+
+      return docs.map(mapTutorDoc);
+    } catch (error) {
+      console.error("FAILED TO LOAD ALL TUTORS:", error);
+      return getLocal<Tutor[]>(KEYS.TUTORS, defaultTutors);
+    }
   },
 
   getTutorApplicationsFromDB: async (): Promise<any[]> => {
@@ -2235,3 +2589,11 @@ export type Credit = {
   contribution: string;
   order: number;
 };
+
+export function tutorSlug(name: string): string {
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/gi, "-")
+    .replace(/^-+|-+$/g, "");
+}
