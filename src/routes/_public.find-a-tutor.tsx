@@ -721,13 +721,21 @@ function FindATutorPage() {
                         )}
                       </div>
 
-                      <div className="flex items-center gap-1 text-xs text-amber-500 font-semibold">
-                        <Star className="h-3.5 w-3.5 fill-amber-500" />
+                      <div className="flex items-center gap-3 text-xs font-semibold">
+                        <div className="flex items-center gap-1 text-amber-500">
+                          <Star className="h-3.5 w-3.5 fill-amber-500" />
+                          <span>{tutor.rating_avg.toFixed(2)}</span>
+                          <span className="text-muted-foreground font-normal">
+                            ({tutor.rating_count} reviews)
+                          </span>
+                        </div>
 
-                        <span>{tutor.rating_avg.toFixed(2)}</span>
+                        <span className="text-muted-foreground">
+                          •
+                        </span>
 
-                        <span className="text-muted-foreground font-normal">
-                          ({tutor.rating_count} reviews)
+                        <span className="text-[#164E5E] dark:text-[#6FD4D8]">
+                          {tutor.years_experience} yrs experience
                         </span>
                       </div>
                     </div>
