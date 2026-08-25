@@ -5,6 +5,8 @@ import { appwrite, APPWRITE_DATABASE_ID, getCurrentUser } from "@/integrations/a
 
 export interface Tutor {
   id: string;
+  /** URL-safe slug used in /tutors/[slug] routes and the sitemap. */
+  slug: string;
   name: string;
   avatar_url: string;
   headline: string;
@@ -67,108 +69,34 @@ export interface CMSContent {
 const defaultTutors: Tutor[] = [
   {
     id: "tutor_1",
-    name: "Dr. Alexander Sterling",
+    slug: "test-tutor",
+    name: "Ghost tutor",
     avatar_url:
       "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
-    headline: "Oxford Graduate & Experienced Mathematics Professor",
+    headline: "A test tutor, the headline shows here.",
     about:
-      "I hold a PhD in Mathematics from Oxford University and have spent over 12 years helping students master advanced calculus, algebra, and physics. My teaching style focuses on understanding core principles rather than memorization, making complex topics accessible and engaging.",
-    hourly_rate: 65,
-    rating_avg: 4.95,
-    rating_count: 84,
-    years_experience: 12,
-    languages: ["English", "French"],
-    subjects: ["Mathematics", "Physics", "Calculus"],
-    levels: ["A-Level", "IB", "University", "IGCSE"],
+      "I am not a tutor, this profile is fake. and this section is my about.",
+    hourly_rate: 67,
+    rating_avg: 6.7,
+    rating_count: 69,
+    years_experience: 67,
+    languages: ["English", "Languages show here"],
+    subjects: ["Mathematics", "Subjects show here", "Calculus"],
+    levels: ["A-Level","Levels show here", "IGCSE"],
     is_featured: true,
     is_verified: true,
-    availability: "Mondays & Wednesdays (14:00 - 18:00 UTC)",
-  },
-  {
-    id: "tutor_2",
-    name: "Sophia Martinez",
-    avatar_url:
-      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80",
-    headline: "Bilingual Literature Scholar & English Essay Specialist",
-    about:
-      "Specializing in SAT English, AP Literature, and academic writing. I work closely with students to polish their essay writing skills, vocabulary, and literary analysis. I am passionate about literature and helping students express themselves clearly.",
-    hourly_rate: 45,
-    rating_avg: 4.88,
-    rating_count: 62,
-    years_experience: 8,
-    languages: ["English", "Spanish"],
-    subjects: ["English Literature", "Creative Writing", "SAT Verbal"],
-    levels: ["GCSE", "SAT", "High School", "Secondary"],
-    is_featured: true,
-    is_verified: true,
-    availability: "Tuesdays & Thursdays (15:00 - 20:00 UTC)",
-  },
-  {
-    id: "tutor_3",
-    name: "Marcus Chen",
-    avatar_url:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
-    headline: "Software Engineer & Computer Science Tutor",
-    about:
-      "Ex-Google Engineer teaching Python, Java, web development, and data structures. I believe in hands-on, project-based learning. Whether you are prepping for AP Computer Science, university exams, or coding interviews, I've got you covered.",
-    hourly_rate: 55,
-    rating_avg: 4.92,
-    rating_count: 47,
-    years_experience: 6,
-    languages: ["English", "Mandarin"],
-    subjects: ["Computer Science", "Programming (Python/Java)", "Web Dev"],
-    levels: ["University", "GCSE", "A-Level", "Professional"],
-    is_featured: true,
-    is_verified: true,
-    availability: "Saturdays (09:00 - 17:00 UTC)",
-  },
-  {
-    id: "tutor_4",
-    name: "Elena Rostova",
-    avatar_url:
-      "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80",
-    headline: "Biochemistry Ph.D. & Pre-Med Mentor",
-    about:
-      "Teaching Biology and Chemistry for medical school aspirants and high school students. I use illustrative diagrams, concept maps, and practical medical scenarios to help make biology and biochemistry understandable and fun.",
-    hourly_rate: 50,
-    rating_avg: 4.91,
-    rating_count: 39,
-    years_experience: 7,
-    languages: ["English", "Russian"],
-    subjects: ["Chemistry", "Biology", "Biochemistry"],
-    levels: ["IB", "A-Level", "University", "GCSE"],
-    is_featured: false,
-    is_verified: true,
-    availability: "Fridays (13:00 - 18:00 UTC)",
+    availability: "availability shows here",
   },
 ];
 
 const defaultTestimonials: Testimonial[] = [
   {
     id: "test_1",
-    name: "Sarah Jenkins",
+    name: "Fake testimonial (Name shows here)",
     rating: 5,
     comment:
-      "Dr. Sterling completely turned around my son's attitude towards calculus. He went from failing to getting an A in his IB exams!",
-    role: "Parent of IB Student",
-    is_featured: true,
-  },
-  {
-    id: "test_2",
-    name: "Liam O'Connor",
-    rating: 5,
-    comment:
-      "The Computer Science tutoring from Marcus was incredible. His practical industry insights helped me secure a software engineering internship.",
-    role: "University Sophomore",
-    is_featured: true,
-  },
-  {
-    id: "test_3",
-    name: "Amira Patel",
-    rating: 5,
-    comment:
-      "Alvey connected me with Sophia, who helped me raise my SAT Verbal score by 140 points in just six weeks. I'm so grateful!",
-    role: "SAT Aspirant",
+      "Dr ghost helped me alot... the message shows here",
+    role: "role of the person that wrote this review shows here. usually the student or thier parent",
     is_featured: true,
   },
 ];
@@ -176,18 +104,18 @@ const defaultTestimonials: Testimonial[] = [
 const defaultCMS: CMSContent = {
   homepage: {
     hero: {
-      headline: "Unlock Your Academic Potential with Premier Private Tutors",
+      headline: "Find a private tutor and get your A* easier than ever!",
       subheadline:
-        "Connect with certified Ivy League and Oxbridge tutors for personalized, high-impact learning. We help students achieve academic excellence through curated matching.",
+        "Connect with online tutors for multiple subjects across multiple boards, get the grades you deserve!",
       ctaPrimary: "Find the Perfect Tutor",
-      ctaSecondary: "Apply as a Tutor",
+      ctaSecondary: "Be the Perfect Tutor",
     },
     stats: {
-      tutors: 124,
-      students: 1450,
-      lessons: 9240,
-      subjects: 45,
-      rating: 4.9,
+      tutors: 18,
+      students: 4,
+      lessons: 0,
+      subjects: 20,
+      rating: 4.7,
     },
   },
   about: {
@@ -292,15 +220,11 @@ const defaultSubjects = [
   "Quran",
 ];
 const defaultLevels = [
-  "Primary",
   "Secondary",
   "GCSE",
   "IGCSE",
   "A-Level",
-  "IB",
-  "SAT",
   "University",
-  "Professional",
 ];
 
 const KEYS = {
@@ -367,6 +291,19 @@ function safeBool(value: unknown): boolean {
 function safeNumber(value: unknown, fallback = 0): number {
   const n = typeof value === "number" ? value : Number(value);
   return Number.isFinite(n) ? n : fallback;
+}
+
+/**
+ * Converts a tutor's display name into a URL-safe slug.
+ * e.g. "Dr. Mohammed Sobhy" → "mohammed-sobhy"
+ */
+function nameToSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")   // strip punctuation / special chars
+    .trim()
+    .replace(/\s+/g, "-")            // spaces → hyphens
+    .replace(/-+/g, "-");            // collapse repeated hyphens
 }
 
 function initials(name: string): string {
@@ -462,13 +399,24 @@ async function createDocument(
 }
 
 function mapTutorDoc(doc: any): Tutor {
+  const name = safeString(
+    doc.displayName || doc.name || doc.fullName,
+    "Certified Tutor",
+  );
+
+  // Prefer an explicit slug stored in Appwrite, then fall back to
+  // generating one from the tutor's display name so the URL is always
+  // human-readable and stable.
+  const slug =
+    safeString(doc.slug, "") ||
+    nameToSlug(name) ||
+    (doc.$id as string);
+
   return {
     id: doc.$id || doc.id,
+    slug,
 
-    name: safeString(
-      doc.displayName || doc.name || doc.fullName,
-      "Certified Tutor",
-    ),
+    name,
 
     avatar_url:
       doc.avatarUrl ||
@@ -668,11 +616,24 @@ export const DataStore = {
     return tutors.find((t) => t.id === id) || null;
   },
 
+  /**
+   * Look up a tutor by their URL slug.
+   * Falls back to matching by id so old bookmarks still resolve.
+   */
+  getTutorBySlug: async (slug: string): Promise<Tutor | null> => {
+    const tutors = await DataStore.getTutors();
+    return (
+      tutors.find((t) => t.slug === slug) ||
+      tutors.find((t) => t.id === slug) ||
+      null
+    );
+  },
+
 
 
   saveTutor: async (tutor: Tutor): Promise<void> => {
     const payload = {
-      slug: tutor.id,
+      slug: nameToSlug(tutor.name) || tutor.id,
       displayName: tutor.name,
       headline: tutor.headline,
       shortBio: tutor.about.slice(0, 240),

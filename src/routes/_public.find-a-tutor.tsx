@@ -30,6 +30,17 @@ import { seoMeta, seoLinks, jsonLdScript, serviceSchema } from "@/lib/seo";
 
 
 export const Route = createFileRoute("/_public/find-a-tutor")({
+  loader: async () => {
+    // Pre-fetch all active tutors at the route level so:
+    // 1. Content is available without waiting for client-side effects.
+    // 2. The <noscript> fallback below can render crawlable <a> links.
+    try {
+      const tutors = await DataStore.getTutors();
+      return { tutors };
+    } catch {
+      return { tutors: [] as Tutor[] };
+    }
+  },
   head: () => ({
     meta: seoMeta({
       title: "Find a Tutor",
@@ -55,11 +66,12 @@ export const Route = createFileRoute("/_public/find-a-tutor")({
 });
 
 function FindATutorPage() {
+  const { tutors: loaderTutors } = Route.useLoaderData();
 
   const searchParams = useSearch({ from: "/_public/find-a-tutor" });
-  const [isLoading, setIsLoading] = useState(true);
-  const [tutors, setTutors] = useState<Tutor[]>([]);
-  const [filteredTutors, setFilteredTutors] = useState<Tutor[]>([]);
+  const [isLoading, setIsLoading] = useState(!loaderTutors?.length);
+  const [tutors, setTutors] = useState<Tutor[]>(loaderTutors ?? []);
+  const [filteredTutors, setFilteredTutors] = useState<Tutor[]>(loaderTutors ?? []);
   const [subjects, setSubjects] = useState<string[]>([]);
   const [levels, setLevels] = useState<string[]>([]);
   const [languages, setLanguages] = useState<string[]>([]);
@@ -87,7 +99,8 @@ function FindATutorPage() {
 
       try {
         const [tList, sList] = await Promise.all([
-          DataStore.getTutors(),
+          // Re-use loader data when available; only hit Appwrite when missing.
+          loaderTutors?.length ? Promise.resolve(loaderTutors) : DataStore.getTutors(),
           DataStore.getSubjects(),
         ]);
 
@@ -774,8 +787,8 @@ function FindATutorPage() {
                       className="w-full text-xs font-medium rounded-lg"
                     >
                       <Link
-                        to="/tutors/$tutorId"
-                        params={{ tutorId: tutor.id }}
+                        to="/tutors/$tutorSlug"
+                        params={{ tutorSlug: tutor.slug }}
                       >
                         View Profile
                       </Link>
@@ -801,6 +814,26 @@ function FindATutorPage() {
           }
         </main>
       </div>
+
+      {/*
+        Crawler-accessible tutor directory.
+        This <noscript> block is intentionally hidden from JS-enabled browsers
+        but provides plain <a href> links that search engine crawlers use for
+        link discovery and indexing of every tutor profile page.
+      */}
+      <noscript>
+        <nav aria-label="Tutor profiles directory" style={{ display: "none" }}>
+          <ul>
+            {tutors.map((tutor) => (
+              <li key={tutor.slug}>
+                <a href={`/tutors/${tutor.slug}`}>
+                  {tutor.name} – {tutor.headline}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </noscript>
     </>
   );
 }

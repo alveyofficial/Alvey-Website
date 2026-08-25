@@ -154,6 +154,8 @@ export function serviceSchema(): Record<string, unknown> {
 
 export interface TutorSeoData {
   id: string;
+  /** URL-safe slug — used for the canonical URL and JSON-LD. */
+  slug: string;
   name: string;
   headline: string;
   about: string;
@@ -174,7 +176,7 @@ export function tutorPersonSchema(tutor: TutorSeoData): Record<string, unknown> 
     name: tutor.name,
     description: tutor.about,
     image: tutor.avatar_url,
-    url: `${SITE.url}/tutors/${tutor.id}`,
+    url: `${SITE.url}/tutors/${tutor.slug}`,
     jobTitle: tutor.headline,
     knowsLanguage: tutor.languages,
     knowsAbout: tutor.subjects,

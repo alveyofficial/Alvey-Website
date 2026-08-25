@@ -37,7 +37,7 @@ import { Route as AuthenticatedRecruitmentIndexRouteImport } from './routes/_aut
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as ApiPublicStatsRouteImport } from './routes/api/public/stats'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
-import { Route as PublicTutorsTutorIdRouteImport } from './routes/_public.tutors.$tutorId'
+import { Route as PublicTutorsTutorSlugRouteImport } from./routes/_public.tutors.$tutorSlug.tsxSlug'
 import { Route as AuthenticatedTutorStudentsRouteImport } from './routes/_authenticated/tutor/students'
 import { Route as AuthenticatedTutorSettingsRouteImport } from './routes/_authenticated/tutor/settings'
 import { Route as AuthenticatedTutorScheduleRouteImport } from './routes/_authenticated/tutor/schedule'
@@ -211,9 +211,9 @@ const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
   path: '/api/public/health',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PublicTutorsTutorIdRoute = PublicTutorsTutorIdRouteImport.update({
-  id: '/tutors/$tutorId',
-  path: '/tutors/$tutorId',
+const PublicTutorsTutorSlugRoute = PublicTutorsTutorSlugRouteImport.update({
+  id: '/tutors/$tutorSlug',
+  path: '/tutors/$tutorSlug',
   getParentRoute: () => PublicRoute,
 } as any)
 const AuthenticatedTutorStudentsRoute =
@@ -462,7 +462,7 @@ export interface FileRoutesByFullPath {
   '/tutor/schedule': typeof AuthenticatedTutorScheduleRoute
   '/tutor/settings': typeof AuthenticatedTutorSettingsRoute
   '/tutor/students': typeof AuthenticatedTutorStudentsRoute
-  '/tutors/$tutorId': typeof PublicTutorsTutorIdRoute
+  '/tutors/$tutorSlug': typeof PublicTutorsTutorSlugRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/stats': typeof ApiPublicStatsRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -523,7 +523,7 @@ export interface FileRoutesByTo {
   '/tutor/schedule': typeof AuthenticatedTutorScheduleRoute
   '/tutor/settings': typeof AuthenticatedTutorSettingsRoute
   '/tutor/students': typeof AuthenticatedTutorStudentsRoute
-  '/tutors/$tutorId': typeof PublicTutorsTutorIdRoute
+  '/tutors/$tutorSlug': typeof PublicTutorsTutorSlugRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/stats': typeof ApiPublicStatsRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -587,7 +587,7 @@ export interface FileRoutesById {
   '/_authenticated/tutor/schedule': typeof AuthenticatedTutorScheduleRoute
   '/_authenticated/tutor/settings': typeof AuthenticatedTutorSettingsRoute
   '/_authenticated/tutor/students': typeof AuthenticatedTutorStudentsRoute
-  '/_public/tutors/$tutorId': typeof PublicTutorsTutorIdRoute
+  '/_public/tutors/$tutorSlug': typeof PublicTutorsTutorSlugRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/stats': typeof ApiPublicStatsRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -650,7 +650,7 @@ export interface FileRouteTypes {
     | '/tutor/schedule'
     | '/tutor/settings'
     | '/tutor/students'
-    | '/tutors/$tutorId'
+    | '/tutors/$tutorSlug'
     | '/api/public/health'
     | '/api/public/stats'
     | '/admin/'
@@ -711,7 +711,7 @@ export interface FileRouteTypes {
     | '/tutor/schedule'
     | '/tutor/settings'
     | '/tutor/students'
-    | '/tutors/$tutorId'
+    | '/tutors/$tutorSlug'
     | '/api/public/health'
     | '/api/public/stats'
     | '/admin'
@@ -774,7 +774,7 @@ export interface FileRouteTypes {
     | '/_authenticated/tutor/schedule'
     | '/_authenticated/tutor/settings'
     | '/_authenticated/tutor/students'
-    | '/_public/tutors/$tutorId'
+    | '/_public/tutors/$tutorSlug'
     | '/api/public/health'
     | '/api/public/stats'
     | '/_authenticated/admin/'
@@ -992,11 +992,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_public/tutors/$tutorId': {
-      id: '/_public/tutors/$tutorId'
-      path: '/tutors/$tutorId'
-      fullPath: '/tutors/$tutorId'
-      preLoaderRoute: typeof PublicTutorsTutorIdRouteImport
+    '/_public/tutors/$tutorSlug': {
+      id: '/_public/tutors/$tutorSlug'
+      path: '/tutors/$tutorSlug'
+      fullPath: '/tutors/$tutorSlug'
+      preLoaderRoute: typeof PublicTutorsTutorSlugRouteImport
       parentRoute: typeof PublicRoute
     }
     '/_authenticated/tutor/students': {
@@ -1339,7 +1339,7 @@ interface PublicRouteChildren {
   PublicTermsOfServiceRoute: typeof PublicTermsOfServiceRoute
   PublicWorkWithUsRoute: typeof PublicWorkWithUsRoute
   PublicIndexRoute: typeof PublicIndexRoute
-  PublicTutorsTutorIdRoute: typeof PublicTutorsTutorIdRoute
+  PublicTutorsTutorSlugRoute: typeof PublicTutorsTutorSlugRoute
 }
 
 const PublicRouteChildren: PublicRouteChildren = {
@@ -1351,7 +1351,7 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicTermsOfServiceRoute: PublicTermsOfServiceRoute,
   PublicWorkWithUsRoute: PublicWorkWithUsRoute,
   PublicIndexRoute: PublicIndexRoute,
-  PublicTutorsTutorIdRoute: PublicTutorsTutorIdRoute,
+  PublicTutorsTutorSlugRoute: PublicTutorsTutorSlugRoute,
 }
 
 const PublicRouteWithChildren =
