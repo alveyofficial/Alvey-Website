@@ -37,7 +37,7 @@ import { Route as AuthenticatedRecruitmentIndexRouteImport } from './routes/_aut
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as ApiPublicStatsRouteImport } from './routes/api/public/stats'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
-import { Route as PublicTutorsTutorSlugRouteImport } from./routes/_public.tutors.$tutorSlug.tsxSlug'
+import { Route as PublicTutorsTutorSlugRouteImport } from './routes/_public.tutors.$tutorSlug'
 import { Route as AuthenticatedTutorStudentsRouteImport } from './routes/_authenticated/tutor/students'
 import { Route as AuthenticatedTutorSettingsRouteImport } from './routes/_authenticated/tutor/settings'
 import { Route as AuthenticatedTutorScheduleRouteImport } from './routes/_authenticated/tutor/schedule'
