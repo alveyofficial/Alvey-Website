@@ -1079,6 +1079,17 @@ function ManageTutorModal({
   const [responseTime, setResponseTime] =
     useState(tutor.responseTime || "");
 
+  const [qualificationFileUrl, setQualificationFileUrl] =
+    useState(tutor.highestQualificationFileUrl || "");
+
+  const [qualificationFileName, setQualificationFileName] =
+    useState(tutor.highestQualificationFileName || "");
+
+  const [resultFileUrl, setResultFileUrl] =
+    useState(tutor.resultDocumentFileUrl || "");
+
+  const [resultFileName, setResultFileName] =
+    useState(tutor.resultDocumentFileName || "");
   // STATUS
   const [verified, setVerified] =
     useState(tutor.is_verified ?? false);
@@ -1101,26 +1112,35 @@ function ManageTutorModal({
 
         // QUALIFICATION
         highestQualification: qualification,
-        highestQualificationLink:
-          qualificationLink.trim(),
+        highestQualificationLink: qualificationLink.trim(),
+        highestQualificationFileUrl:
+          qualificationFileUrl.trim() || null,
+        highestQualificationFileName:
+          qualificationFileName.trim(),
+
         examBoard: examBoard.trim(),
         examResultSummary: examResult.trim(),
+
         resultDocumentLink: resultLink.trim(),
+        resultDocumentFileUrl:
+          resultFileUrl.trim() || null,
+        resultDocumentFileName:
+          resultFileName.trim(),
 
         // TEACHING
         languages: languages
           .split(",")
-          .map((x) => x.trim())
+          .map(x => x.trim())
           .filter(Boolean),
 
         subjects: subjects
           .split(",")
-          .map((x) => x.trim())
+          .map(x => x.trim())
           .filter(Boolean),
 
         levels: levels
           .split(",")
-          .map((x) => x.trim())
+          .map(x => x.trim())
           .filter(Boolean),
 
         teachingExperience:
@@ -1129,38 +1149,43 @@ function ManageTutorModal({
         teachingFormat,
 
         // PRICING
+        hourly_rate:
+          Number(hourlyRate) || 0,
+
         oneOnOneRateUsd:
-          parseFloat(oneOnOneRate) || 0,
+          Number(oneOnOneRate) || 0,
 
         groupRateUsd:
-          parseFloat(groupRate) || 0,
+          Number(groupRate) || 0,
 
         maxGroupStudents:
-          parseInt(maxStudents) || 0,
+          Number(maxStudents) || 1,
 
         weeklyClassesPerStudent:
-          parseInt(weeklyClasses) || 0,
+          Number(weeklyClasses) || 1,
 
         classDurationMinutes:
-          parseInt(duration) || 60,
-
-        hourly_rate:
-          parseFloat(hourlyRate) ||
-          parseFloat(oneOnOneRate) ||
-          0,
+          Number(duration) || 60,
 
         // PROFILE
         headline: headline.trim(),
-        about: about.trim(),
-        avatar_url:
-          avatarUrl.trim() || tutor.avatar_url,
 
-        videoLink: videoLink.trim(),
-        instagramHandle: instagram.trim(),
-        testimonial: testimonial.trim(),
+        about: about.trim(),
+
+        avatar_url:
+          avatarUrl.trim(),
+
+        videoLink:
+          videoLink.trim(),
+
+        instagramHandle:
+          instagram.trim(),
+
+        testimonial:
+          testimonial.trim(),
 
         years_experience:
-          parseInt(yearsExp) || 0,
+          Number(yearsExp) || 0,
 
         availability:
           availability.trim(),
@@ -1169,10 +1194,12 @@ function ManageTutorModal({
           responseTime.trim(),
 
         // STATUS
-        is_verified: verified,
-        is_featured: featured,
-      });
+        is_verified:
+          verified,
 
+        is_featured:
+          featured,
+      });
       toast.success("Tutor profile updated successfully.");
 
       onSaved();
@@ -1353,6 +1380,26 @@ function ManageTutorModal({
                   }
                 />
               </Field>
+              <Field label="Qualification File URL">
+                <Input
+                  type="url"
+                  value={qualificationFileUrl}
+                  onChange={(e) =>
+                    setQualificationFileUrl(e.target.value)
+                  }
+                  placeholder="https://..."
+                />
+              </Field>
+
+              <Field label="Qualification File Name">
+                <Input
+                  value={qualificationFileName}
+                  onChange={(e) =>
+                    setQualificationFileName(e.target.value)
+                  }
+                  placeholder="Degree.pdf"
+                />
+              </Field>
             </TabsContent>
 
             {/* TEACHING */}
@@ -1419,6 +1466,27 @@ function ManageTutorModal({
                   onChange={(e) =>
                     setResultLink(e.target.value)
                   }
+                />
+              </Field>
+
+              <Field label="Result Document File URL">
+                <Input
+                  type="url"
+                  value={resultFileUrl}
+                  onChange={(e) =>
+                    setResultFileUrl(e.target.value)
+                  }
+                  placeholder="https://..."
+                />
+              </Field>
+
+              <Field label="Result Document File Name">
+                <Input
+                  value={resultFileName}
+                  onChange={(e) =>
+                    setResultFileName(e.target.value)
+                  }
+                  placeholder="Results.pdf"
                 />
               </Field>
 

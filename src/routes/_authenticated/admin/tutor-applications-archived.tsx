@@ -63,6 +63,11 @@ function ArchivedTutorApplications() {
     await DataStore.updateTutorApplicationStatus(id, "approved");
     await DataStore.saveTutor({
       id: tutorId,
+      slug: name
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, ""),
       name,
       avatar_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0f172a&color=ffffff&size=256`,
       headline: "Professional Educator",

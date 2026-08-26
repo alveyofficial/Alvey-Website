@@ -54,7 +54,7 @@ function ReviewModal({
   onClose,
   onAction,
 }: {
-  app: Record<string, unknown>;
+  app: Record<string, any>;
   onClose: () => void;
   onAction: () => void;
 }) {
@@ -122,20 +122,142 @@ function ReviewModal({
 
       await DataStore.saveTutor({
         id: tutorId,
+        slug: name
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-|-$/g, ""),
+
         name,
-        avatar_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0f172a&color=ffffff&size=256`,
-        headline: (app.headline as string) || "Professional Educator",
-        about: ((app.teachingExperience || app.cover_letter || "") as string),
-        hourly_rate: Number(app.oneOnOneRateUsd ?? app.hourlyRate ?? 40),
-        rating_avg: 5.0,
-        rating_count: 0,
-        years_experience: Number(app.yearsExperience ?? app.years_experience ?? 1),
+
+        phone:
+          (app.phoneNumber || app.phone) as string | undefined,
+
+        discordUsername:
+          (app.discordUsername || app.discord_username) as string | undefined,
+
+        dateOfBirth:
+          (app.dateOfBirth || app.date_of_birth) as string | undefined,
+
+        countryOfResidence:
+          (app.countryOfResidence || app.country_of_residence) as string | undefined,
+
+        avatar_url:
+          `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0f172a&color=ffffff&size=256`,
+
+        headline:
+          (app.headline as string) || "Professional Educator",
+
+        about:
+          ((app.teachingExperience || app.cover_letter || "") as string),
+
+        hourly_rate:
+          Number(app.oneOnOneRateUsd ?? app.hourlyRate ?? 40),
+
+        rating_avg:
+          5,
+
+        rating_count:
+          0,
+
+        years_experience:
+          Number(app.yearsExperience ?? app.years_experience ?? 0),
+
         languages,
+
         subjects,
+
         levels,
-        is_featured: false,
-        is_verified: true,
-        availability: "Contact for availability",
+
+        availability:
+          (app.availability as string) || "Contact for availability",
+
+        // Qualifications
+        highestQualification:
+          (app.highestQualification || app.highest_qualification) as string | undefined,
+
+        highestQualificationLink:
+          (app.highestQualificationLink || app.qualification_link) as string | undefined,
+
+        highestQualificationFileId:
+          (app.highestQualificationFileId || app.highest_qualification_file_id) as string | undefined,
+
+        highestQualificationFileName:
+          (app.highestQualificationFileName || app.highest_qualification_file_name) as string | undefined,
+
+        highestQualificationFileUrl:
+          (app.highestQualificationFileUrl || app.highest_qualification_file_url) as string | undefined,
+
+        examBoard:
+          (app.examBoard || app.exam_board) as string | undefined,
+
+        examResultSummary:
+          (app.examResultSummary || app.exam_result_summary) as string | undefined,
+
+        resultDocumentLink:
+          (app.resultDocumentLink || app.result_document_link) as string | undefined,
+
+        resultDocumentFileId:
+          (app.resultDocumentFileId || app.result_document_file_id) as string | undefined,
+
+        resultDocumentFileName:
+          (app.resultDocumentFileName || app.result_document_file_name) as string | undefined,
+
+        resultDocumentFileUrl:
+          (app.resultDocumentFileUrl || app.result_document_file_url) as string | undefined,
+
+        // Teaching
+        teachingExperience:
+          (app.teachingExperience || app.cover_letter) as string | undefined,
+
+        teachingFormat:
+          (app.teachingFormat || app.teaching_format) as string | undefined,
+
+        // Pricing
+        oneOnOneRateUsd:
+          app.oneOnOneRateUsd != null
+            ? Number(app.oneOnOneRateUsd)
+            : undefined,
+
+        groupRateUsd:
+          app.groupRateUsd != null
+            ? Number(app.groupRateUsd)
+            : undefined,
+
+        maxGroupStudents:
+          app.maxGroupStudents != null
+            ? Number(app.maxGroupStudents)
+            : undefined,
+
+        weeklyClassesPerStudent:
+          app.weeklyClassesPerStudent != null
+            ? Number(app.weeklyClassesPerStudent)
+            : undefined,
+
+        classDurationMinutes:
+          app.classDurationMinutes != null
+            ? Number(app.classDurationMinutes)
+            : undefined,
+
+        // Social
+        videoLink:
+          app.videoLink as string | undefined,
+
+        instagramHandle:
+          (app.instagramHandle || app.instagram_handle) as string | undefined,
+
+        testimonial:
+          app.testimonial as string | undefined,
+
+        // Admin
+        is_featured:
+          false,
+
+        is_verified:
+          true,
+
+        is_active:
+          true,
       });
 
       // 3. Assign role
@@ -172,7 +294,7 @@ function ReviewModal({
     }
   };
 
-  const field = (label: string, value: unknown, mono = false): JSX.Element | null => {
+  const field = (label: string, value: unknown, mono = false): ReactNode => {
     if (!value && value !== 0) return null;
     return (
       <div className="space-y-1">
@@ -184,7 +306,7 @@ function ReviewModal({
     );
   };
 
-  const arrayField = (label: string, value: unknown): JSX.Element | null => {
+  const arrayField = (label: string, value: unknown): ReactNode => {
     const arr = Array.isArray(value) ? value : value ? [value] : [];
     if (arr.length === 0) return null;
     return (
@@ -424,11 +546,11 @@ function ReviewModal({
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 function AdminTutorApplications() {
-  const [applications, setApplications] = useState<Record<string, unknown>[]>([]);
+  const [applications, setApplications] = useState<Record<string, any>[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("active"); // active = non-archived
-  const [reviewing, setReviewing] = useState<Record<string, unknown> | null>(null);
+  const [reviewing, setReviewing] = useState<Record<string, any> | null>(null);
 
   useEffect(() => {
     loadApplications();
@@ -468,20 +590,141 @@ function AdminTutorApplications() {
     await DataStore.updateTutorApplicationStatus(id, "approved");
     await DataStore.saveTutor({
       id: tutorId,
+      slug: name
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, ""),
       name,
-      avatar_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0f172a&color=ffffff&size=256`,
-      headline: "Professional Educator",
-      about: ((app.teachingExperience || app.cover_letter || "") as string),
-      hourly_rate: Number(app.oneOnOneRateUsd ?? 40),
-      rating_avg: 5.0,
-      rating_count: 0,
-      years_experience: Number(app.yearsExperience ?? 1),
+
+      phone:
+        (app.phoneNumber || app.phone) as string | undefined,
+
+      discordUsername:
+        (app.discordUsername || app.discord_username) as string | undefined,
+
+      dateOfBirth:
+        (app.dateOfBirth || app.date_of_birth) as string | undefined,
+
+      countryOfResidence:
+        (app.countryOfResidence || app.country_of_residence) as string | undefined,
+
+      avatar_url:
+        `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0f172a&color=ffffff&size=256`,
+
+      headline:
+        (app.headline as string) || "Professional Educator",
+
+      about:
+        ((app.teachingExperience || app.cover_letter || "") as string),
+
+      hourly_rate:
+        Number(app.oneOnOneRateUsd ?? app.hourlyRate ?? 40),
+
+      rating_avg:
+        5,
+
+      rating_count:
+        0,
+
+      years_experience:
+        Number(app.yearsExperience ?? app.years_experience ?? 0),
+
       languages,
+
       subjects,
+
       levels,
-      is_featured: false,
-      is_verified: true,
-      availability: "Contact for availability",
+
+      availability:
+        (app.availability as string) || "Contact for availability",
+
+      // Qualifications
+      highestQualification:
+        (app.highestQualification || app.highest_qualification) as string | undefined,
+
+      highestQualificationLink:
+        (app.highestQualificationLink || app.qualification_link) as string | undefined,
+
+      highestQualificationFileId:
+        (app.highestQualificationFileId || app.highest_qualification_file_id) as string | undefined,
+
+      highestQualificationFileName:
+        (app.highestQualificationFileName || app.highest_qualification_file_name) as string | undefined,
+
+      highestQualificationFileUrl:
+        (app.highestQualificationFileUrl || app.highest_qualification_file_url) as string | undefined,
+
+      examBoard:
+        (app.examBoard || app.exam_board) as string | undefined,
+
+      examResultSummary:
+        (app.examResultSummary || app.exam_result_summary) as string | undefined,
+
+      resultDocumentLink:
+        (app.resultDocumentLink || app.result_document_link) as string | undefined,
+
+      resultDocumentFileId:
+        (app.resultDocumentFileId || app.result_document_file_id) as string | undefined,
+
+      resultDocumentFileName:
+        (app.resultDocumentFileName || app.result_document_file_name) as string | undefined,
+
+      resultDocumentFileUrl:
+        (app.resultDocumentFileUrl || app.result_document_file_url) as string | undefined,
+
+      // Teaching
+      teachingExperience:
+        (app.teachingExperience || app.cover_letter) as string | undefined,
+
+      teachingFormat:
+        (app.teachingFormat || app.teaching_format) as string | undefined,
+
+      // Pricing
+      oneOnOneRateUsd:
+        app.oneOnOneRateUsd != null
+          ? Number(app.oneOnOneRateUsd)
+          : undefined,
+
+      groupRateUsd:
+        app.groupRateUsd != null
+          ? Number(app.groupRateUsd)
+          : undefined,
+
+      maxGroupStudents:
+        app.maxGroupStudents != null
+          ? Number(app.maxGroupStudents)
+          : undefined,
+
+      weeklyClassesPerStudent:
+        app.weeklyClassesPerStudent != null
+          ? Number(app.weeklyClassesPerStudent)
+          : undefined,
+
+      classDurationMinutes:
+        app.classDurationMinutes != null
+          ? Number(app.classDurationMinutes)
+          : undefined,
+
+      // Social
+      videoLink:
+        app.videoLink as string | undefined,
+
+      instagramHandle:
+        (app.instagramHandle || app.instagram_handle) as string | undefined,
+
+      testimonial:
+        app.testimonial as string | undefined,
+
+      // Admin
+      is_featured:
+        false,
+
+      is_verified:
+        true,
+
+      is_active:
+        true,
     });
     if (userId) await DataStore.assignUserRole(userId, "tutor");
     if (email) await DataStore.addToTeam("tutors", email, userId);

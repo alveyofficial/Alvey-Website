@@ -5,19 +5,20 @@ import { appwrite, APPWRITE_DATABASE_ID, getCurrentUser } from "@/integrations/a
 
 export interface Tutor {
   id: string;
-  /** URL-safe slug used in /tutors/[slug] routes and the sitemap. */
   slug: string;
+
+  // Basic information
   name: string;
-  phone?: string;
-  discordUsername?: string;
-  dateOfBirth?: string;
-  countryOfResidence?: string;
+  phone?: string | null;
+  email?: string | null;
+  discordUsername?: string | null;
+  dateOfBirth?: string | null;
+  countryOfResidence?: string | null;
 
   // Public profile
   avatar_url: string;
   headline: string;
   about: string;
-  slug: string;
 
   // Stats
   hourly_rate: number;
@@ -32,41 +33,40 @@ export interface Tutor {
   availability: string;
 
   // Qualification
-  highestQualification?: string;
-  highestQualificationLink?: string;
-  highestQualificationFileId?: string;
-  highestQualificationFileName?: string;
-  highestQualificationFileUrl?: string;
-
-  examBoard?: string;
-  examResultSummary?: string;
-
-  resultDocumentLink?: string;
-  resultDocumentFileId?: string;
-  resultDocumentFileName?: string;
-  resultDocumentFileUrl?: string;
-
-  teachingExperience?: string;
-  teachingFormat?: string;
+  highestQualification?: string | null;
+  highestQualificationLink?: string | null;
+  highestQualificationFileId?: string | null;
+  highestQualificationFileName?: string | null;
+  highestQualificationFileUrl?: string | null;
+  examBoard?: string | null;
+  examResultSummary?: string | null;
+  resultDocumentLink?: string | null;
+  resultDocumentFileId?: string | null;
+  resultDocumentFileName?: string | null;
+  resultDocumentFileUrl?: string | null;
+  teachingExperience?: string | null;
+  teachingFormat?: string | null;
 
   // Pricing
-  oneOnOneRateUsd?: number;
-  groupRateUsd?: number;
-  maxGroupStudents?: number;
-  weeklyClassesPerStudent?: number;
-  classDurationMinutes?: number;
+  oneOnOneRateUsd?: number | null;
+  groupRateUsd?: number | null;
+  maxGroupStudents?: number | null;
+  weeklyClassesPerStudent?: number | null;
+  classDurationMinutes?: number | null;
 
   // Public/social
-  videoLink?: string;
-  instagramHandle?: string;
-  testimonial?: string;
-
+  videoLink?: string | null;
+  instagramHandle?: string | null;
+  testimonial?: string | null;
   responseTime?: string;
+
+  // Optional Appwrite profile links
+  contactUrl?: string | null;
+  inquiryUrl?: string | null;
 
   // Status
   is_featured: boolean;
   is_verified: boolean;
-
   is_active?: boolean;
 }
 
@@ -738,7 +738,9 @@ export const DataStore = {
         tutor.highestQualificationFileName ?? null,
 
       highestQualificationFileUrl:
-        tutor.highestQualificationFileUrl ?? null,
+        tutor.highestQualificationFileUrl?.trim()
+          ? tutor.highestQualificationFileUrl.trim()
+          : undefined,
 
       examBoard:
         tutor.examBoard ?? null,
@@ -747,7 +749,9 @@ export const DataStore = {
         tutor.examResultSummary ?? null,
 
       resultDocumentLink:
-        tutor.resultDocumentLink ?? null,
+        tutor.resultDocumentLink?.trim()
+          ? tutor.resultDocumentLink.trim()
+          : undefined,
 
       resultDocumentFileId:
         tutor.resultDocumentFileId ?? null,
@@ -756,7 +760,9 @@ export const DataStore = {
         tutor.resultDocumentFileName ?? null,
 
       resultDocumentFileUrl:
-        tutor.resultDocumentFileUrl ?? null,
+        tutor.resultDocumentFileUrl?.trim()
+          ? tutor.resultDocumentFileUrl.trim()
+          : undefined,
 
       teachingExperience:
         tutor.teachingExperience ?? null,
@@ -784,7 +790,9 @@ export const DataStore = {
 
       // Extra profile
       videoLink:
-        tutor.videoLink ?? null,
+        tutor.videoLink?.trim()
+          ? tutor.videoLink.trim()
+          : undefined,
 
       instagramHandle:
         tutor.instagramHandle ?? null,
@@ -842,9 +850,6 @@ export const DataStore = {
     );
 
     const merged: Tutor = {
-      ...existing,
-      ...tutor,
-
       id: tutor.id,
 
       name:
@@ -852,28 +857,10 @@ export const DataStore = {
         existing?.name ??
         "Certified Tutor",
 
-      
-
-      phone:
-        tutor.phone ??
-        existing?.phone,
-
-      discordUsername:
-        tutor.discordUsername ??
-        existing?.discordUsername,
-
-      dateOfBirth:
-        tutor.dateOfBirth ??
-        existing?.dateOfBirth,
-
-      countryOfResidence:
-        tutor.countryOfResidence ??
-        existing?.countryOfResidence,
-
       avatar_url:
         tutor.avatar_url ??
         existing?.avatar_url ??
-        avatarFor(tutor.name || existing?.name || "Tutor"),
+        avatarFor(tutor.name || "Tutor"),
 
       headline:
         tutor.headline ??
@@ -918,12 +905,7 @@ export const DataStore = {
       levels:
         tutor.levels ??
         existing?.levels ??
-        defaultLevels,
-
-      availability:
-        tutor.availability ??
-        existing?.availability ??
-        "Flexible schedule (contact us)",
+        [],
 
       is_featured:
         tutor.is_featured ??
@@ -935,112 +917,280 @@ export const DataStore = {
         existing?.is_verified ??
         false,
 
-      highestQualification:
-        tutor.highestQualification ??
-        existing?.highestQualification,
+      slug:
+        tutor.slug ??
+        existing?.slug ??
+        tutor.id,
 
-      highestQualificationLink:
-        tutor.highestQualificationLink ??
-        existing?.highestQualificationLink,
+      availability:
+        tutor.availability ??
+        existing?.availability ??
+        "Flexible schedule (contact us)",
+    };
 
-      highestQualificationFileId:
-        tutor.highestQualificationFileId ??
-        existing?.highestQualificationFileId,
+    const payload = {
+      // ─────────────────────────────────────────────
+      // Public profile
+      // ─────────────────────────────────────────────
 
-      highestQualificationFileName:
-        tutor.highestQualificationFileName ??
-        existing?.highestQualificationFileName,
+      slug:
+        tutor.slug ??
+        existing?.slug ??
+        merged.id,
 
-      highestQualificationFileUrl:
-        tutor.highestQualificationFileUrl ??
-        existing?.highestQualificationFileUrl,
+      displayName:
+        merged.name,
 
-      examBoard:
-        tutor.examBoard ??
-        existing?.examBoard,
+      headline:
+        merged.headline,
 
-      examResultSummary:
-        tutor.examResultSummary ??
-        existing?.examResultSummary,
+      shortBio:
+        merged.about.slice(0, 240),
 
-      resultDocumentLink:
-        tutor.resultDocumentLink ??
-        existing?.resultDocumentLink,
+      fullBio:
+        merged.about,
 
-      resultDocumentFileId:
-        tutor.resultDocumentFileId ??
-        existing?.resultDocumentFileId,
+      avatarInitials:
+        initials(merged.name),
 
-      resultDocumentFileName:
-        tutor.resultDocumentFileName ??
-        existing?.resultDocumentFileName,
+      avatarUrl:
+        merged.avatar_url || null,
 
-      resultDocumentFileUrl:
-        tutor.resultDocumentFileUrl ??
-        existing?.resultDocumentFileUrl,
+      education:
+        [],
 
-      teachingExperience:
-        tutor.teachingExperience ??
-        existing?.teachingExperience,
+      subjects:
+        merged.subjects,
 
-      teachingFormat:
-        tutor.teachingFormat ??
-        existing?.teachingFormat ??
-        "online",
+      levels:
+        merged.levels,
 
-      oneOnOneRateUsd:
-        tutor.oneOnOneRateUsd ??
-        existing?.oneOnOneRateUsd ??
-        0,
+      languages:
+        merged.languages,
 
-      groupRateUsd:
-        tutor.groupRateUsd ??
-        existing?.groupRateUsd ??
-        0,
-
-      maxGroupStudents:
-        tutor.maxGroupStudents ??
-        existing?.maxGroupStudents ??
-        1,
-
-      weeklyClassesPerStudent:
-        tutor.weeklyClassesPerStudent ??
-        existing?.weeklyClassesPerStudent ??
-        1,
-
-      classDurationMinutes:
-        tutor.classDurationMinutes ??
-        existing?.classDurationMinutes ??
-        60,
-
-      videoLink:
-        tutor.videoLink ??
-        existing?.videoLink,
-
-      instagramHandle:
-        tutor.instagramHandle ??
-        existing?.instagramHandle,
-
-      testimonial:
-        tutor.testimonial ??
-        existing?.testimonial,
+      publicBadges:
+        merged.is_verified
+          ? ["Verified"]
+          : [],
 
       responseTime:
         tutor.responseTime ??
         existing?.responseTime ??
         "Within 24 hours",
 
-      slug:
-        tutor.slug ??
-        existing?.slug ??
-        tutorSlug(
-          tutor.name ??
-          existing?.name ??
-          "tutor"
-        ),
+      availability:
+        merged.availability,
+
+      // ─────────────────────────────────────────────
+      // Contact
+      // ─────────────────────────────────────────────
+
+      contactEmail:
+        tutor.email ??
+        existing?.email ??
+        null,
+
+      contactUrl:
+        tutor.contactUrl ??
+        existing?.contactUrl ??
+        null,
+
+      inquiryUrl:
+        tutor.inquiryUrl ??
+        existing?.inquiryUrl ??
+        null,
+
+      phone:
+        tutor.phone ??
+        existing?.phone ??
+        null,
+
+      discordUsername:
+        tutor.discordUsername ??
+        existing?.discordUsername ??
+        null,
+
+      countryOfResidence:
+        tutor.countryOfResidence ??
+        existing?.countryOfResidence ??
+        null,
+
+      // ─────────────────────────────────────────────
+      // Personal
+      // ─────────────────────────────────────────────
+
+      dateOfBirth:
+        tutor.dateOfBirth ??
+        existing?.dateOfBirth ??
+        null,
+
+      // ─────────────────────────────────────────────
+      // Qualifications
+      // ─────────────────────────────────────────────
+
+      highestQualification:
+        tutor.highestQualification ??
+        existing?.highestQualification ??
+        null,
+
+      highestQualificationLink:
+        tutor.highestQualificationLink ??
+        existing?.highestQualificationLink ??
+        null,
+
+      highestQualificationFileId:
+        tutor.highestQualificationFileId ??
+        existing?.highestQualificationFileId ??
+        null,
+
+      highestQualificationFileName:
+        tutor.highestQualificationFileName ??
+        existing?.highestQualificationFileName ??
+        null,
+
+      highestQualificationFileUrl:
+        tutor.highestQualificationFileUrl ??
+        existing?.highestQualificationFileUrl ??
+        null,
+
+      examBoard:
+        tutor.examBoard ??
+        existing?.examBoard ??
+        null,
+
+      examResultSummary:
+        tutor.examResultSummary ??
+        existing?.examResultSummary ??
+        null,
+
+      resultDocumentLink:
+        tutor.resultDocumentLink ??
+        existing?.resultDocumentLink ??
+        null,
+
+      resultDocumentFileId:
+        tutor.resultDocumentFileId ??
+        existing?.resultDocumentFileId ??
+        null,
+
+      resultDocumentFileName:
+        tutor.resultDocumentFileName ??
+        existing?.resultDocumentFileName ??
+        null,
+
+      resultDocumentFileUrl:
+        tutor.resultDocumentFileUrl ??
+        existing?.resultDocumentFileUrl ??
+        null,
+
+      // ─────────────────────────────────────────────
+      // Teaching
+      // ─────────────────────────────────────────────
+
+      teachingExperience:
+        tutor.teachingExperience ??
+        existing?.teachingExperience ??
+        null,
+
+      teachingFormat:
+        tutor.teachingFormat ??
+        existing?.teachingFormat ??
+        null,
+
+      // ─────────────────────────────────────────────
+      // Pricing / scheduling
+      // ─────────────────────────────────────────────
+
+      oneOnOneRateUsd:
+        tutor.oneOnOneRateUsd ??
+        existing?.oneOnOneRateUsd ??
+        null,
+
+      groupRateUsd:
+        tutor.groupRateUsd ??
+        existing?.groupRateUsd ??
+        null,
+
+      maxGroupStudents:
+        tutor.maxGroupStudents ??
+        existing?.maxGroupStudents ??
+        null,
+
+      weeklyClassesPerStudent:
+        tutor.weeklyClassesPerStudent ??
+        existing?.weeklyClassesPerStudent ??
+        null,
+
+      classDurationMinutes:
+        tutor.classDurationMinutes ??
+        existing?.classDurationMinutes ??
+        null,
+
+      // ─────────────────────────────────────────────
+      // Public/social
+      // ─────────────────────────────────────────────
+
+      videoLink:
+        tutor.videoLink ??
+        existing?.videoLink ??
+        null,
+
+      instagramHandle:
+        tutor.instagramHandle ??
+        existing?.instagramHandle ??
+        null,
+
+      testimonial:
+        tutor.testimonial ??
+        existing?.testimonial ??
+        null,
+
+      // ─────────────────────────────────────────────
+      // Stats / admin state
+      // ─────────────────────────────────────────────
+
+      rating:
+        merged.rating_avg,
+
+      reviewCount:
+        merged.rating_count,
+
+      hourlyRate:
+        Math.round(merged.hourly_rate),
+
+      experienceYears:
+        merged.years_experience,
+
+      featured:
+        merged.is_featured,
+
+      verified:
+        merged.is_verified,
+
+      active:
+        existing?.is_active ??
+        true,
     };
 
-    await DataStore.saveTutor(merged);
+    await upsertDocument(
+      COLLECTIONS.TUTOR_PROFILES,
+      tutor.id,
+      payload
+    );
+
+    const tutors = await DataStore.getTutors();
+
+    const index = tutors.findIndex(
+      (t) => t.id === tutor.id
+    );
+
+    if (index !== -1) {
+      tutors[index] = merged;
+    } else {
+      tutors.push(merged);
+    }
+
+    setLocal(KEYS.TUTORS, tutors);
   },
 
   archiveTutor: async (id: string): Promise<void> => {
@@ -1457,27 +1607,153 @@ export const DataStore = {
       setLocal(KEYS.APPLICATIONS, list);
 
       if (status === "approved" && list[idx].applicant_user_id) {
-        const userId = list[idx].applicant_user_id;
+        const application = list[idx];
+        const userId = application.applicant_user_id;
+
         await DataStore.assignUserRole(userId, "tutor");
-        const user = await getCurrentUser();
-        console.log("CURRENT USER:", user);
+
         await DataStore.saveTutor({
           id: userId,
-          name: list[idx].full_name,
-          avatar_url: avatarFor(list[idx].full_name),
-          headline: "Professional Educator",
-          about: list[idx].cover_letter || "",
-          hourly_rate: 45,
-          rating_avg: 5.0,
+          slug: userId,
+
+          name: application.full_name || "Certified Tutor",
+
+          phone:
+            (application.phoneNumber ||
+              application.phone ||
+              "") as string,
+
+          discordUsername:
+            (application.discordUsername ||
+              application.discord_username ||
+              "") as string,
+
+          dateOfBirth:
+            (application.dateOfBirth ||
+              application.date_of_birth ||
+              "") as string,
+
+          countryOfResidence:
+            (application.countryOfResidence ||
+              application.country_of_residence ||
+              "") as string,
+
+          avatar_url: avatarFor(
+            application.full_name || "Certified Tutor",
+          ),
+
+          headline:
+            (application.headline as string) ||
+            "Professional Educator",
+
+          about:
+            (application.teachingExperience ||
+              application.teaching_experience ||
+              application.cover_letter ||
+              "") as string,
+
+          highestQualification:
+            (application.highestQualification ||
+              application.highest_qualification ||
+              "") as string,
+
+          highestQualificationLink:
+            (application.highestQualificationLink ||
+              application.qualification_link ||
+              "") as string,
+
+          examBoard:
+            (application.examBoard ||
+              application.exam_board ||
+              "") as string,
+
+          examResultSummary:
+            (application.examResultSummary ||
+              application.exam_result_summary ||
+              "") as string,
+
+          teachingExperience:
+            (application.teachingExperience ||
+              application.teaching_experience ||
+              application.cover_letter ||
+              "") as string,
+
+          teachingFormat:
+            (application.teachingFormat ||
+              application.teaching_format ||
+              "online") as string,
+
+          oneOnOneRateUsd:
+            Number(
+              application.oneOnOneRateUsd ??
+              application.hourlyRate ??
+              application.expected_rate ??
+              0,
+            ),
+
+          groupRateUsd:
+            Number(application.groupRateUsd ?? 0),
+
+          maxGroupStudents:
+            Number(application.maxGroupStudents ?? 0),
+
+          weeklyClassesPerStudent:
+            Number(application.weeklyClassesPerStudent ?? 0),
+
+          classDurationMinutes:
+            Number(application.classDurationMinutes ?? 0),
+
+          videoLink:
+            (application.videoLink || "") as string,
+
+          instagramHandle:
+            (application.instagramHandle ||
+              application.instagram_handle ||
+              "") as string,
+
+          testimonial:
+            (application.testimonial || "") as string,
+
+          responseTime: "Within 24 hours",
+
+          hourly_rate:
+            Number(
+              application.oneOnOneRateUsd ??
+              application.hourlyRate ??
+              application.expected_rate ??
+              40,
+            ),
+
+          rating_avg: 5,
           rating_count: 0,
-          years_experience: list[idx].years_experience || 5,
-          languages: list[idx].languages || ["English"],
-          subjects: list[idx].subjects || [],
-          levels: list[idx].levels || [],
+
+          years_experience:
+            Number(
+              application.yearsExperience ??
+              application.years_experience ??
+              0,
+            ),
+
+          languages:
+            application.languages ||
+            application.languagesSpoken ||
+            [],
+
+          subjects:
+            application.subjects ||
+            (application.subjectName
+              ? [application.subjectName]
+              : []),
+
+          levels:
+            application.levels ||
+            (application.teachingLevel
+              ? [application.teachingLevel]
+              : []),
+
           is_featured: false,
           is_verified: true,
           availability: "Available",
-          slug: tutorSlug(list[idx].full_name),
         });
       }
     }
