@@ -81,7 +81,7 @@ function TutorProfilePage() {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <div className="h-8 w-8 rounded-full border-4 border-blue-600 border-t-transparent animate-spin" />
+        <div className="h-8 w-8 rounded-full border-4 border-emerald-600 border-t-transparent animate-spin" />
       </div>
     );
   }
@@ -93,7 +93,7 @@ function TutorProfilePage() {
         <p className="text-muted-foreground text-sm">
           We couldn't locate a profile matching this ID. The tutor may be temporarily inactive.
         </p>
-        <Button asChild className="rounded-xl bg-blue-600 hover:bg-blue-700">
+        <Button asChild className="rounded-xl bg-emerald-600 hover:bg-emerald-700">
           <Link to="/find-a-tutor">Back to Marketplace</Link>
         </Button>
       </div>
@@ -129,8 +129,8 @@ function TutorProfilePage() {
                       {tutor.name}
                     </h1>
                     {tutor.is_verified && (
-                      <Badge className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200/50 gap-1 rounded-full text-[10px] font-bold px-2 py-0.5 shrink-0">
-                        <CheckCircle className="h-3 w-3 text-blue-600 fill-blue-50" /> Verified
+                      <Badge className="bg-[#164E5E]/10 hover:bg-[#3D7F8F]/10 text-emerald-700 border-[#3D7F8F]/30 gap-1 rounded-full text-[10px] font-bold px-2 py-0.5 shrink-0">
+                        <CheckCircle className="h-3 w-3 text-[#164E5E] fill-emerald-50" /> Verified
                         Tutor
                       </Badge>
                     )}
@@ -140,7 +140,7 @@ function TutorProfilePage() {
                       </Badge>
                     )}
                   </div>
-                  <p className="text-blue-600 dark:text-blue-400 font-semibold text-sm">
+                  <p className="text-emerald-600 dark:text-[#6FD4D8] font-semibold text-sm">
                     {tutor.headline}
                   </p>
                 </div>
@@ -153,7 +153,7 @@ function TutorProfilePage() {
                   </span>
                   <span className="h-3 w-px bg-border hidden sm:inline" />
                   <span className="flex items-center gap-1.5">
-                    <Award className="h-4 w-4 text-blue-600" />
+                    <Award className="h-4 w-4 text-emerald-600" />
                     <strong className="text-foreground">{tutor.years_experience} Yrs</strong>{" "}
                     Teaching Experience
                   </span>
@@ -187,7 +187,7 @@ function TutorProfilePage() {
                   {tutor.subjects.map((sub) => (
                     <Badge
                       key={sub}
-                      className="bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/20 dark:text-blue-400 border border-blue-100/30 font-medium px-3 py-1 text-xs rounded-lg"
+                      className="bg-emerald-50 hover:bg-emerald-100 text-[#164E5E] dark:bg-[#3D7F8F]/20 dark:text-emerald-400 border border-[#3D7F8F]/30 font-medium px-3 py-1 text-xs rounded-lg"
                     >
                       {sub}
                     </Badge>
@@ -216,13 +216,13 @@ function TutorProfilePage() {
 
           {/* Student Reviews List */}
           <Card className="rounded-2xl border-border/80 bg-background p-6 space-y-6 shadow-sm">
-            <h2 className="text-lg font-bold">Student Testimonials & Reviews</h2>
+            <h2 className="text-lg font-bold">Testimonials & Reviews</h2>
             {tutor.testimonial && (
               <div className="rounded-xl border border-border/60 bg-slate-50/50 dark:bg-slate-900/20 p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <User className="h-4 w-4 text-[#3D7F8F]" />
+                  <User className="h-4 w-4 text-emerald-600" />
                   <span className="text-sm font-semibold">
-                    Student Testimonial
+                    Tutor Testimonial
                   </span>
                 </div>
 
@@ -273,7 +273,7 @@ function TutorProfilePage() {
 
         {/* Booking & Side card panel (Right - 4 columns) */}
         <div className="lg:col-span-4 space-y-6">
-          <Card className="rounded-2xl border-blue-200 dark:border-slate-800 bg-background shadow-lg shadow-blue-500/5 p-6 space-y-5">
+          <Card className="rounded-2xl border-emerald-200 dark:border-slate-800 bg-background shadow-lg shadow-[#164E5E]/5 p-6 space-y-5">
             <div className="text-center space-y-1">
               <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider block">
                 Hourly Tuition Rate
@@ -288,7 +288,7 @@ function TutorProfilePage() {
 
             <div className="space-y-3.5 text-xs">
               <div className="flex items-center gap-3">
-                <Calendar className="h-4 w-4 text-blue-600 shrink-0" />
+                <Calendar className="h-4 w-4 text-emerald-600 shrink-0" />
                 <div>
                   <span className="text-muted-foreground block">Weekly Availability:</span>
                   <span className="font-semibold">{tutor.availability}</span>
@@ -296,7 +296,7 @@ function TutorProfilePage() {
               </div>
 
               <div className="flex items-center gap-3">
-                <Clock className="h-4 w-4 text-blue-600 shrink-0" />
+                <Clock className="h-4 w-4 text-emerald-600 shrink-0" />
                 <div>
                   <span className="text-muted-foreground block">Avg Response Time:</span>
                   <span className="font-semibold">&lt; 2 hours</span>
@@ -304,7 +304,7 @@ function TutorProfilePage() {
               </div>
 
               <div className="flex items-center gap-3">
-                <Globe className="h-4 w-4 text-blue-600 shrink-0" />
+                <Globe className="h-4 w-4 text-emerald-600 shrink-0" />
                 <div>
                   <span className="text-muted-foreground block">Teaching Medium:</span>
                   <span className="font-semibold">Interactive Video Classroom</span>
@@ -312,7 +312,7 @@ function TutorProfilePage() {
               </div>
 
               <div className="flex items-center gap-3">
-                <ShieldCheck className="h-4 w-4 text-blue-600 shrink-0" />
+                <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
                 <div>
                   <span className="text-muted-foreground block">Guarantee:</span>
                   <span className="font-semibold">Satisfaction Matched Guarantee</span>
@@ -323,7 +323,7 @@ function TutorProfilePage() {
             <div className="pt-2">
               <Button
                 asChild
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl h-11 shadow-md shadow-blue-500/10"
+                className="w-full bg-[#164E5E] hover:bg-[#3D7F8F] text-white font-semibold rounded-xl h-11 shadow-md shadow-[#164E5E]/10"
               >
                 <Link to="/contact" search={{ tutorId: tutor.id }}>
                   I .. I want! Book now!!!

@@ -130,7 +130,7 @@ const defaultTutors: Tutor[] = [
     years_experience: 67,
     languages: ["English", "Languages show here"],
     subjects: ["Mathematics", "Subjects show here", "Calculus"],
-    levels: ["A-Level","Levels show here", "IGCSE"],
+    levels: ["A-Level", "Levels show here", "IGCSE"],
     is_featured: true,
     is_verified: true,
     availability: "availability shows here",
@@ -2109,7 +2109,10 @@ export const DataStore = {
       list[idx].status = status;
       setLocal(KEYS.REVIEWS, list);
     }
-    await upsertDocument(COLLECTIONS.REVIEWS, id, { status });
+    await upsertDocument(COLLECTIONS.REVIEWS, id, {
+      status,
+      isPublic: status === "approved",
+    });
   },
 
   // --- AUDIT LOGS ---
