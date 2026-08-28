@@ -525,7 +525,7 @@ function mapTutorDoc(doc: any): Tutor {
     groupRateUsd: safeNumber(doc.groupRateUsd),
     maxGroupStudents: safeNumber(doc.maxGroupStudents),
     weeklyClassesPerStudent: safeNumber(doc.weeklyClassesPerStudent),
-
+    testimonial: safeString(doc.testimonial),
     responseTime: safeString(doc.responseTime),
   };
 }
@@ -2480,7 +2480,10 @@ export const DataStore = {
       list[idx].status = status;
       setLocal(KEYS.REVIEWS, list);
     }
-    await upsertDocument(COLLECTIONS.REVIEWS, id, { status });
+    await upsertDocument(COLLECTIONS.REVIEWS, id, {
+      status,
+      isPublic: status === "approved",
+    });
   },
 
   addTutorResponse: async (reviewId: string, response: string): Promise<void> => {
