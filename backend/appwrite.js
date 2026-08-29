@@ -15,4 +15,16 @@ const db = new Databases(client);
 
 const dbId = process.env.APPWRITE_DB;
 
-module.exports = { client, db, dbId };
+//Not all ids but some
+const table = {
+    tutorProfiles:'tutor_profiles',
+    recruitmentApps: 'volunteer_applications',
+    tutorReviews: 'tutor_reviews',
+    schedules: 'schedules',
+    students: 'students',
+    tutorApplications: 'tutor_applications',
+    users: 'users',
+    credits: 'credits'
+};
+
+module.exports = { client, db, dbId, table };

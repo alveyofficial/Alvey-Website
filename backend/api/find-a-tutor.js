@@ -4,13 +4,13 @@ require('dotenv').config({
     path: path.resolve(__dirname, '../env/.env')});
 
 
-const { client, db, dbId } = require('../appwrite');
+const { client, db, dbId, table } = require('../appwrite');
 
 const tutors = async() =>{
     try{
         const res = await db.listDocuments(
             dbId,
-            "tutor_profiles"
+            table.tutorProfiles //this is the tableId
         );
         let data = [];
         //Cleaning up tutor data
