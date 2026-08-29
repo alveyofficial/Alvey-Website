@@ -43,8 +43,8 @@ export const Route = createFileRoute("/_public/tutors/$tutorSlug")({
     return {
       meta: seoMeta({
         title: tutor
-          ? `${name}${headline ? `, ${headline}+"hi"` : ""}`
-          : "Tutor Profile",
+          ? `${name}${headline ? `, ${headline}` : ""} | Alvey`
+          : "Tutor Profile | Alvey",
         exactTitle: true,
         description,
         path,
