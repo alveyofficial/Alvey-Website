@@ -29,7 +29,7 @@ export const Route = createFileRoute("/_public/tutors/$tutorSlug")({
   head: ({ loaderData, params }) => {
     const tutor = loaderData?.tutor;
     const name = tutor?.name ?? "Tutor Profile";
-    const headline = tutor?.headline ?? "";
+    const headline = tutor?.headline?.trim() ?? "";
 
     const description = tutor
       ? `${headline ? headline + " — " : ""}Learn more about ${name} on Alvey: subjects, levels, reviews, and availability.`
@@ -42,7 +42,10 @@ export const Route = createFileRoute("/_public/tutors/$tutorSlug")({
 
     return {
       meta: seoMeta({
-        title: tutor ? `${name} · Private Tutor` : "Tutor Profile",
+        title: tutor
+          ? `${name}${headline ? `, ${headline}+"hi"` : ""}`
+          : "Tutor Profile",
+        exactTitle: true,
         description,
         path,
         image,
