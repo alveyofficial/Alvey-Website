@@ -1,0 +1,6 @@
+Kindly add your changes here for others to know
+
+28/08/2026 - 29/09/2026 ( Trim )
+- Created Migration Layout
+- Added all routes and subroutes needed in the frontend
+- Basic backend with .env configuration
