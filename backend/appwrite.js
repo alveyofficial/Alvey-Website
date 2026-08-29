@@ -12,3 +12,7 @@ const client = new Client()
     .setKey(process.env.APPWRITE_KEY);
 
 const db = new Databases(client);
+
+const dbId = process.env.APPWRITE_DB;
+
+module.exports = { client, db, dbId };

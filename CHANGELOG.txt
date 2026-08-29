@@ -6,3 +6,4 @@ Kindly add your changes here for others to know
 - Basic backend with .env configuration
 - Added Tailwind
 - Added Appwrite Config
+- Created Find Tutors Api (Completed) :)

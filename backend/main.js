@@ -8,6 +8,7 @@ const express = require('express');
 const cors = require('cors');
 const port = parseInt(process.env.PORT);
 const frontend_uri = process.env.FRONTEND_URI;
+const { tutors } = require('./api/find-a-tutor');
 
 //CORS Setup and basic setup
 const app = express();
@@ -21,6 +22,11 @@ app.use(express.urlencoded({extended:true}));
 app.get("/ping", (req,res)=>{
     res.send("Pong!");
 });
+
+app.get("/tutor-profiles", async (req,res)=>{
+    const tutorsData = await tutors();
+    res.json(tutorsData);
+}); 
 
 app.listen(port, ()=>{
     console.log(`Server listening on http://localhost:${port}/`);
