@@ -7,4 +7,6 @@ To run, ensure you have gone into both the `frontend` and `backend` directories,
 - `npm run frontend` within this directory to start **only** the frontend
 - `npm run backend` within this directory to start **only** the backend with autorefresh
 
+Kindly explain your changes in the `CHANGELOG.txt` file.
+
 Thank you!

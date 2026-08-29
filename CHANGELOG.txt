@@ -4,3 +4,5 @@ Kindly add your changes here for others to know
 - Created Migration Layout
 - Added all routes and subroutes needed in the frontend
 - Basic backend with .env configuration
+- Added Tailwind
+- Added Appwrite Config

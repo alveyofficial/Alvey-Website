@@ -8,7 +8,6 @@ const express = require('express');
 const cors = require('cors');
 const port = parseInt(process.env.PORT);
 const frontend_uri = process.env.FRONTEND_URI;
-console.log(port);
 
 //CORS Setup and basic setup
 const app = express();
