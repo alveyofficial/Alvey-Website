@@ -253,7 +253,7 @@ function ProfilePage() {
 
           <div className="text-sm">
             <p className="font-medium">
-              You're signed in as a guest.
+              You're signed in as a guest. ( NULL WHEN U FREE MAKE PROFILE ADAPTIVE )
             </p>
 
             <p className="mt-0.5 text-muted-foreground">

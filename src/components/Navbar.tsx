@@ -18,7 +18,7 @@ function getDashboardRoute(roles: string[]): string | null {
     return "/recruitment";
   }
 
-  if (roles.includes("student")) {
+  if (roles.includes("Student")) {
     return "/student/dashboard";
   }
 
