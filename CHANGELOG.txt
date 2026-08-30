@@ -17,3 +17,9 @@ Kindly add your changes here for others to know
 - Split routes into their own backend/routes folder, backend/api stays for the appwrite-facing logic
 - Added cookie-parser and turned on credentials in cors so the login cookie actually works
 - Made .env.example for the team
+
+30/08/2026 ( Dusky )
+- Verified local dev setup end to end (clone, install, env, run, curl test) on a clean machine
+- Expanded root README.md with a full step by step local setup walkthrough, including where APPWRITE_DB actually comes from (its the ID, not the "Database" name shown in console)
+- Added a Windows/PowerShell curl gotcha note to the README since plain curl is aliased to Invoke-WebRequest there and breaks on normal flags
+- Confirmed signup rejects known disposable email domains (like example.com) at the appwrite project level, not a bug in our code
