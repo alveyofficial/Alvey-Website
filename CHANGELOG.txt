@@ -7,3 +7,13 @@ Kindly add your changes here for others to know
 - Added Tailwind
 - Added Appwrite Config
 - Created Find Tutors Api (Completed) :)
+
+30/08/2026 ( Dusky )
+- Created full Auth backend, signup, login, logout
+- Added email verification (send + confirm)
+- Added forgot password / reset password
+- Added google, linkedin, discord oauth login
+- Roles now use appwrite labels instead of the old users collection
+- Split routes into their own backend/routes folder, backend/api stays for the appwrite-facing logic
+- Added cookie-parser and turned on credentials in cors so the login cookie actually works
+- Made .env.example for the team

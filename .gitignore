@@ -35,4 +35,6 @@ dist-ssr
 *.sln
 *.sw?
 .env
+Alvey-Website/backend/env/.env
+!Alvey-Website/backend/env/.env.example
 >>>>>>> origin

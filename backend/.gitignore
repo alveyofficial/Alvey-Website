@@ -1,6 +1,3 @@
-*env
-env
-*.env
-.env
-
+Alvey-Website/backend/env/.env
+!Alvey-Website/backend/env/.env.example
 node_modules
