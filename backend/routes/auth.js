@@ -41,10 +41,14 @@ router.post('/signup', async(req,res)=>{
     const { name, email, password } = req.body;
 
     if(!name || !email || !password){
-        return res.json("name, email and password are all required");
+        return res.status(400).json("name, email and password are all required");
     }
 
     const result = await signUp(name, email, password);
+
+    if(typeof result === "string"){
+        return res.status(400).json(result);
+    }
     res.json(result);
 });
 
@@ -52,13 +56,13 @@ router.post('/login', async(req,res)=>{
     const { email, password } = req.body;
 
     if(!email || !password){
-        return res.json("email and password are both required");
+        return res.status(400).json("email and password are both required");
     }
 
     const result = await signIn(email, password);
 
     if(typeof result === "string"){
-        return res.json(result);
+        return res.status(400).json(result);
     }
 
     setSessionCookie(res, result);
@@ -76,13 +80,17 @@ router.post('/send-verification', async(req,res)=>{
     const { redirectUrl } = req.body;
 
     if(!sessionSecret){
-        return res.json("You need to be logged in first");
+        return res.status(401).json("You need to be logged in first");
     }
     if(!redirectUrl){
-        return res.json("redirectUrl is required");
+        return res.status(400).json("redirectUrl is required");
     }
 
     const result = await sendVerificationEmail(sessionSecret, redirectUrl);
+
+    if(typeof result === "string"){
+        return res.status(400).json(result);
+    }
     res.json(result);
 });
 
@@ -90,10 +98,14 @@ router.get('/verify', async(req,res)=>{
     const { userId, secret } = req.query;
 
     if(!userId || !secret){
-        return res.json("userId and secret are both required");
+        return res.status(400).json("userId and secret are both required");
     }
 
     const result = await confirmVerification(userId, secret);
+
+    if(typeof result === "string"){
+        return res.status(400).json(result);
+    }
     res.json(result);
 });
 
@@ -101,10 +113,14 @@ router.post('/forgot-password', async(req,res)=>{
     const { email, redirectUrl } = req.body;
 
     if(!email || !redirectUrl){
-        return res.json("email and redirectUrl are both required");
+        return res.status(400).json("email and redirectUrl are both required");
     }
 
     const result = await sendRecoveryEmail(email, redirectUrl);
+
+    if(typeof result === "string"){
+        return res.status(400).json(result);
+    }
     res.json(result);
 });
 
@@ -112,10 +128,14 @@ router.post('/reset-password', async(req,res)=>{
     const { userId, secret, password } = req.body;
 
     if(!userId || !secret || !password){
-        return res.json("userId, secret and password are all required");
+        return res.status(400).json("userId, secret and password are all required");
     }
 
     const result = await confirmRecovery(userId, secret, password);
+
+    if(typeof result === "string"){
+        return res.status(400).json(result);
+    }
     res.json(result);
 });
 
