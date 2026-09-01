@@ -2065,11 +2065,10 @@ export const DataStore = {
         body: review.comment,
         rating: review.rating,
         isPublic: false,
-        status: "pending",
         helpfulCount: 0,
         response: null,
         responseAt: null,
-        tutor: review.tutor_id,
+        tutorId: review.tutor_id,
         studentId: review.student_id,
         createdAt: new Date().toISOString(),
       },
@@ -2079,10 +2078,40 @@ export const DataStore = {
     return newRev;
   },
 
+  updateReview: async (
+    id: string,
+    review: {
+      rating: number;
+      comment: string;
+    },
+  ) => {
+    const list = getLocal<Review[]>(KEYS.REVIEWS, []);
+    const idx = list.findIndex((r) => r.id === id);
+
+    if (idx !== -1) {
+      list[idx] = {
+        ...list[idx],
+        rating: review.rating,
+        comment: review.comment,
+        status: "pending",
+        created_at: new Date().toISOString(),
+      };
+
+      setLocal(KEYS.REVIEWS, list);
+    }
+
+    await upsertDocument(COLLECTIONS.REVIEWS, id, {
+      rating: review.rating,
+      body: review.comment,
+      isPublic: false,
+    });
+
+    return id;
+  },
   getReviews: async (tutorId?: string): Promise<Review[]> => {
     try {
       const queries = [Query.equal("isPublic", true), Query.equal("status", "approved")];
-      if (tutorId) queries.push(Query.equal("tutor", tutorId));
+      if (tutorId) queries.push(Query.equal("tutorId", tutorId));
       const docs = await listDocuments(COLLECTIONS.REVIEWS, queries);
       if (docs.length > 0) return docs.map(mapReviewDoc);
     } catch { }
