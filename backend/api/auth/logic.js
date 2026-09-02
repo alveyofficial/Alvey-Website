@@ -25,7 +25,7 @@ const signUp = async(name, email, password) =>{
         return newUser;
     } catch(err){
         console.log("Error Signing Up : "+err.message);
-        return "Could not create account :(";
+        return err.message;
     }
 };
 
@@ -40,7 +40,7 @@ const signIn = async(email, password) =>{
         return session;
     } catch(err){
         console.log("Error Signing In : "+err.message);
-        return "Could not log in :(";
+        return err.message;
     }
 };
 
@@ -61,7 +61,7 @@ const sendVerificationEmail = async(sessionSecret, redirectUrl) =>{
         return token;
     } catch(err){
         console.log("Error Sending Verification Email : "+err.message);
-        return "Could not send verification email :(";
+        return err.message;
     }
 };
 
@@ -76,7 +76,7 @@ const confirmVerification = async(userId, secret) =>{
         return result;
     } catch(err){
         console.log("Error Confirming Verification : "+err.message);
-        return "Could not verify email :((";
+        return err.message;
     }
 };
 
@@ -107,7 +107,7 @@ const confirmRecovery = async(userId, secret, password) =>{
         return result;
     } catch(err){
         console.log("Error Confirming Recovery : "+err.message);
-        return "Could not reset password :(";
+        return err.message;
     }
 };
 

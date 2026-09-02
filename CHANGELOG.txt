@@ -17,12 +17,16 @@ Kindly add your changes here for others to know
 - Split routes into their own backend/routes folder, backend/api stays for the appwrite-facing logic
 - Added cookie-parser and turned on credentials in cors so the login cookie actually works
 - Made .env.example for the team
-
-30/08/2026 ( Dusky )
 - Verified local dev setup end to end (clone, install, env, run, curl test) on a clean machine
 - Expanded root README.md with a full step by step local setup walkthrough, including where APPWRITE_DB actually comes from (its the ID, not the "Database" name shown in console)
 - Added a Windows/PowerShell curl gotcha note to the README since plain curl is aliased to Invoke-WebRequest there and breaks on normal flags
 - Confirmed signup rejects known disposable email domains (like example.com) at the appwrite project level, not a bug in our code
+
+31/08/2026 ( Dusky )
+- Confirmed verify-email.tsx and reset-password.tsx from main are already fully covered on dev (GET /auth/verify, POST /auth/reset-password), no separate migration needed
+- Fixed every auth route to return the real appwrite error message with a proper status code on failure, instead of a hardcoded string with status 200 (matches how main reads err.message)
+- Affects signUp, signIn, sendVerificationEmail, confirmVerification, confirmRecovery in logic.js, and /signup, /login, /send-verification, /verify, /forgot-password, /reset-password in routes/auth.js
+- OAuth routes left as is, main never reads oauth failure text so no behavior to match there
 
 ==== NEW MONTH :) === 
 
