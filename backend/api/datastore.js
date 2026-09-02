@@ -4,15 +4,16 @@ require('dotenv').config({
 
 
 const { client, db, dbId, table, ID } = require('../appwrite');
-const { Query } = require('node-appwrite');
+const { Query, Users } = require('node-appwrite');
 
 const { tutors } = require('./find-a-tutor');
 
 class DatastoreSkeleton{
-    constructor(db, dbId, table){
+    constructor(db, dbId, table, client){
         this.db = db;
         this.dbId = dbId;
         this.table = table;
+        this.client = client;
     }
 
     async newDocument(
@@ -37,6 +38,11 @@ class DatastoreSkeleton{
             collectionId,
             query
         )) || []);
+    }
+
+    async fetchAuthUsers(){
+        const users = new Users(this.client);
+        return await users.list();
     }
 }
 
@@ -63,8 +69,7 @@ class Datastore extends DatastoreSkeleton{
     async getHomepageStats(){
         const tutorData = await tutors();
         //Fetch user count
-        const members = await this.fetchDocument(
-            this.table.users);
+        const members = await this.fetchAuthUsers();
         const subjectSet = new Set();
         tutorData.forEach(tutor=>{
             (tutor.subjects || []).map(subj=>subjectSet.add(subj))
@@ -74,7 +79,7 @@ class Datastore extends DatastoreSkeleton{
 
         return {
             tutors : tutorData.length,
-            members : members.documents.length,
+            members : members.total,
             subjects : subjectSet.size,
             rating : Number(rating.toFixed(1))
         }
@@ -82,6 +87,6 @@ class Datastore extends DatastoreSkeleton{
     }
 }
 
-const datastore = new Datastore(db, dbId, table);
+const datastore = new Datastore(db, dbId, table, client);
 
 module.exports = { datastore };

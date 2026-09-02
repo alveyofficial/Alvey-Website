@@ -3,9 +3,7 @@ const path = require('path');
 require('dotenv').config({
     path: path.resolve(__dirname, './env/.env')});
 
-const { Client, Databases, Query, ID } = require('node-appwrite');
-const { warn } = require('console');
-
+const { Client, Databases, Query, ID, Users } = require('node-appwrite');
 
 const client = new Client()
     .setEndpoint(process.env.APPWRITE_ENDPOINT)
