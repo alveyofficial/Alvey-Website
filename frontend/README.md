@@ -9,4 +9,6 @@ It is in **.tsx** and not in **.jsx**
 
 ## How to Setup
 - Begin by installing all packages with `npm i`
+- Add a `.env` in this current directory,
+- Set value `VITE_API_URL = ""` to backend url
 - To run the frontend, use `npm run dev`

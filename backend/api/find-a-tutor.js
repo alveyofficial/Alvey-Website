@@ -41,8 +41,8 @@ const tutors = async() =>{
         return data;
         //return res.documents;
     } catch(err){
-        console.log("Error Fetching Tutor Profiles : "+err.message);
-        return "Could not fetch tutor profiles :(";
+        console.error("Error Fetching Tutor Profiles : "+err.message);
+        return [];
     }
 };
 

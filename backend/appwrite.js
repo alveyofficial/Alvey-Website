@@ -3,7 +3,8 @@ const path = require('path');
 require('dotenv').config({
     path: path.resolve(__dirname, './env/.env')});
 
-const { Client, Databases } = require('node-appwrite');
+const { Client, Databases, Query, ID } = require('node-appwrite');
+const { warn } = require('console');
 
 
 const client = new Client()
@@ -24,7 +25,8 @@ const table = {
     students: 'students',
     tutorApplications: 'tutor_applications',
     users: 'users',
-    credits: 'credits'
+    credits: 'credits',
+    subjectCategories: 'subject_categories'
 };
 
-module.exports = { client, db, dbId, table };
+module.exports = { client, db, dbId, table, ID, Query };

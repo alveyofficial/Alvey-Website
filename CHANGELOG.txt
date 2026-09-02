@@ -23,3 +23,14 @@ Kindly add your changes here for others to know
 - Expanded root README.md with a full step by step local setup walkthrough, including where APPWRITE_DB actually comes from (its the ID, not the "Database" name shown in console)
 - Added a Windows/PowerShell curl gotcha note to the README since plain curl is aliased to Invoke-WebRequest there and breaks on normal flags
 - Confirmed signup rejects known disposable email domains (like example.com) at the appwrite project level, not a bug in our code
+
+==== NEW MONTH :) === 
+
+2/09/2026 ( Trim )
+- Made a api router for frontend
+- Installed modules for frontend design
+- Migrated all UI files from old project to here
+- Tailwind styles mirated
+- Finished navbar
+- Finished Homepage
+- Added improved datastore

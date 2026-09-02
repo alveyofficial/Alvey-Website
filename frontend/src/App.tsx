@@ -1,10 +1,9 @@
-import './App.css';
 import { Routes, Route } from 'react-router-dom';
 
 //Pages and Components
-import Home from './pages/Home/Home';
+import Home from './pages/Home';
 import ErrorPage from './pages/ErrorPage/ErrorPage';
-import Navbar from './components/Navbar/Navbar';
+import Navbar from './components/Navbar';
 import FindTutor from './pages/FindTutor/FindTutor';
 import Apply from './pages/Apply/Apply';
 import WorkWithUs from './pages/WorkWithUs/WorkWithUs';
