@@ -5,11 +5,14 @@
 - `main.js` — entry point. Sets up Express, CORS, cookies, mounts routes, starts the server.
 - `appwrite.js` — the single shared Appwrite client, database ID, and the `table` object (collection ID lookups).
 - `env/.env` / `env/.env.example` — environment variables. `.env` is not committed, copy `.env.example`.
-- `api/` — logic files only. Talks to Appwrite. No Express (`req`/`res`) in here.
+- `api/` — logic files only. Talks to Appwrite (or, for contact, Discord). No Express (`req`/`res`) in here.
   - `find-a-tutor.js` — pulls tutor profile data from Appwrite.
+  - `datastore.js` — data layer (subject categories, homepage stats). not in its own subfolder, because it includes stuff across multiple sources rather than owning one feature.
   - `auth/logic.js` — all Appwrite Auth calls (signup, login, verify, recovery, oauth, roles).
-- `routes/` — Express route files only. Talks to `req`/`res`. Calls into `api/` for the actual Appwrite work.
+  - `contact/logic.js` — contact form handling.
+- `routes/` — Express route files only. Talks to `req`/`res`. Calls into `api/` for the actual work.
   - `auth.js` — all `/auth/*` endpoints (signup, login, logout, verify, recovery, oauth).
+  - `contact.js` — `POST /contact`, forwards to `contact/logic.js`.
 
 ## Frontend (`/frontend`)
 

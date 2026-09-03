@@ -38,3 +38,9 @@ Kindly add your changes here for others to know
 - Finished navbar
 - Finished Homepage
 - Added improved datastore
+
+3/09/2026 ( Dusky )
+- Added contact backend: backend/api/contact/logic.js, backend/routes/contact.js
+- Added DISCORD_WEBHOOK_URL to .env.example
+- Put /contact route into backend/main.js
+- Fixed route mismatch: backend/main.js was putting tutor data at /tutor-profiles, but frontend/src/api.ts, the nav link etc all use /find-a-tutor, renamed the backend route to /find-a-tutor since it was the only place using the old name
