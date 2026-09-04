@@ -12,13 +12,14 @@ const {
     getRoles
 } = require('../api/auth/logic');
 
-//ssame order/roles as redirectByRole in the old auth.tsx, first matching label wins eyayayayyayeayye
+//same order as redirectByRole in the old auth.tsx, first matching team wins
+//these must match real team names from appwrite console > auth > teams, lowercased
 const roleToPath = [
     { label: "admin", path: "/admin" },
-    { label: "website", path: "/admin" },
-    { label: "tutor", path: "/tutor" },
+    { label: "website managers", path: "/admin" },
+    { label: "tutors", path: "/tutor" },
     { label: "recruitment", path: "/recruitment" },
-    { label: "student", path: "/student/dashboard" }
+    { label: "students", path: "/student/dashboard" }
 ];
 
 const pathForRoles = (labels) =>{

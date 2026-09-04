@@ -151,13 +151,13 @@ const finishOAuthSession = async(userId, secret) =>{
     }
 };
 
-//roles live as appwrite labels now instead of the old users collection,
-//a fresh signup has no labels at all, the route treats that as the default
+//roles now as appwrite teams, not labels, iso said dont use labels
+//new signup has no teams, route sets that as the default
 //student/guest landing page
 const getRoles = async(userId) =>{
     try{
-        const user = await users.get({ userId });
-        return user.labels;
+        const result = await users.listMemberships({ userId });
+        return result.memberships.map(m => m.teamName.toLowerCase());
     } catch(err){
         console.log("Error Getting Roles : "+err.message);
         return [];
