@@ -126,6 +126,21 @@ export const appwrite = {
       const user = await getCurrentUser();
       return { data: { session: user ? { user } : null } };
     },
+    async createJWT() {
+      try {
+        const response = await getClient().account.createJWT();
+
+        return {
+          data: { jwt: response.jwt },
+          error: null,
+        };
+      } catch (error) {
+        return {
+          data: { jwt: null },
+          error: error instanceof Error ? error : new Error(String(error)),
+        };
+      }
+    },
     async signInWithPassword({ email, password }: { email: string; password: string }) {
       try {
         await getClient().account.createEmailPasswordSession(email, password);

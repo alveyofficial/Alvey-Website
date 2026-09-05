@@ -44,8 +44,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { DataStore } from "@/lib/data-store";
-import { ID } from "@/integrations/appwrite/client";
+import { DataStore, type Tutor } from "@/lib/data-store";
 
 export const Route = createFileRoute("/_authenticated/admin/students")({
   component: AdminStudents,
@@ -66,36 +65,85 @@ function CreateStudentModal({
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("student");
+  const [tutors, setTutors] = useState<Tutor[]>([]);
+  const [tutorId, setTutorId] = useState("");
+  useEffect(() => {
+    if (!open) return;
+
+    DataStore.getTutors()
+      .then(setTutors)
+      .catch((error) => {
+        console.error("Failed to load tutors:", error);
+        toast.error("Failed to load tutors.");
+      });
+  }, [open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!name.trim() || !email.trim()) {
       toast.error("Full name and email are required.");
       return;
     }
+
+    if (role === "student" && !tutorId) {
+      toast.error("Please select a tutor.");
+      return;
+    }
+
     setLoading(true);
+
     try {
-      const newId = ID.unique();
+      if (role === "student") {
+        // Resolve the EXISTING Appwrite Auth user through their email.
+        const { data: jwtData, error: jwtError } =
+          await appwrite.auth.createJWT();
 
-      await DataStore.saveUserRecord({
-        id: newId,
-        email: email.trim(),
-        displayName: name.trim(),
-        role,
-      });
+        if (jwtError || !jwtData.jwt) {
+          throw jwtError || new Error("Failed to authenticate admin.");
+        }
 
-      if (role === "Student") {
-        await DataStore.addToTeam(
-          "Students",
-          email.trim(),
-          newId,
-          ["Student"]
+        const response = await fetch("/api/admin/resolve-student", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${jwtData.jwt}`,
+          },
+          body: JSON.stringify({
+            email: email.trim(),
+          }),
+        });
+
+        const resolved = await response.json();
+
+        if (!response.ok) {
+          throw new Error(resolved.error || "Failed to find Auth user.");
+        }
+
+        const studentId = resolved.userId;
+
+
+        await DataStore.saveUserRecord({
+          id: studentId,
+          email: email.trim(),
+          displayName: name.trim(),
+          role,
+        });
+
+        await DataStore.createStudentAssignment(
+          studentId,
+          tutorId
         );
+      } else {
+        throw new Error("Only students can be added from this form.");
       }
       toast.success("Student created successfully.");
+
       setName("");
       setEmail("");
-      setRole("Student");
+      setRole("student");
+      setTutorId("");
+
       onCreated();
       onClose();
     } catch (err: any) {
@@ -143,6 +191,28 @@ function CreateStudentModal({
               </SelectContent>
             </Select>
           </div>
+          {role === "student" && (
+            <div>
+              <Label>
+                Assign Tutor <span className="text-destructive">*</span>
+              </Label>
+
+              <Select value={tutorId} onValueChange={setTutorId}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select a tutor" />
+                </SelectTrigger>
+
+                <SelectContent>
+                  {tutors.map((tutor) => (
+                    <SelectItem key={tutor.id} value={tutor.id}>
+                      {tutor.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
             <Button type="submit" disabled={loading}>
@@ -168,17 +238,61 @@ function StudentModal({
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const [name, setName] = useState((student.displayName || student.name || "") as string);
+  const [name, setName] = useState(
+    (student.displayName || student.name || "") as string
+  );
   const [email] = useState((student.email || "") as string);
   const [role, setRole] = useState((student.role || "student") as string);
   const [saving, setSaving] = useState(false);
   const [confirmArchive, setConfirmArchive] = useState(false);
+  const [tutors, setTutors] = useState<Tutor[]>([]);
+  const [tutorId, setTutorId] = useState("");
+  const [assignmentId, setAssignmentId] = useState("");
+  const [loadingAssignment, setLoadingAssignment] = useState(true);
 
-  const id = (student.$id || student.id) as string;
+  const id = (student.userId || student.id) as string;
   const displayName = (student.displayName || student.name || "Student") as string;
 
+  useEffect(() => {
+    if (role !== "student") {
+      setLoadingAssignment(false);
+      return;
+    }
+
+    const loadAssignment = async () => {
+      setLoadingAssignment(true);
+
+      try {
+        const [loadedTutors, assignment] = await Promise.all([
+          DataStore.getTutors(),
+          DataStore.getStudentAssignment(id),
+        ]);
+
+        setTutors(loadedTutors);
+
+        if (assignment) {
+          setAssignmentId(assignment.$id || assignment.id || "");
+          setTutorId(assignment.tutorId || "");
+        }
+      } catch (error) {
+        console.error("Failed to load student assignment:", error);
+        toast.error("Failed to load tutor assignment.");
+      } finally {
+        setLoadingAssignment(false);
+      }
+    };
+
+    loadAssignment();
+  }, [id, role]);
+
   const handleSave = async () => {
+    if (role === "student" && !tutorId) {
+      toast.error("Please select a tutor.");
+      return;
+    }
+
     setSaving(true);
+
     try {
       await DataStore.saveUserRecord({
         id,
@@ -186,10 +300,26 @@ function StudentModal({
         displayName: name.trim(),
         role,
       });
+
+      if (role === "student" && tutorId) {
+        if (assignmentId) {
+          await DataStore.updateStudentAssignment(
+            assignmentId,
+            tutorId
+          );
+        } else {
+          await DataStore.createStudentAssignment(
+            id,
+            tutorId
+          );
+        }
+      }
+
       toast.success("Student updated");
       onSaved();
       onClose();
-    } catch {
+    } catch (error) {
+      console.error(error);
       toast.error("Failed to update student");
     } finally {
       setSaving(false);
@@ -261,6 +391,34 @@ function StudentModal({
                   </SelectContent>
                 </Select>
               </div>
+              {role === "student" && (
+                <div>
+                  <Label>
+                    Assigned Tutor <span className="text-destructive">*</span>
+                  </Label>
+
+                  {loadingAssignment ? (
+                    <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Loading assignment...
+                    </div>
+                  ) : (
+                    <Select value={tutorId} onValueChange={setTutorId}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Select a tutor" />
+                      </SelectTrigger>
+
+                      <SelectContent>
+                        {tutors.map((tutor) => (
+                          <SelectItem key={tutor.id} value={tutor.id}>
+                            {tutor.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -379,7 +537,7 @@ function AdminStudents() {
           <CardContent className="p-0">
             <div className="divide-y">
               {filtered.map((s) => {
-                const id = (s.$id || s.id) as string;
+                const id = (s.userId || s.id) as string;
                 const name = (s.displayName || s.name || "Unknown") as string;
                 const email = (s.email || "") as string;
 

@@ -48,24 +48,46 @@ function Dashboard() {
   useEffect(() => {
     (async () => {
       const { data: userData } = await appwrite.auth.getUser();
+
+      console.log("CURRENT AUTH USER:", userData.user);
+
+      const memberships = await DataStore.getStudentTeamMembers();
+
+      console.log(
+        "STUDENTS TEAM MEMBERS:",
+        memberships.map((member: any) => ({
+          userId: member.userId,
+          userName: member.userName,
+          userEmail: member.userEmail,
+        }))
+      );
+
       const uid = userData.user?.id;
+
+      console.log("UID USED FOR ASSIGNMENT QUERY:", uid);
+
       if (!uid) return;
+
       const [roles, record, assignments] = await Promise.all([
         DataStore.getUserRoles(uid),
         DataStore.getUserRecord(uid),
         DataStore.getStudentAssignments(uid),
       ]);
+
+      console.log("FINAL ASSIGNMENTS:", assignments);
+
       setRoles((roles ?? []).map((x) => x as Role));
       setProfile({
         display_name: record?.displayName || userData.user?.name || null,
         email: record?.email || userData.user?.email || null,
       });
       setAssignments(assignments ?? []);
+
       console.log("Student assignments:", assignments);
       console.log("Assignment count:", assignments?.length);
     })();
   }, []);
-
+  
   const submitReview = async () => {
     if (!selectedTutor || rating < 1 || rating > 5) {
       return;
@@ -157,6 +179,7 @@ function Dashboard() {
   if (roles.includes("recruitment")) {
     return <div>Recruitment Dashboard Coming Soon</div>;
   }
+
   return (
     <div className="space-y-8">
       <div>

@@ -37,6 +37,7 @@ import { Route as AuthenticatedRecruitmentIndexRouteImport } from './routes/_aut
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as ApiPublicStatsRouteImport } from './routes/api/public/stats'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
+import { Route as ApiAdminResolveStudentRouteImport } from './routes/api/admin/resolve-student'
 import { Route as PublicTutorsTutorSlugRouteImport } from './routes/_public.tutors.$tutorSlug'
 import { Route as AuthenticatedTutorStudentsRouteImport } from './routes/_authenticated/tutor/students'
 import { Route as AuthenticatedTutorSettingsRouteImport } from './routes/_authenticated/tutor/settings'
@@ -209,6 +210,11 @@ const ApiPublicStatsRoute = ApiPublicStatsRouteImport.update({
 const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
   id: '/api/public/health',
   path: '/api/public/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminResolveStudentRoute = ApiAdminResolveStudentRouteImport.update({
+  id: '/api/admin/resolve-student',
+  path: '/api/admin/resolve-student',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PublicTutorsTutorSlugRoute = PublicTutorsTutorSlugRouteImport.update({
@@ -463,6 +469,7 @@ export interface FileRoutesByFullPath {
   '/tutor/settings': typeof AuthenticatedTutorSettingsRoute
   '/tutor/students': typeof AuthenticatedTutorStudentsRoute
   '/tutors/$tutorSlug': typeof PublicTutorsTutorSlugRoute
+  '/api/admin/resolve-student': typeof ApiAdminResolveStudentRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/stats': typeof ApiPublicStatsRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -524,6 +531,7 @@ export interface FileRoutesByTo {
   '/tutor/settings': typeof AuthenticatedTutorSettingsRoute
   '/tutor/students': typeof AuthenticatedTutorStudentsRoute
   '/tutors/$tutorSlug': typeof PublicTutorsTutorSlugRoute
+  '/api/admin/resolve-student': typeof ApiAdminResolveStudentRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/stats': typeof ApiPublicStatsRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -588,6 +596,7 @@ export interface FileRoutesById {
   '/_authenticated/tutor/settings': typeof AuthenticatedTutorSettingsRoute
   '/_authenticated/tutor/students': typeof AuthenticatedTutorStudentsRoute
   '/_public/tutors/$tutorSlug': typeof PublicTutorsTutorSlugRoute
+  '/api/admin/resolve-student': typeof ApiAdminResolveStudentRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/stats': typeof ApiPublicStatsRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -651,6 +660,7 @@ export interface FileRouteTypes {
     | '/tutor/settings'
     | '/tutor/students'
     | '/tutors/$tutorSlug'
+    | '/api/admin/resolve-student'
     | '/api/public/health'
     | '/api/public/stats'
     | '/admin/'
@@ -712,6 +722,7 @@ export interface FileRouteTypes {
     | '/tutor/settings'
     | '/tutor/students'
     | '/tutors/$tutorSlug'
+    | '/api/admin/resolve-student'
     | '/api/public/health'
     | '/api/public/stats'
     | '/admin'
@@ -775,6 +786,7 @@ export interface FileRouteTypes {
     | '/_authenticated/tutor/settings'
     | '/_authenticated/tutor/students'
     | '/_public/tutors/$tutorSlug'
+    | '/api/admin/resolve-student'
     | '/api/public/health'
     | '/api/public/stats'
     | '/_authenticated/admin/'
@@ -790,6 +802,7 @@ export interface RootRouteChildren {
   VerifyEmailRoute: typeof VerifyEmailRoute
   ApiChatbotRoute: typeof ApiChatbotRoute
   ApiSitemapRoute: typeof ApiSitemapRoute
+  ApiAdminResolveStudentRoute: typeof ApiAdminResolveStudentRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicStatsRoute: typeof ApiPublicStatsRoute
 }
@@ -990,6 +1003,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/health'
       fullPath: '/api/public/health'
       preLoaderRoute: typeof ApiPublicHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/resolve-student': {
+      id: '/api/admin/resolve-student'
+      path: '/api/admin/resolve-student'
+      fullPath: '/api/admin/resolve-student'
+      preLoaderRoute: typeof ApiAdminResolveStudentRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_public/tutors/$tutorSlug': {
@@ -1365,6 +1385,7 @@ const rootRouteChildren: RootRouteChildren = {
   VerifyEmailRoute: VerifyEmailRoute,
   ApiChatbotRoute: ApiChatbotRoute,
   ApiSitemapRoute: ApiSitemapRoute,
+  ApiAdminResolveStudentRoute: ApiAdminResolveStudentRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicStatsRoute: ApiPublicStatsRoute,
 }
