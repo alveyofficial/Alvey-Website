@@ -55,4 +55,4 @@ Kindly add your changes here for others to know
 - Added getTutorBySlug and getReviews to frontend/src/api.ts
 
 08/09/2026 ( Trim )
-- Updated tsconfig.app.json in frontend to try and skip build errors
+- Updated tsconfig.app.json and package.json in frontend to try and skip build errors
