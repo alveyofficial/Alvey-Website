@@ -25,6 +25,36 @@ export class Router {
         }
     }
 
+    async getTutorBySlug(slug: string) {
+        try {
+            const res = await axios.get(`${this.url}/find-a-tutor/${slug}`);
+            return res.data;
+        } catch (err) {
+            if (isAxiosError(err)) { 
+                console.error("API Error :", err.response?.status, err.message);
+            } else if (err instanceof Error) {
+                console.error("Failed to get tutor :", err.message);
+            }
+            return null;
+        }
+    }
+
+    async getReviews(tutorId?: string) {
+        try {
+            const res = await axios.get(`${this.url}/reviews`, {
+                params: tutorId ? { tutorId } : {}
+            });
+            return res.data;
+        } catch (err) {
+            if (isAxiosError(err)) { 
+                console.error("API Error :", err.response?.status, err.message);
+            } else if (err instanceof Error) {
+                console.error("Failed to get reviews :", err.message);
+            }
+            return [];
+        }
+    }
+
     async getHomepageStats() {
         try {
             const res = await axios.get(`${this.url}/datastore/homepage-stats`);

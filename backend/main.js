@@ -9,9 +9,10 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const port = parseInt(process.env.PORT);
 const frontend_uri = process.env.FRONTEND_URI;
-const { tutors } = require('./api/find-a-tutor');
 const authRoutes = require('./routes/auth');
 const contactRoutes = require('./routes/contact');
+const findATutorRoutes = require('./routes/find-a-tutor');
+const reviewsRoutes = require('./routes/reviews');
 const { datastore } = require('./api/datastore');
 
 //CORS Setup and basic setup
@@ -26,15 +27,12 @@ app.use(express.urlencoded({extended:true}));
 app.use(cookieParser());
 app.use('/auth', authRoutes);
 app.use('/contact', contactRoutes);
+app.use('/find-a-tutor', findATutorRoutes);
+app.use('/reviews', reviewsRoutes);
 
 //Server test request
 app.get("/ping", (req,res)=>{
     res.send("Pong!");
-});
-
-app.get("/find-a-tutor", async (req,res)=>{
-    const tutorsData = await tutors();
-    res.json(tutorsData);
 });
 
 app.get("/datastore/subject-categories", async (req,res) => {

@@ -6,7 +6,7 @@ require('dotenv').config({
 const { client, db, dbId, table, ID } = require('../appwrite');
 const { Query, Users } = require('node-appwrite');
 
-const { tutors } = require('./find-a-tutor');
+const { tutors } = require('./find-a-tutor/logic');
 
 class DatastoreSkeleton{
     constructor(db, dbId, table, client){
