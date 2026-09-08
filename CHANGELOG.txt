@@ -53,3 +53,6 @@ Kindly add your changes here for others to know
 - Added getTutorBySlug() in the same file, and a new GET /find-a-tutor/:slug route
 - Added backend/api/reviews/logic.js and backend/routes/reviews.js
 - Added getTutorBySlug and getReviews to frontend/src/api.ts
+
+08/09/2026 ( Trim )
+- Updated tsconfig.json in frontend to try and skip build errors
