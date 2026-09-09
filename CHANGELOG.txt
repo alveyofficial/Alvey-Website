@@ -56,3 +56,4 @@ Kindly add your changes here for others to know
 
 08/09/2026 ( Trim )
 - Updated tsconfig.app.json and package.json in frontend to try and skip build errors
+- Updated main.js in backend to be able to run on AppWrite Servers
