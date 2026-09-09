@@ -5,10 +5,20 @@ require('dotenv').config({
 
 const { Client, Databases, Query, ID, Users } = require('node-appwrite');
 
-const client = new Client()
-    .setEndpoint(process.env.APPWRITE_ENDPOINT)
-    .setProject(process.env.APPWRITE_ID)
-    .setKey(process.env.APPWRITE_KEY);
+const client = new Client();
+
+if (process.env.APPWRITE_FUNCTION_ID) {
+    client
+        .setEndpoint('https://appwrite.io') 
+        .setProject(process.env.APPWRITE_FUNCTION_ID)
+        .setKey(process.env.APPWRITE_KEY);
+} else {
+    client
+        .setEndpoint(process.env.APPWRITE_ENDPOINT)
+        .setProject(process.env.APPWRITE_ID)
+        .setKey(process.env.APPWRITE_KEY);
+}
+
 
 const db = new Databases(client);
 
