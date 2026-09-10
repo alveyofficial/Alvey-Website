@@ -1,8 +1,6 @@
-const express = require('express');
-const router = express.Router();
 const { sendContactMessage } = require('../api/contact/logic');
 
-router.post('/', async(req,res)=>{
+const contactSubmitRoute = async(req,res)=>{
     const { name, email, message } = req.body;
 
     if(!name || !email || !message){
@@ -15,6 +13,9 @@ router.post('/', async(req,res)=>{
         return res.status(400).json(result);
     }
     res.json(result);
-});
+};
 
-module.exports = router;
+module.exports = (appInstance) => {
+    appInstance.post('/contact', contactSubmitRoute);
+};
+

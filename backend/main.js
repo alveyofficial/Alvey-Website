@@ -9,10 +9,6 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const port = parseInt(process.env.PORT);
 const frontend_uri = process.env.FRONTEND_URI;
-const authRoutes = require('./routes/auth');
-const contactRoutes = require('./routes/contact');
-const findATutorRoutes = require('./routes/find-a-tutor');
-const reviewsRoutes = require('./routes/reviews');
 const { datastore } = require('./api/datastore');
 
 //Route Functions
@@ -34,16 +30,22 @@ const datastoreHomepageStatsRoute = async (req, res) => {
 
 const isAppwriteCloud = process.env.APPWRITE_FUNCTION_ID !== undefined;
 
+const authRoutes = require('./routes/auth');
+const contactRoutes = require('./routes/contact');
+const findATutorRoutes = require('./routes/find-a-tutor');
+const reviewsRoutes = require('./routes/reviews');
+//
+
 //Check if running local project or not
 if (isAppwriteCloud) {
     module.exports = async (context) => {
         const { AppExpress } = await import('@itznotabug/appexpress');
         const appExpressInstance = new AppExpress();
         
-        appExpressInstance.use('/auth', authRoutes);
-        appExpressInstance.use('/contact', contactRoutes);
-        appExpressInstance.use('/find-a-tutor', findATutorRoutes);
-        appExpressInstance.use('/reviews', reviewsRoutes);
+        authRoutes(appExpressInstance);
+        contactRoutes(appExpressInstance);
+        findATutorRoutes(appExpressInstance);
+        reviewsRoutes(appExpressInstance);
         
         appExpressInstance.get("/ping", pingRoute);
         appExpressInstance.get("/datastore/subject-categories", datastoreSubjectCategoriesRoute);
@@ -62,10 +64,11 @@ if (isAppwriteCloud) {
     app.use(express.json());
     app.use(express.urlencoded({extended:true}));
     app.use(cookieParser());
-    app.use('/auth', authRoutes);
-    app.use('/contact', contactRoutes);
-    app.use('/find-a-tutor', findATutorRoutes);
-    app.use('/reviews', reviewsRoutes);
+
+    authRoutes(app);
+    contactRoutes(app);
+    findATutorRoutes(app);
+    reviewsRoutes(app);
 
     //Server test request
     app.get("/ping", pingRoute);

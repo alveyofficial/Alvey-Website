@@ -1,5 +1,3 @@
-const express = require('express');
-const router = express.Router();
 const {
     signUp,
     signIn,
@@ -12,8 +10,6 @@ const {
     getRoles
 } = require('../api/auth/logic');
 
-//same order as redirectByRole in the old auth.tsx, first matching team wins
-//these must match real team names from appwrite console > auth > teams, lowercased
 const roleToPath = [
     { label: "admin", path: "/admin" },
     { label: "website managers", path: "/admin" },
@@ -38,7 +34,7 @@ const setSessionCookie = (res, session) =>{
     });
 };
 
-router.post('/signup', async(req,res)=>{
+const signupRoute = async (req, res) => {
     const { name, email, password } = req.body;
 
     if(!name || !email || !password){
@@ -51,9 +47,9 @@ router.post('/signup', async(req,res)=>{
         return res.status(400).json(result);
     }
     res.json(result);
-});
+};
 
-router.post('/login', async(req,res)=>{
+const loginRoute = async (req, res) => {
     const { email, password } = req.body;
 
     if(!email || !password){
@@ -69,14 +65,14 @@ router.post('/login', async(req,res)=>{
     setSessionCookie(res, result);
     const roles = await getRoles(result.userId);
     res.json({ userId: result.userId, redirect: pathForRoles(roles) });
-});
+};
 
-router.post('/logout', (req,res)=>{
+const logoutRoute = (req, res) => {
     res.clearCookie('appwrite-session');
     res.json("Logged out!");
-});
+};
 
-router.post('/send-verification', async(req,res)=>{
+const sendVerificationRoute = async (req, res) => {
     const sessionSecret = req.cookies['appwrite-session'];
     const { redirectUrl } = req.body;
 
@@ -93,9 +89,9 @@ router.post('/send-verification', async(req,res)=>{
         return res.status(400).json(result);
     }
     res.json(result);
-});
+};
 
-router.get('/verify', async(req,res)=>{
+const verifyRoute = async (req, res) => {
     const { userId, secret } = req.query;
 
     if(!userId || !secret){
@@ -108,9 +104,9 @@ router.get('/verify', async(req,res)=>{
         return res.status(400).json(result);
     }
     res.json(result);
-});
+};
 
-router.post('/forgot-password', async(req,res)=>{
+const forgotPasswordRoute = async (req, res) => {
     const { email, redirectUrl } = req.body;
 
     if(!email || !redirectUrl){
@@ -123,9 +119,9 @@ router.post('/forgot-password', async(req,res)=>{
         return res.status(400).json(result);
     }
     res.json(result);
-});
+};
 
-router.post('/reset-password', async(req,res)=>{
+const resetPasswordRoute = async (req, res) => {
     const { userId, secret, password } = req.body;
 
     if(!userId || !secret || !password){
@@ -138,9 +134,9 @@ router.post('/reset-password', async(req,res)=>{
         return res.status(400).json(result);
     }
     res.json(result);
-});
+};
 
-router.get('/oauth/:provider', async(req,res)=>{
+const oauthProviderRoute = async (req, res) => {
     const { provider } = req.params;
     const { successUrl, failureUrl } = req.query;
 
@@ -154,9 +150,9 @@ router.get('/oauth/:provider', async(req,res)=>{
         return res.redirect(redirectUrl);
     }
     res.json(redirectUrl);
-});
+};
 
-router.get('/oauth/:provider/success', async(req,res)=>{
+const oauthProviderSuccessRoute = async (req, res) => {
     const { userId, secret } = req.query;
 
     if(!userId || !secret){
@@ -172,6 +168,16 @@ router.get('/oauth/:provider/success', async(req,res)=>{
     setSessionCookie(res, result);
     const roles = await getRoles(result.userId);
     res.json({ userId: result.userId, redirect: pathForRoles(roles) });
-});
+};
 
-module.exports = router;
+module.exports = (appInstance) => {
+    appInstance.post('/auth/signup', signupRoute);
+    appInstance.post('/auth/login', loginRoute);
+    appInstance.post('/auth/logout', logoutRoute);
+    appInstance.post('/auth/send-verification', sendVerificationRoute);
+    appInstance.get('/auth/verify', verifyRoute);
+    appInstance.post('/auth/forgot-password', forgotPasswordRoute);
+    appInstance.post('/auth/reset-password', resetPasswordRoute);
+    appInstance.get('/auth/oauth/:provider', oauthProviderRoute);
+    appInstance.get('/auth/oauth/:provider/success', oauthProviderSuccessRoute);
+};
