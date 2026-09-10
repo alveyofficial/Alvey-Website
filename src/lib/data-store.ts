@@ -1983,14 +1983,27 @@ export const DataStore = {
     });
   },
 
-  getStudentAssignment: async (studentId: string): Promise<any | null> => {
+  getStudentAssignment: async (
+    studentId: string
+  ): Promise<any | null> => {
     try {
-      const docs = await listDocuments(COLLECTIONS.ASSIGNMENTS, [
-        Query.equal("studentId", studentId),
-        Query.equal("isActive", true),
-      ]);
+      const docs = await listDocuments(
+        COLLECTIONS.ASSIGNMENTS,
+        [
+          Query.equal("studentId", studentId),
+          Query.equal("isActive", true),
+        ]
+      );
 
-      return docs[0] || null;
+      const assignment = docs[0] || null;
+
+      console.log("=== ASSIGNMENT LOOKUP ===");
+      console.log("studentId:", studentId);
+      console.log("assignment:", assignment);
+      console.log("assignment $id:", assignment?.$id);
+      console.log("assignment tutorId:", assignment?.tutorId);
+
+      return assignment;
     } catch (error) {
       console.error("Failed to load student assignment:", error);
       return null;
@@ -2001,8 +2014,25 @@ export const DataStore = {
     assignmentId: string,
     tutorId: string,
   ): Promise<void> => {
-    await upsertDocument(COLLECTIONS.ASSIGNMENTS, assignmentId, {
-      tutorId,
+    console.log("=== UPDATE ASSIGNMENT DEBUG ===");
+    console.log("assignmentId:", assignmentId);
+    console.log("assignmentId length:", assignmentId?.length);
+    console.log("assignmentId JSON:", JSON.stringify(assignmentId));
+    console.log("tutorId:", tutorId);
+
+    if (!assignmentId || assignmentId.length > 36) {
+      throw new Error(
+        `Invalid assignment document ID: ${assignmentId}`
+      );
+    }
+
+    await appwrite.databases.updateDocument({
+      databaseId: APPWRITE_DATABASE_ID,
+      collectionId: COLLECTIONS.ASSIGNMENTS,
+      documentId: assignmentId,
+      data: {
+        tutorId,
+      },
     });
   },
   // --- REVIEWS ---
@@ -2035,6 +2065,7 @@ export const DataStore = {
         body: review.comment,
         rating: review.rating,
         isPublic: false,
+        isDeleted: false,
         helpfulCount: 0,
         response: null,
         responseAt: null,
@@ -2082,7 +2113,6 @@ export const DataStore = {
     try {
       const queries = [
         Query.equal("isPublic", true),
-        Query.equal("isDeleted", false),
       ];
 
       if (tutorId) {
@@ -2123,6 +2153,49 @@ export const DataStore = {
       isPublic: status === "approved",
       isDeleted: status === "rejected",
     });
+
+    const review = idx !== -1 ? list[idx] : null;
+
+    if (review?.tutor_id) {
+      await DataStore.syncTutorRating(review.tutor_id);
+    }
+  },
+  syncTutorRating: async (tutorId: string): Promise<void> => {
+    try {
+      const docs = await listDocuments(COLLECTIONS.REVIEWS, [
+        Query.equal("tutorId", tutorId),
+        Query.equal("isPublic", true),
+      ]);
+
+      const ratings = docs
+        .map((doc: any) => Number(doc.rating))
+        .filter((rating) => Number.isFinite(rating) && rating >= 1 && rating <= 5);
+
+      const ratingCount = ratings.length;
+
+      const ratingAvg =
+        ratingCount > 0
+          ? Number(
+            (
+              ratings.reduce((sum, rating) => sum + rating, 0) /
+              ratingCount
+            ).toFixed(2)
+          )
+          : 0;
+
+      await upsertDocument(COLLECTIONS.TUTOR_PROFILES, tutorId, {
+        rating: ratingAvg,
+        reviewCount: ratingCount,
+      });
+
+      console.log("=== TUTOR RATING SYNC ===");
+      console.log("Tutor:", tutorId);
+      console.log("Rating:", ratingAvg);
+      console.log("Review count:", ratingCount);
+    } catch (error) {
+      console.error("Failed to sync tutor rating:", error);
+      throw error;
+    }
   },
 
   // --- AUDIT LOGS ---
@@ -2513,10 +2586,21 @@ export const DataStore = {
       setLocal(KEYS.REVIEWS, list);
     }
 
+    const docs = await listDocuments(COLLECTIONS.REVIEWS, [
+      Query.equal("$id", id),
+      Query.limit(1),
+    ]);
+
+    const reviewDoc = docs[0];
+
     await upsertDocument(COLLECTIONS.REVIEWS, id, {
       isPublic: status === "approved",
       isDeleted: status === "rejected",
     });
+
+    if (reviewDoc?.tutorId) {
+      await DataStore.syncTutorRating(reviewDoc.tutorId);
+    }
   },
 
   addTutorResponse: async (reviewId: string, response: string): Promise<void> => {
@@ -2556,50 +2640,50 @@ export const DataStore = {
   // --- TEAM MEMBERSHIP ---
 
   addToTeam: async (
-  teamId: string,
-  email: string,
-  userId?: string,
-  roles: string[] = ["tutor"]
-): Promise<string> => {
-  try {
-    console.log("=== APPWRITE TEAM DEBUG ===");
-    console.log("Team ID:", teamId);
-    console.log("Email:", email);
-    console.log("User ID:", userId);
-    console.log("Roles:", roles);
+    teamId: string,
+    email: string,
+    userId?: string,
+    roles: string[] = ["tutor"]
+  ): Promise<string> => {
+    try {
+      console.log("=== APPWRITE TEAM DEBUG ===");
+      console.log("Team ID:", teamId);
+      console.log("Email:", email);
+      console.log("User ID:", userId);
+      console.log("Roles:", roles);
 
-    const team = await appwrite.teams.get({
-      teamId,
-    });
+      const team = await appwrite.teams.get({
+        teamId,
+      });
 
-    console.log("TEAM FOUND:", team);
+      console.log("TEAM FOUND:", team);
 
-    const membership = await appwrite.teams.createMembership({
-      teamId,
-      roles,
-      email: userId ? undefined : email,
-      userId: userId || undefined,
-      url: window.location.origin,
-    });
+      const membership = await appwrite.teams.createMembership({
+        teamId,
+        roles,
+        email: userId ? undefined : email,
+        userId: userId || undefined,
+        url: window.location.origin,
+      });
 
-    console.log("MEMBERSHIP CREATED:", membership);
-    console.log("RESOLVED AUTH USER ID:", membership.userId);
+      console.log("MEMBERSHIP CREATED:", membership);
+      console.log("RESOLVED AUTH USER ID:", membership.userId);
 
-    if (!membership.userId) {
-      throw new Error("Appwrite membership did not return a user ID.");
+      if (!membership.userId) {
+        throw new Error("Appwrite membership did not return a user ID.");
+      }
+
+      return membership.userId;
+    } catch (e: any) {
+      if (e?.code === 409) {
+        console.log("User is already a member of the team.");
+        throw new Error("User is already a member of the team.");
+      }
+
+      console.error("addToTeam failed:", e);
+      throw e;
     }
-
-    return membership.userId;
-  } catch (e: any) {
-    if (e?.code === 409) {
-      console.log("User is already a member of the team.");
-      throw new Error("User is already a member of the team.");
-    }
-
-    console.error("addToTeam failed:", e);
-    throw e;
-  }
-},
+  },
 
   removeFromTeam: async (teamId: string, membershipId: string): Promise<void> => {
     try {
@@ -2665,18 +2749,27 @@ export const DataStore = {
 
   getAllStudents: async (): Promise<any[]> => {
     try {
-      const memberships = await DataStore.getStudentTeamMembers();
+      const docs = await listDocuments(COLLECTIONS.USERS, [
+        Query.equal("role", "student"),
+        Query.equal("active", true),
+      ]);
 
-      return memberships.map((member: any) => ({
-        id: member.userId,
-        userId: member.userId,
-        membershipId: member.$id,
-        name: member.userName || member.userEmail || "Student",
-        email: member.userEmail || "",
-        avatar_url: avatarFor(
-          member.userName || member.userEmail || "Student"
-        ),
-      }));
+      return docs.map((user: any) => {
+        const userId = user.authUserId || user.$id;
+        const name =
+          user.displayName || user.name || user.email || "Student";
+
+        return {
+          id: userId,
+          userId,
+          membershipId: null,
+          name,
+          displayName: user.displayName || name,
+          email: user.email || "",
+          role: user.role || "student",
+          avatar_url: avatarFor(name),
+        };
+      });
     } catch (error) {
       console.error("Failed to load students:", error);
       return [];

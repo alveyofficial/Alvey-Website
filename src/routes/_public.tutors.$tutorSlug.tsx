@@ -98,7 +98,23 @@ function TutorProfilePage() {
         DataStore.getTutors(),
       ]);
 
-      setTutor(tRecord);
+      const liveRating =
+        rList.length > 0
+          ? Number(
+            (
+              rList.reduce((sum, review) => sum + Number(review.rating), 0) /
+              rList.length
+            ).toFixed(2)
+          )
+          : 0;
+
+      const liveTutor: Tutor = {
+        ...tRecord,
+        rating_avg: liveRating,
+        rating_count: rList.length,
+      };
+
+      setTutor(liveTutor);
       setReviews(rList);
       setAllTutors(tutors);
       setLoading(false);
