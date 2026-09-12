@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Search,
   SlidersHorizontal,
@@ -78,21 +78,44 @@ function FindATutorPage() {
   const [priceBounds, setPriceBounds] = useState({ min: 0, max: 0 });
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedSubject, setSelectedSubject] = useState(
-    searchParams.subject || "All"
+  const [selectedSubjects, setSelectedSubjects] = useState<string[]>(
+    searchParams.subject ? [searchParams.subject] : []
   );
-  const [selectedLevel, setSelectedLevel] = useState(
-    searchParams.level || "All"
+
+  const [selectedLevels, setSelectedLevels] = useState<string[]>(
+    searchParams.level ? [searchParams.level] : []
   );
   const [selectedLanguage, setSelectedLanguage] = useState("All");
-  const [subjectOpen, setSubjectOpen] = useState(false);
-  const [levelOpen, setLevelOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
   const [minPrice, setMinPrice] = useState(0);
   const [maxPrice, setMaxPrice] = useState(0);
   const [onlyVerified, setOnlyVerified] = useState(false);
   const [sortBy, setSortBy] = useState("featured");
+  const visibleSubjects = useMemo(() => {
+    if (selectedLevels.length === 0) {
+      return subjects;
+    }
 
+    return Array.from(
+      new Set(
+        tutors
+          .filter((tutor) =>
+            selectedLevels.some((level) =>
+              tutor.levels.includes(level)
+            )
+          )
+          .flatMap((tutor) => tutor.subjects)
+      )
+    ).sort((a, b) => a.localeCompare(b));
+  }, [subjects, tutors, selectedLevels]);
+
+  useEffect(() => {
+    if (selectedLevels.length === 0) return;
+
+    setSelectedSubjects((current) =>
+      current.filter((subject) => visibleSubjects.includes(subject))
+    );
+  }, [selectedLevels, visibleSubjects]);
   useEffect(() => {
     (async () => {
       setIsLoading(true);
@@ -144,13 +167,8 @@ function FindATutorPage() {
   }, []);
 
   useEffect(() => {
-    if (searchParams.level) {
-      setSelectedLevel(searchParams.level);
-    }
-
-    if (searchParams.subject) {
-      setSelectedSubject(searchParams.subject);
-    }
+    setSelectedLevels(searchParams.level ? [searchParams.level] : []);
+    setSelectedSubjects(searchParams.subject ? [searchParams.subject] : []);
   }, [searchParams]);
 
   useEffect(() => {
@@ -168,15 +186,19 @@ function FindATutorPage() {
       );
     }
 
-    if (selectedSubject !== "All") {
+    if (selectedLevels.length > 0) {
       result = result.filter((t) =>
-        t.subjects.includes(selectedSubject)
+        selectedLevels.some((level) =>
+          t.levels.includes(level)
+        )
       );
     }
 
-    if (selectedLevel !== "All") {
+    if (selectedSubjects.length > 0) {
       result = result.filter((t) =>
-        t.levels.includes(selectedLevel)
+        selectedSubjects.some((subject) =>
+          t.subjects.includes(subject)
+        )
       );
     }
 
@@ -227,8 +249,8 @@ function FindATutorPage() {
   }, [
     tutors,
     searchQuery,
-    selectedSubject,
-    selectedLevel,
+    selectedSubjects,
+    selectedLevels,
     selectedLanguage,
     minPrice,
     maxPrice,
@@ -239,8 +261,8 @@ function FindATutorPage() {
 
   const handleResetFilters = () => {
     setSearchQuery("");
-    setSelectedSubject("All");
-    setSelectedLevel("All");
+    setSelectedSubjects([]);
+    setSelectedLevels([]);
     setSelectedLanguage("All");
     setMinPrice(priceBounds.min || 0);
     setMaxPrice(priceBounds.max || 0);
@@ -281,132 +303,76 @@ function FindATutorPage() {
               <SlidersHorizontal className="h-4 w-4 text-primary" />Filters
             </h3>
 
-            {/* Subject Selector */}
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Subject
-              </label>
-              <Popover open={subjectOpen} onOpenChange={setSubjectOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={subjectOpen}
-                    className="w-full justify-between rounded-xl font-normal"
-                  >
-                    {selectedSubject === "All" ? "All Subjects" : selectedSubject}
-                    <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                  <Command>
-                    <CommandInput placeholder="Search subjects..." />
-                    <CommandList>
-                      <CommandEmpty>No subject found.</CommandEmpty>
-                      <CommandGroup>
-                        <CommandItem
-                          value="All Subjects"
-                          onSelect={() => {
-                            setSelectedSubject("All");
-                            setSubjectOpen(false);
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              selectedSubject === "All" ? "opacity-100" : "opacity-0",
-                            )}
-                          />
-                          All Subjects
-                        </CommandItem>
-                        {subjects.map((sub) => (
-                          <CommandItem
-                            key={sub}
-                            value={sub}
-                            onSelect={() => {
-                              setSelectedSubject(sub);
-                              setSubjectOpen(false);
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                selectedSubject === sub ? "opacity-100" : "opacity-0",
-                              )}
-                            />
-                            {sub}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-            </div>
-
             {/* Academic Level Selector */}
-            <div className="space-y-2">
+            <div className="space-y-3">
               <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Academic Level
               </label>
-              <Popover open={levelOpen} onOpenChange={setLevelOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={levelOpen}
-                    className="w-full justify-between rounded-xl font-normal"
-                  >
-                    {selectedLevel === "All" ? "All Levels" : selectedLevel}
-                    <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                  <Command>
-                    <CommandInput placeholder="Search levels..." />
-                    <CommandList>
-                      <CommandEmpty>No level found.</CommandEmpty>
-                      <CommandGroup>
-                        <CommandItem
-                          value="All Levels"
-                          onSelect={() => {
-                            setSelectedLevel("All");
-                            setLevelOpen(false);
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              selectedLevel === "All" ? "opacity-100" : "opacity-0",
-                            )}
-                          />
-                          All Levels
-                        </CommandItem>
-                        {levels.map((lvl) => (
-                          <CommandItem
-                            key={lvl}
-                            value={lvl}
-                            onSelect={() => {
-                              setSelectedLevel(lvl);
-                              setLevelOpen(false);
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                selectedLevel === lvl ? "opacity-100" : "opacity-0",
-                              )}
-                            />
-                            {lvl}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+
+              <div className="flex flex-wrap gap-2">
+                {levels.map((level) => {
+                  const selected = selectedLevels.includes(level);
+
+                  return (
+                    <button
+                      key={level}
+                      type="button"
+                      onClick={() => {
+                        setSelectedLevels((current) =>
+                          selected
+                            ? current.filter((item) => item !== level)
+                            : [...current, level]
+                        );
+                      }}
+                      className={cn(
+                        "rounded-full border px-3 py-1.5 text-xs font-medium transition-all",
+                        selected
+                          ? "border-[#164E5E] bg-[#164E5E] text-white dark:border-[#6FD4D8] dark:bg-[#6FD4D8] dark:text-[#0D2330]"
+                          : "border-border bg-background text-muted-foreground hover:border-[#164E5E] hover:text-foreground"
+                      )}
+                    >
+                      {level}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+
+
+            {/* Subject Selector */}
+            <div className="space-y-3">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Subjects
+              </label>
+
+              <div className="flex flex-wrap gap-2">
+                {visibleSubjects.map((subject) => {
+                  const selected = selectedSubjects.includes(subject);
+
+                  return (
+                    <button
+                      key={subject}
+                      type="button"
+                      onClick={() => {
+                        setSelectedSubjects((current) =>
+                          selected
+                            ? current.filter((item) => item !== subject)
+                            : [...current, subject]
+                        );
+                      }}
+                      className={cn(
+                        "rounded-full border px-3 py-1.5 text-xs font-medium transition-all",
+                        selected
+                          ? "border-[#164E5E] bg-[#164E5E] text-white dark:border-[#6FD4D8] dark:bg-[#6FD4D8] dark:text-[#0D2330]"
+                          : "border-border bg-background text-muted-foreground hover:border-[#164E5E] hover:text-foreground"
+                      )}
+                    >
+                      {subject}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Language Selector */}
@@ -603,8 +569,8 @@ function FindATutorPage() {
           </div>
 
           {/* Active Applied Filters Badges row */}
-          {(selectedSubject !== "All" ||
-            selectedLevel !== "All" ||
+          {(selectedSubjects.length > 0 ||
+            selectedLevels.length > 0 ||
             selectedLanguage !== "All" ||
             onlyVerified ||
             searchQuery !== "") && (
@@ -621,24 +587,41 @@ function FindATutorPage() {
                     />
                   </Badge>
                 )}
-                {selectedSubject !== "All" && (
-                  <Badge variant="secondary" className="gap-1 rounded-md px-2 py-0.5">
-                    Subject: {selectedSubject}
+                {selectedSubjects.map((subject) => (
+                  <Badge
+                    key={subject}
+                    variant="secondary"
+                    className="gap-1 rounded-md px-2 py-0.5"
+                  >
+                    Subject: {subject}
                     <X
                       className="h-3 w-3 cursor-pointer text-muted-foreground hover:text-foreground"
-                      onClick={() => setSelectedSubject("All")}
+                      onClick={() =>
+                        setSelectedSubjects((current) =>
+                          current.filter((item) => item !== subject)
+                        )
+                      }
                     />
                   </Badge>
-                )}
-                {selectedLevel !== "All" && (
-                  <Badge variant="secondary" className="gap-1 rounded-md px-2 py-0.5">
-                    Level: {selectedLevel}
+                ))}
+
+                {selectedLevels.map((level) => (
+                  <Badge
+                    key={level}
+                    variant="secondary"
+                    className="gap-1 rounded-md px-2 py-0.5"
+                  >
+                    Level: {level}
                     <X
                       className="h-3 w-3 cursor-pointer text-muted-foreground hover:text-foreground"
-                      onClick={() => setSelectedLevel("All")}
+                      onClick={() =>
+                        setSelectedLevels((current) =>
+                          current.filter((item) => item !== level)
+                        )
+                      }
                     />
                   </Badge>
-                )}
+                ))}
                 {selectedLanguage !== "All" && (
                   <Badge variant="secondary" className="gap-1 rounded-md px-2 py-0.5">
                     Language: {selectedLanguage}
