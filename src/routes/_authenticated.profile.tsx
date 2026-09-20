@@ -1,9 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-
 import { appwrite } from "@/integrations/appwrite/client";
 import { DataStore } from "@/lib/data-store";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -433,6 +431,7 @@ function ProfilePage() {
           )}
         </CardContent>
       </Card>
+
 
       {/* Account status */}
 

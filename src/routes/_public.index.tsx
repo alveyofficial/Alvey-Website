@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { DataStore } from "@/lib/data-store";
+import { DataStore, type PlatformReview } from "@/lib/data-store";
 import { seoMeta, seoLinks, jsonLdScript, websiteSchema, organizationSchema, serviceSchema } from "@/lib/seo";
 import { motion } from "motion/react";
 
@@ -75,7 +75,9 @@ type Level = {
   slug: string;
 };
 function Index() {
-
+  const [platformReviews, setPlatformReviews] = useState<PlatformReview[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+  const reviewsScrollRef = useRef<HTMLDivElement | null>(null);
   const [levels, setLevels] = useState<Level[]>([]);
   const [levelsLoading, setLevelsLoading] = useState(true);
 
@@ -128,6 +130,37 @@ function Index() {
   useEffect(() => {
     DataStore.getHomepageStats().then(setStats);
   }, []);
+
+  useEffect(() => {
+    DataStore.getPlatformReviews()
+      .then(setPlatformReviews)
+      .finally(() => setReviewsLoading(false));
+  }, []);
+
+  useEffect(() => {
+    if (platformReviews.length <= 1) return;
+
+    const container = reviewsScrollRef.current;
+    if (!container) return;
+
+    const interval = window.setInterval(() => {
+      const maxScroll = container.scrollWidth - container.clientWidth;
+
+      if (container.scrollLeft >= maxScroll - 10) {
+        container.scrollTo({
+          left: 0,
+          behavior: "smooth",
+        });
+      } else {
+        container.scrollBy({
+          left: 380,
+          behavior: "smooth",
+        });
+      }
+    }, 4000);
+
+    return () => window.clearInterval(interval);
+  }, [platformReviews]);
 
   return (
     <div className="w-full">
@@ -274,7 +307,7 @@ duration-300
               label: "Subjects",
             },
             {
-              value: `${stats.rating}/5`,
+              value: stats.rating > 0 ? `${stats.rating}/5` : "No reviews",
               label: "Average Rating",
             },
           ].map((stat, i) => (
@@ -417,81 +450,229 @@ duration-300
 
       </section>
 
-      {/* Call to Action */}
-      {/* reviews */}
-      <section className="py-24 bg-[#F8FCFD] dark:bg-[#0D2330]">
+      {/* Platform Reviews */}
+      <section className="section-blend py-28 bg-[#F8FCFD] dark:bg-[#0D2330] [--section-blend-color:#F8FCFD] dark:[--section-blend-color:#0D2330]">
         <div className="max-w-7xl mx-auto px-8">
 
+          {/* Section heading */}
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-100px" }}
             variants={fadeInUp}
-            className="text-center mb-12"
+            className="text-center mb-16"
           >
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#3D7F8F] dark:text-[#6FD4D8]">
-              What people say
+            <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#3D7F8F] dark:text-[#6FD4D8]">
+              What users say
             </p>
 
             <h2 className="mt-3 text-4xl md:text-5xl font-black tracking-tight text-[#164E5E] dark:text-white">
-              Real people. Real experiences.
+              Real experiences from Alvey users.
             </h2>
 
-            <p className="mt-4 text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              See what tutors and students have to say about their experience with Alvey.
+            <p className="mt-5 text-lg text-muted-foreground dark:text-slate-300 max-w-2xl mx-auto">
+              See what students, tutors, and members think about their experience
+              with Alvey.
             </p>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="flex justify-center"
-          >
-            <Card className="w-full max-w-2xl rounded-3xl border border-[#D8E7EB] dark:border-slate-700 bg-white dark:bg-slate-900 shadow-md hover:shadow-xl transition-all duration-300">
-              <CardContent className="p-8 md:p-10">
-                <div
-                  className="flex justify-center gap-1 mb-6"
-                  aria-label="5 out of 5 stars"
+          {/* Loading */}
+          {reviewsLoading ? (
+            <div className="flex gap-6 overflow-hidden">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Card
+                  key={i}
+                  className="h-[300px] w-[85vw] sm:w-[420px] lg:w-[460px] shrink-0 rounded-3xl border border-[#D8E7EB] dark:border-slate-700 bg-white dark:bg-slate-900"
                 >
-                  {"★★★★★".split("").map((star, i) => (
-                    <span
-                      key={i}
-                      className="text-[#F4B942] text-xl"
-                    >
-                      {star}
-                    </span>
-                  ))}
-                </div>
-                <p className="text-lg md:text-xl leading-8 text-center text-gray-700 dark:text-gray-200">
-                  “Tutors Link is an awesome platform. As a tutor, I'd been
-                  struggling to find students since the Oct-Nov examination
-                  session finished, but just 1 week of me joining this platform
-                  and I already have a prospective student. 10/10.”
-                </p>
-                <div className="flex justify-center items-center gap-3 mt-8 pt-6 border-t border-gray-100 dark:border-slate-800">
-                  <div className="h-11 w-11 rounded-full bg-[#164E5E] text-white flex items-center justify-center font-bold">
-                    A
-                  </div>
+                  <CardContent className="p-8 flex flex-col h-full">
+                    <div className="h-5 w-28 rounded-full bg-muted animate-pulse" />
 
-                  <div className="text-left">
-                    <p className="font-semibold text-[#164E5E] dark:text-white">
-                      Alvey Tutor
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Tutor
-                    </p>
-                  </div>
+                    <div className="mt-7 space-y-3">
+                      <div className="h-4 w-full rounded bg-muted animate-pulse" />
+                      <div className="h-4 w-full rounded bg-muted animate-pulse" />
+                      <div className="h-4 w-4/5 rounded bg-muted animate-pulse" />
+                    </div>
+
+                    <div className="mt-auto flex items-center gap-3">
+                      <div className="h-11 w-11 rounded-full bg-muted animate-pulse" />
+
+                      <div className="space-y-2">
+                        <div className="h-4 w-28 rounded bg-muted animate-pulse" />
+                        <div className="h-3 w-36 rounded bg-muted animate-pulse" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : platformReviews.length === 0 ? (
+
+            /* Empty state */
+            <Card className="max-w-xl mx-auto rounded-3xl border border-dashed border-[#BFD4DA] dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 shadow-sm">
+              <CardContent className="p-12 text-center">
+
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#164E5E]/10 dark:bg-[#6FD4D8]/10">
+                  <span className="text-2xl text-[#164E5E] dark:text-[#6FD4D8]">
+                    ★
+                  </span>
                 </div>
+
+                <h3 className="mt-5 text-xl font-bold text-[#164E5E] dark:text-white">
+                  Be the first to review Alvey
+                </h3>
+
+                <p className="mt-2 text-muted-foreground dark:text-slate-300">
+                  Share your experience and help others discover Alvey.
+                </p>
 
               </CardContent>
             </Card>
+
+          ) : (
+            <div
+              ref={reviewsScrollRef}
+              className="
+      flex
+      gap-6
+      overflow-x-auto
+      pb-5
+      snap-x
+      snap-mandatory
+      scroll-smooth
+      [scrollbar-width:thin]
+    "
+            >
+              {platformReviews.map((review) => (
+                <motion.div
+                  key={review.id}
+                  variants={fadeInUp}
+                  whileHover={{ y: -6 }}
+                  transition={{ duration: 0.2 }}
+                  className="
+          shrink-0
+          w-[85vw]
+          sm:w-[420px]
+          lg:w-[460px]
+          snap-center
+        "
+                >
+                  <Card
+                    className="
+            group
+            h-full
+            min-h-[300px]
+            rounded-3xl
+            border
+            border-[#D8E7EB]
+            dark:border-slate-700
+            bg-white
+            dark:bg-slate-900
+            shadow-md
+            hover:shadow-xl
+            transition-all
+            duration-300
+          "
+                  >
+                    <CardContent className="p-8 md:p-10 flex flex-col h-full">
+                      {/* Rating */}
+                      <div
+                        className="flex gap-1"
+                        aria-label={`${review.rating} out of 5 stars`}
+                      >
+                        {Array.from({ length: 5 }).map((_, index) => (
+                          <span
+                            key={index}
+                            className={
+                              index < review.rating
+                                ? "text-[#F4B942] text-xl"
+                                : "text-gray-300 dark:text-gray-600 text-xl"
+                            }
+                          >
+                            ★
+                          </span>
+                        ))}
+                      </div>
+
+                      {/* Review body */}
+                      {review.body && (
+                        <p className="mt-7 text-lg leading-8 font-medium text-[#263B42] dark:text-gray-200">
+                          “{review.body}”
+                        </p>
+                      )}
+
+                      {/* Author */}
+                      <div className="mt-auto pt-8 flex items-center gap-3">
+                        <div className="h-11 w-11 shrink-0 rounded-full bg-[#164E5E] text-white flex items-center justify-center font-bold">
+                          {review.authorInitials}
+                        </div>
+
+                        <div className="min-w-0">
+                          <p className="font-semibold text-[#164E5E] dark:text-white truncate">
+                            {review.authorName}
+                          </p>
+
+                          {review.title && (
+                            <p className="text-sm text-muted-foreground dark:text-slate-400 truncate">
+                              {review.title}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          )}
+
+        {/* Review CTA */}
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mt-16 flex flex-col items-center text-center"
+          >
+            <p className="text-base font-medium text-muted-foreground dark:text-slate-400 mb-5">
+              Have you used Alvey?
+            </p>
+
+            <Button
+              asChild
+              className="
+    w-full
+    max-w-xl
+    h-16
+    rounded-full
+    bg-[#164E5E]
+    px-10
+    text-lg
+    md:text-xl
+    text-white
+    font-bold
+    shadow-[0_15px_35px_rgba(22,78,94,.25)]
+    hover:bg-[#3D7F8F]
+    hover:shadow-[0_20px_45px_rgba(61,127,143,.35)]
+    hover:-translate-y-1
+    transition-all
+    duration-300
+    dark:bg-[#6FD4D8]
+    dark:text-[#08131A]
+    dark:hover:bg-[#8BE4E7]
+  "
+            >
+              <Link to="/reviews">
+                Write your review
+              </Link>
+            </Button>
           </motion.div>
 
-        </div>
-      </section>
-      <section className="py-36">
+
+        </div >
+      </section >
+
+
+      {/* Call to Action */}
+      < section className="py-36" >
 
         <div className="max-w-6xl mx-auto px-8">
 
@@ -571,7 +752,7 @@ duration-300
 
         </div>
 
-      </section>
+      </section >
       <footer className="section-blend border-t bg-white dark:bg-[#08131A] dark:border-slate-800 [--section-blend-color:white] dark:[--section-blend-color:#08131A]">
 
         <div className="max-w-7xl mx-auto px-8 py-16">
@@ -668,7 +849,7 @@ duration-300
                 >
                   Credits
                 </Link>
-                
+
               </div>
 
             </div>

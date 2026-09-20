@@ -80,6 +80,20 @@ export interface Review {
   status: "pending" | "approved" | "rejected";
 }
 
+export interface PlatformReview {
+  id: string;
+  authorName: string;
+  authorInitials: string;
+  title: string;
+  body: string;
+  rating: number;
+  authorid: string;
+  isPublic: boolean;
+  isDeleted: boolean;
+  helpfulCount: number;
+  createdAt: string;
+}
+
 export interface Testimonial {
   id: string;
   name: string;
@@ -297,6 +311,7 @@ const COLLECTIONS = {
   SUBJECTS: "subjects",
   SUBJECT_CATEGORIES: "subject_categories",
   REVIEWS: "tutor_reviews",
+  PLATFORM_REVIEWS: "Platform_reviews",
   LESSONS: "lessons",
   NOTIFICATIONS: "notifications",
   PAGES: "pages",
@@ -2077,6 +2092,195 @@ export const DataStore = {
     );
 
     return newRev;
+  },
+
+  getPlatformReviews: async (): Promise<PlatformReview[]> => {
+    try {
+      const docs = await listDocuments(COLLECTIONS.PLATFORM_REVIEWS, [
+        Query.equal("isPublic", true),
+        Query.equal("isDeleted", false),
+        Query.orderDesc("$createdAt"),
+      ]);
+
+      return docs.map((doc) => ({
+        id: doc.$id,
+        authorName: safeString(doc.authorName, "Anonymous"),
+        authorInitials: safeString(
+          doc.authorInitials,
+          initials(doc.authorName || "Anonymous"),
+        ),
+        title: safeString(doc.title, ""),
+        body: safeString(doc.body, ""),
+        rating: safeNumber(doc.rating, 5),
+        authorid: safeString(doc.authorid, ""),
+        isPublic: Boolean(doc.isPublic),
+        isDeleted: Boolean(doc.isDeleted),
+        helpfulCount: safeNumber(doc.helpfulCount, 0),
+        createdAt: doc.$createdAt || new Date().toISOString(),
+      }));
+    } catch (error) {
+      console.error("Failed to load platform reviews:", error);
+      return [];
+    }
+  },
+
+  getAllPlatformReviews: async (): Promise<
+    (PlatformReview & { status: "pending" | "approved" | "rejected" })[]
+  > => {
+    try {
+      const docs = await listDocuments(COLLECTIONS.PLATFORM_REVIEWS, [
+        Query.orderDesc("$createdAt"),
+        Query.limit(100),
+      ]);
+
+      return docs.map((doc) => ({
+        id: doc.$id,
+        authorName: safeString(doc.authorName, "Anonymous"),
+        authorInitials: safeString(
+          doc.authorInitials,
+          initials(doc.authorName || "Anonymous"),
+        ),
+        title: safeString(doc.title, ""),
+        body: safeString(doc.body, ""),
+        rating: safeNumber(doc.rating, 5),
+        authorid: safeString(doc.authorid, ""),
+        isPublic: Boolean(doc.isPublic),
+        isDeleted: Boolean(doc.isDeleted),
+        helpfulCount: safeNumber(doc.helpfulCount, 0),
+        createdAt: doc.$createdAt || new Date().toISOString(),
+        status: doc.isDeleted
+          ? "rejected"
+          : doc.isPublic
+            ? "approved"
+            : "pending",
+      }));
+    } catch (error) {
+      console.error("Failed to load all platform reviews:", error);
+      return [];
+    }
+  },
+
+  moderatePlatformReview: async (
+    id: string,
+    status: "pending" | "approved" | "rejected",
+  ): Promise<void> => {
+    await upsertDocument(COLLECTIONS.PLATFORM_REVIEWS, id, {
+      isPublic: status === "approved",
+      isDeleted: status === "rejected",
+    });
+  },
+
+  updatePlatformReview: async (
+    id: string,
+    review: {
+      authorName?: string;
+      title?: string;
+      body?: string;
+      rating?: number;
+    },
+  ): Promise<void> => {
+    const data: Record<string, any> = {};
+
+    if (review.authorName !== undefined) {
+      data.authorName = review.authorName;
+      data.authorInitials = initials(review.authorName);
+    }
+
+    if (review.title !== undefined) {
+      data.title = review.title;
+    }
+
+    if (review.body !== undefined) {
+      data.body = review.body;
+    }
+
+    if (review.rating !== undefined) {
+      data.rating = review.rating;
+    }
+
+    await upsertDocument(COLLECTIONS.PLATFORM_REVIEWS, id, data);
+  },
+
+  createPlatformReview: async (review: {
+    authorid: string;
+    authorName: string;
+    title?: string;
+    body?: string;
+    rating: number;
+    isPublic?: boolean;
+  }): Promise<PlatformReview> => {
+    const newReview = await createDocument(
+      COLLECTIONS.PLATFORM_REVIEWS,
+      {
+        authorName: review.authorName.trim(),
+        authorInitials: initials(review.authorName),
+        title: review.title?.trim() || "",
+        body: review.body?.trim() || "",
+        rating: review.rating,
+        authorid: review.authorid,
+        isPublic: review.isPublic ?? false,
+        isDeleted: false,
+        helpfulCount: 0,
+      },
+    );
+
+    return {
+      id: newReview.$id,
+      authorName: safeString(newReview.authorName, review.authorName),
+      authorInitials: safeString(
+        newReview.authorInitials,
+        initials(review.authorName),
+      ),
+      title: safeString(newReview.title, ""),
+      body: safeString(newReview.body, ""),
+      rating: safeNumber(newReview.rating, review.rating),
+      authorid: safeString(newReview.authorid, review.authorid),
+      isPublic: Boolean(newReview.isPublic),
+      isDeleted: Boolean(newReview.isDeleted),
+      helpfulCount: safeNumber(newReview.helpfulCount, 0),
+      createdAt: newReview.$createdAt || new Date().toISOString(),
+    };
+  },
+
+
+  submitPlatformReview: async (review: {
+    authorid: string;
+    authorName: string;
+    title?: string;
+    body?: string;
+    rating: number;
+  }): Promise<PlatformReview> => {
+    const newReview = await createDocument(
+      COLLECTIONS.PLATFORM_REVIEWS,
+      {
+        authorName: review.authorName,
+        authorInitials: initials(review.authorName),
+        title: review.title || "",
+        body: review.body || "",
+        rating: review.rating,
+        authorid: review.authorid,
+        isPublic: false,
+        isDeleted: false,
+        helpfulCount: 0,
+      },
+    );
+
+    return {
+      id: newReview.$id,
+      authorName: safeString(newReview.authorName, review.authorName),
+      authorInitials: safeString(
+        newReview.authorInitials,
+        initials(review.authorName),
+      ),
+      title: safeString(newReview.title, ""),
+      body: safeString(newReview.body, ""),
+      rating: safeNumber(newReview.rating, review.rating),
+      authorid: safeString(newReview.authorid, review.authorid),
+      isPublic: Boolean(newReview.isPublic),
+      isDeleted: Boolean(newReview.isDeleted),
+      helpfulCount: safeNumber(newReview.helpfulCount, 0),
+      createdAt: newReview.$createdAt || new Date().toISOString(),
+    };
   },
 
   updateReview: async (

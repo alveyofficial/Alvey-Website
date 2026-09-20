@@ -60,6 +60,11 @@ const guestNav: NavItem[] = [
     icon: Home,
   },
   {
+    name: "Reviews",
+    href: "/reviews",
+    icon: Star,
+  },
+  {
     name: "Profile",
     href: "/profile",
     icon: User,

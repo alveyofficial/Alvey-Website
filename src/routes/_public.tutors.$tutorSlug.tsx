@@ -231,11 +231,22 @@ function TutorProfilePage() {
                 <div className="mt-4 flex flex-wrap justify-center md:justify-start items-center gap-x-5 gap-y-3 text-sm text-muted-foreground">
 
                   <span className="flex items-center gap-1.5">
-                    <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
-                    <strong className="text-foreground">
-                      {tutor.rating_avg.toFixed(2)}
-                    </strong>
-                    ({tutor.rating_count} reviews)
+                    {tutor.rating_count > 0 ? (
+                      <>
+                        <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
+                        <strong className="text-foreground">
+                          {tutor.rating_avg.toFixed(2)}/5
+                        </strong>
+                        <span>
+                          ({tutor.rating_count}{" "}
+                          {tutor.rating_count === 1 ? "review" : "reviews"})
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-muted-foreground">
+                        No reviews
+                      </span>
+                    )}
                   </span>
 
                   <span className="flex items-center gap-1.5">
@@ -404,8 +415,16 @@ function TutorProfilePage() {
                 </div>
 
                 <div className="hidden sm:flex items-center gap-1 text-sm">
-                  <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
-                  <strong>{tutor.rating_avg.toFixed(2)}</strong>
+                  {tutor.rating_count > 0 ? (
+                    <>
+                      <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
+                      <strong>{tutor.rating_avg.toFixed(2)}/5</strong>
+                    </>
+                  ) : (
+                    <span className="text-muted-foreground">
+                      No reviews
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -596,8 +615,14 @@ function TutorProfilePage() {
                       </span>
 
                       <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Star className="h-3 w-3 text-amber-500 fill-amber-500" />
-                        {candidate.rating_avg.toFixed(1)}
+                        {candidate.rating_count > 0 ? (
+                          <>
+                            <Star className="h-3 w-3 text-amber-500 fill-amber-500" />
+                            {candidate.rating_avg.toFixed(1)}/5
+                          </>
+                        ) : (
+                          "No reviews"
+                        )}
                       </span>
                     </div>
                   </div>
