@@ -25,6 +25,7 @@ import {
   BarChart3,
   Archive,
   Home,
+  Newspaper
 } from "lucide-react";
 
 type Role =
@@ -152,6 +153,7 @@ const adminNav: NavItem[] = [
   { name: "Notifications", href: "/admin/notifications", icon: Bell },
   { name: "Pages", href: "/admin/pages", icon: BookOpen },
   { name: "Homepage", href: "/admin/homepage", icon: FileEdit },
+  { name: "Blogs", href: "/admin/blogs", icon: Newspaper },
   { name: "AI Assistant", href: "/admin/ai-assistant", icon: MessageSquare },
   { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
   { name: "Settings", href: "/admin/settings", icon: Settings },

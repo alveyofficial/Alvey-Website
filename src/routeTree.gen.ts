@@ -23,6 +23,7 @@ import { Route as PublicPrivacyPolicyRouteImport } from './routes/_public.privac
 import { Route as PublicFindATutorRouteImport } from './routes/_public.find-a-tutor'
 import { Route as PublicCreditsRouteImport } from './routes/_public.credits'
 import { Route as PublicContactRouteImport } from './routes/_public.contact'
+import { Route as PublicBlogsRouteImport } from './routes/_public.blogs'
 import { Route as PublicApplyRouteImport } from './routes/_public.apply'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated.settings'
 import { Route as AuthenticatedScheduleRouteImport } from './routes/_authenticated.schedule'
@@ -32,6 +33,7 @@ import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authen
 import { Route as AuthenticatedMyTutorsRouteImport } from './routes/_authenticated.my-tutors'
 import { Route as AuthenticatedLessonsRouteImport } from './routes/_authenticated.lessons'
 import { Route as AuthenticatedCmsRouteImport } from './routes/_authenticated.cms'
+import { Route as PublicBlogsIndexRouteImport } from './routes/_public.blogs.index'
 import { Route as AuthenticatedTutorIndexRouteImport } from './routes/_authenticated/tutor/index'
 import { Route as AuthenticatedRecruitmentIndexRouteImport } from './routes/_authenticated/recruitment/index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
@@ -39,6 +41,7 @@ import { Route as ApiPublicStatsRouteImport } from './routes/api/public/stats'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiAdminResolveStudentRouteImport } from './routes/api/admin/resolve-student'
 import { Route as PublicTutorsTutorSlugRouteImport } from './routes/_public.tutors.$tutorSlug'
+import { Route as PublicBlogsSlugRouteImport } from './routes/_public.blogs.$slug'
 import { Route as AuthenticatedTutorStudentsRouteImport } from './routes/_authenticated/tutor/students'
 import { Route as AuthenticatedTutorSettingsRouteImport } from './routes/_authenticated/tutor/settings'
 import { Route as AuthenticatedTutorScheduleRouteImport } from './routes/_authenticated/tutor/schedule'
@@ -68,6 +71,7 @@ import { Route as AuthenticatedAdminRecruitmentApplicationsRouteImport } from '.
 import { Route as AuthenticatedAdminPagesRouteImport } from './routes/_authenticated/admin/pages'
 import { Route as AuthenticatedAdminNotificationsRouteImport } from './routes/_authenticated/admin/notifications'
 import { Route as AuthenticatedAdminHomepageRouteImport } from './routes/_authenticated/admin/homepage'
+import { Route as AuthenticatedAdminBlogsRouteImport } from './routes/_authenticated/admin/blogs'
 import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin/analytics'
 import { Route as AuthenticatedAdminAiAssistantRouteImport } from './routes/_authenticated/admin/ai-assistant'
 import { Route as AuthenticatedAdminAdvertisementsRouteImport } from './routes/_authenticated/admin/advertisements'
@@ -140,6 +144,11 @@ const PublicContactRoute = PublicContactRouteImport.update({
   path: '/contact',
   getParentRoute: () => PublicRoute,
 } as any)
+const PublicBlogsRoute = PublicBlogsRouteImport.update({
+  id: '/blogs',
+  path: '/blogs',
+  getParentRoute: () => PublicRoute,
+} as any)
 const PublicApplyRoute = PublicApplyRouteImport.update({
   id: '/apply',
   path: '/apply',
@@ -186,6 +195,11 @@ const AuthenticatedCmsRoute = AuthenticatedCmsRouteImport.update({
   path: '/cms',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const PublicBlogsIndexRoute = PublicBlogsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PublicBlogsRoute,
+} as any)
 const AuthenticatedTutorIndexRoute = AuthenticatedTutorIndexRouteImport.update({
   id: '/tutor/',
   path: '/tutor/',
@@ -221,6 +235,11 @@ const PublicTutorsTutorSlugRoute = PublicTutorsTutorSlugRouteImport.update({
   id: '/tutors/$tutorSlug',
   path: '/tutors/$tutorSlug',
   getParentRoute: () => PublicRoute,
+} as any)
+const PublicBlogsSlugRoute = PublicBlogsSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => PublicBlogsRoute,
 } as any)
 const AuthenticatedTutorStudentsRoute =
   AuthenticatedTutorStudentsRouteImport.update({
@@ -395,6 +414,11 @@ const AuthenticatedAdminHomepageRoute =
     path: '/admin/homepage',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminBlogsRoute = AuthenticatedAdminBlogsRouteImport.update({
+  id: '/admin/blogs',
+  path: '/admin/blogs',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedAdminAnalyticsRoute =
   AuthenticatedAdminAnalyticsRouteImport.update({
     id: '/admin/analytics',
@@ -428,6 +452,7 @@ export interface FileRoutesByFullPath {
   '/schedule': typeof AuthenticatedScheduleRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/apply': typeof PublicApplyRoute
+  '/blogs': typeof PublicBlogsRouteWithChildren
   '/contact': typeof PublicContactRoute
   '/credits': typeof PublicCreditsRoute
   '/find-a-tutor': typeof PublicFindATutorRoute
@@ -439,6 +464,7 @@ export interface FileRoutesByFullPath {
   '/admin/advertisements': typeof AuthenticatedAdminAdvertisementsRoute
   '/admin/ai-assistant': typeof AuthenticatedAdminAiAssistantRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
+  '/admin/blogs': typeof AuthenticatedAdminBlogsRoute
   '/admin/homepage': typeof AuthenticatedAdminHomepageRoute
   '/admin/notifications': typeof AuthenticatedAdminNotificationsRoute
   '/admin/pages': typeof AuthenticatedAdminPagesRoute
@@ -468,6 +494,7 @@ export interface FileRoutesByFullPath {
   '/tutor/schedule': typeof AuthenticatedTutorScheduleRoute
   '/tutor/settings': typeof AuthenticatedTutorSettingsRoute
   '/tutor/students': typeof AuthenticatedTutorStudentsRoute
+  '/blogs/$slug': typeof PublicBlogsSlugRoute
   '/tutors/$tutorSlug': typeof PublicTutorsTutorSlugRoute
   '/api/admin/resolve-student': typeof ApiAdminResolveStudentRoute
   '/api/public/health': typeof ApiPublicHealthRoute
@@ -475,6 +502,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/recruitment/': typeof AuthenticatedRecruitmentIndexRoute
   '/tutor/': typeof AuthenticatedTutorIndexRoute
+  '/blogs/': typeof PublicBlogsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof PublicIndexRoute
@@ -501,6 +529,7 @@ export interface FileRoutesByTo {
   '/admin/advertisements': typeof AuthenticatedAdminAdvertisementsRoute
   '/admin/ai-assistant': typeof AuthenticatedAdminAiAssistantRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
+  '/admin/blogs': typeof AuthenticatedAdminBlogsRoute
   '/admin/homepage': typeof AuthenticatedAdminHomepageRoute
   '/admin/notifications': typeof AuthenticatedAdminNotificationsRoute
   '/admin/pages': typeof AuthenticatedAdminPagesRoute
@@ -530,6 +559,7 @@ export interface FileRoutesByTo {
   '/tutor/schedule': typeof AuthenticatedTutorScheduleRoute
   '/tutor/settings': typeof AuthenticatedTutorSettingsRoute
   '/tutor/students': typeof AuthenticatedTutorStudentsRoute
+  '/blogs/$slug': typeof PublicBlogsSlugRoute
   '/tutors/$tutorSlug': typeof PublicTutorsTutorSlugRoute
   '/api/admin/resolve-student': typeof ApiAdminResolveStudentRoute
   '/api/public/health': typeof ApiPublicHealthRoute
@@ -537,6 +567,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/recruitment': typeof AuthenticatedRecruitmentIndexRoute
   '/tutor': typeof AuthenticatedTutorIndexRoute
+  '/blogs': typeof PublicBlogsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -554,6 +585,7 @@ export interface FileRoutesById {
   '/_authenticated/schedule': typeof AuthenticatedScheduleRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_public/apply': typeof PublicApplyRoute
+  '/_public/blogs': typeof PublicBlogsRouteWithChildren
   '/_public/contact': typeof PublicContactRoute
   '/_public/credits': typeof PublicCreditsRoute
   '/_public/find-a-tutor': typeof PublicFindATutorRoute
@@ -566,6 +598,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/advertisements': typeof AuthenticatedAdminAdvertisementsRoute
   '/_authenticated/admin/ai-assistant': typeof AuthenticatedAdminAiAssistantRoute
   '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
+  '/_authenticated/admin/blogs': typeof AuthenticatedAdminBlogsRoute
   '/_authenticated/admin/homepage': typeof AuthenticatedAdminHomepageRoute
   '/_authenticated/admin/notifications': typeof AuthenticatedAdminNotificationsRoute
   '/_authenticated/admin/pages': typeof AuthenticatedAdminPagesRoute
@@ -595,6 +628,7 @@ export interface FileRoutesById {
   '/_authenticated/tutor/schedule': typeof AuthenticatedTutorScheduleRoute
   '/_authenticated/tutor/settings': typeof AuthenticatedTutorSettingsRoute
   '/_authenticated/tutor/students': typeof AuthenticatedTutorStudentsRoute
+  '/_public/blogs/$slug': typeof PublicBlogsSlugRoute
   '/_public/tutors/$tutorSlug': typeof PublicTutorsTutorSlugRoute
   '/api/admin/resolve-student': typeof ApiAdminResolveStudentRoute
   '/api/public/health': typeof ApiPublicHealthRoute
@@ -602,6 +636,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/recruitment/': typeof AuthenticatedRecruitmentIndexRoute
   '/_authenticated/tutor/': typeof AuthenticatedTutorIndexRoute
+  '/_public/blogs/': typeof PublicBlogsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -619,6 +654,7 @@ export interface FileRouteTypes {
     | '/schedule'
     | '/settings'
     | '/apply'
+    | '/blogs'
     | '/contact'
     | '/credits'
     | '/find-a-tutor'
@@ -630,6 +666,7 @@ export interface FileRouteTypes {
     | '/admin/advertisements'
     | '/admin/ai-assistant'
     | '/admin/analytics'
+    | '/admin/blogs'
     | '/admin/homepage'
     | '/admin/notifications'
     | '/admin/pages'
@@ -659,6 +696,7 @@ export interface FileRouteTypes {
     | '/tutor/schedule'
     | '/tutor/settings'
     | '/tutor/students'
+    | '/blogs/$slug'
     | '/tutors/$tutorSlug'
     | '/api/admin/resolve-student'
     | '/api/public/health'
@@ -666,6 +704,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/recruitment/'
     | '/tutor/'
+    | '/blogs/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -692,6 +731,7 @@ export interface FileRouteTypes {
     | '/admin/advertisements'
     | '/admin/ai-assistant'
     | '/admin/analytics'
+    | '/admin/blogs'
     | '/admin/homepage'
     | '/admin/notifications'
     | '/admin/pages'
@@ -721,6 +761,7 @@ export interface FileRouteTypes {
     | '/tutor/schedule'
     | '/tutor/settings'
     | '/tutor/students'
+    | '/blogs/$slug'
     | '/tutors/$tutorSlug'
     | '/api/admin/resolve-student'
     | '/api/public/health'
@@ -728,6 +769,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/recruitment'
     | '/tutor'
+    | '/blogs'
   id:
     | '__root__'
     | '/_authenticated'
@@ -744,6 +786,7 @@ export interface FileRouteTypes {
     | '/_authenticated/schedule'
     | '/_authenticated/settings'
     | '/_public/apply'
+    | '/_public/blogs'
     | '/_public/contact'
     | '/_public/credits'
     | '/_public/find-a-tutor'
@@ -756,6 +799,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/advertisements'
     | '/_authenticated/admin/ai-assistant'
     | '/_authenticated/admin/analytics'
+    | '/_authenticated/admin/blogs'
     | '/_authenticated/admin/homepage'
     | '/_authenticated/admin/notifications'
     | '/_authenticated/admin/pages'
@@ -785,6 +829,7 @@ export interface FileRouteTypes {
     | '/_authenticated/tutor/schedule'
     | '/_authenticated/tutor/settings'
     | '/_authenticated/tutor/students'
+    | '/_public/blogs/$slug'
     | '/_public/tutors/$tutorSlug'
     | '/api/admin/resolve-student'
     | '/api/public/health'
@@ -792,6 +837,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/'
     | '/_authenticated/recruitment/'
     | '/_authenticated/tutor/'
+    | '/_public/blogs/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -907,6 +953,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicContactRouteImport
       parentRoute: typeof PublicRoute
     }
+    '/_public/blogs': {
+      id: '/_public/blogs'
+      path: '/blogs'
+      fullPath: '/blogs'
+      preLoaderRoute: typeof PublicBlogsRouteImport
+      parentRoute: typeof PublicRoute
+    }
     '/_public/apply': {
       id: '/_public/apply'
       path: '/apply'
@@ -970,6 +1023,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCmsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_public/blogs/': {
+      id: '/_public/blogs/'
+      path: '/'
+      fullPath: '/blogs/'
+      preLoaderRoute: typeof PublicBlogsIndexRouteImport
+      parentRoute: typeof PublicBlogsRoute
+    }
     '/_authenticated/tutor/': {
       id: '/_authenticated/tutor/'
       path: '/tutor'
@@ -1018,6 +1078,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/tutors/$tutorSlug'
       preLoaderRoute: typeof PublicTutorsTutorSlugRouteImport
       parentRoute: typeof PublicRoute
+    }
+    '/_public/blogs/$slug': {
+      id: '/_public/blogs/$slug'
+      path: '/$slug'
+      fullPath: '/blogs/$slug'
+      preLoaderRoute: typeof PublicBlogsSlugRouteImport
+      parentRoute: typeof PublicBlogsRoute
     }
     '/_authenticated/tutor/students': {
       id: '/_authenticated/tutor/students'
@@ -1222,6 +1289,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminHomepageRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin/blogs': {
+      id: '/_authenticated/admin/blogs'
+      path: '/admin/blogs'
+      fullPath: '/admin/blogs'
+      preLoaderRoute: typeof AuthenticatedAdminBlogsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/admin/analytics': {
       id: '/_authenticated/admin/analytics'
       path: '/admin/analytics'
@@ -1258,6 +1332,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAdminAdvertisementsRoute: typeof AuthenticatedAdminAdvertisementsRoute
   AuthenticatedAdminAiAssistantRoute: typeof AuthenticatedAdminAiAssistantRoute
   AuthenticatedAdminAnalyticsRoute: typeof AuthenticatedAdminAnalyticsRoute
+  AuthenticatedAdminBlogsRoute: typeof AuthenticatedAdminBlogsRoute
   AuthenticatedAdminHomepageRoute: typeof AuthenticatedAdminHomepageRoute
   AuthenticatedAdminNotificationsRoute: typeof AuthenticatedAdminNotificationsRoute
   AuthenticatedAdminPagesRoute: typeof AuthenticatedAdminPagesRoute
@@ -1304,6 +1379,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminAdvertisementsRoute: AuthenticatedAdminAdvertisementsRoute,
   AuthenticatedAdminAiAssistantRoute: AuthenticatedAdminAiAssistantRoute,
   AuthenticatedAdminAnalyticsRoute: AuthenticatedAdminAnalyticsRoute,
+  AuthenticatedAdminBlogsRoute: AuthenticatedAdminBlogsRoute,
   AuthenticatedAdminHomepageRoute: AuthenticatedAdminHomepageRoute,
   AuthenticatedAdminNotificationsRoute: AuthenticatedAdminNotificationsRoute,
   AuthenticatedAdminPagesRoute: AuthenticatedAdminPagesRoute,
@@ -1350,8 +1426,23 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
   AuthenticatedRouteChildren,
 )
 
+interface PublicBlogsRouteChildren {
+  PublicBlogsSlugRoute: typeof PublicBlogsSlugRoute
+  PublicBlogsIndexRoute: typeof PublicBlogsIndexRoute
+}
+
+const PublicBlogsRouteChildren: PublicBlogsRouteChildren = {
+  PublicBlogsSlugRoute: PublicBlogsSlugRoute,
+  PublicBlogsIndexRoute: PublicBlogsIndexRoute,
+}
+
+const PublicBlogsRouteWithChildren = PublicBlogsRoute._addFileChildren(
+  PublicBlogsRouteChildren,
+)
+
 interface PublicRouteChildren {
   PublicApplyRoute: typeof PublicApplyRoute
+  PublicBlogsRoute: typeof PublicBlogsRouteWithChildren
   PublicContactRoute: typeof PublicContactRoute
   PublicCreditsRoute: typeof PublicCreditsRoute
   PublicFindATutorRoute: typeof PublicFindATutorRoute
@@ -1364,6 +1455,7 @@ interface PublicRouteChildren {
 
 const PublicRouteChildren: PublicRouteChildren = {
   PublicApplyRoute: PublicApplyRoute,
+  PublicBlogsRoute: PublicBlogsRouteWithChildren,
   PublicContactRoute: PublicContactRoute,
   PublicCreditsRoute: PublicCreditsRoute,
   PublicFindATutorRoute: PublicFindATutorRoute,

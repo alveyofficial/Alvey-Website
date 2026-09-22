@@ -70,6 +70,28 @@ export interface Tutor {
   is_active?: boolean;
 }
 
+export interface BlogPost {
+  $id?: string;
+  $createdAt?: string;
+  $updatedAt?: string;
+
+  title: string;
+  slug: string;
+  content: string;
+  image?: string;
+  category: string;
+  readTime: string;
+
+  status: "draft" | "scheduled" | "published";
+  publishedAt?: string;
+  scheduledAt?: string;
+
+  authorId: string;
+  authorName: string;
+
+  isFeatured: boolean;
+}
+
 export interface Review {
   id: string;
   student_name: string;
@@ -322,6 +344,7 @@ const COLLECTIONS = {
   DISCORD_LINKS: "discord_links",
   SCHEDULES: "schedules",
   ASSIGNMENTS: "student_tutor_assignments",
+  BLOG_POSTS: "blog_posts",
 };
 
 function getLocal<T>(key: string, defaultValue: T): T {
@@ -2049,6 +2072,54 @@ export const DataStore = {
         tutorId,
       },
     });
+  },
+  // --- BLOGSS ---
+  getBlogPosts: async (): Promise<BlogPost[]> => {
+    try {
+      const docs = await listDocuments(COLLECTIONS.BLOG_POSTS);
+      return docs as unknown as BlogPost[];
+    } catch (err) {
+      console.error("Failed to get blog posts:", err);
+      return [];
+    }
+  },
+
+  getBlogPost: async (id: string): Promise<BlogPost | null> => {
+    try {
+      const doc = await getDocument(COLLECTIONS.BLOG_POSTS, id);
+      return doc as unknown as BlogPost | null;
+    } catch (err) {
+      console.error("Failed to get blog post:", err);
+      return null;
+    }
+  },
+
+  createBlogPost: async (
+    post: Omit<BlogPost, "$id" | "$createdAt" | "$updatedAt">
+  ): Promise<BlogPost> => {
+    const doc = await createDocument(
+      COLLECTIONS.BLOG_POSTS,
+      post
+    );
+
+    return doc as unknown as BlogPost;
+  },
+
+  updateBlogPost: async (
+    id: string,
+    post: Partial<Omit<BlogPost, "$id" | "$createdAt" | "$updatedAt">>
+  ): Promise<BlogPost> => {
+    const doc = await upsertDocument(
+      COLLECTIONS.BLOG_POSTS,
+      id,
+      post
+    );
+
+    return doc as unknown as BlogPost;
+  },
+
+  deleteBlogPost: async (id: string): Promise<void> => {
+    await deleteDocument(COLLECTIONS.BLOG_POSTS, id);
   },
   // --- REVIEWS ---
   submitReview: async (review: {

@@ -132,6 +132,7 @@ export function Navbar() {
   const navLinks = [
     { label: "Home", to: "/" },
     { label: "Find a Tutor", to: "/find-a-tutor" },
+    { label: "Blogs", to: "/blogs" },
     { label: "Apply as a Tutor", to: "/apply" },
     { label: "Work With Us", to: "/work-with-us" },
     { label: "Contact", to: "/contact" },
