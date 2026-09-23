@@ -38,7 +38,7 @@ function TermsOfServicePage() {
             <ol className="space-y-3 text-muted-foreground leading-7 list-decimal pl-5">
               <li>Tutors must hide their identity as a tutor in the community.</li>
               <li>Tutors must not reveal contact information or usernames before payment is confirmed.</li>
-              <li>Tutors must accept Alvey&apos;s commission terms. Alvey takes 40% of the first month&apos;s fees for each student acquired through the platform.</li>
+              <li>Tutors must accept Alvey&apos;s commission terms. Alvey takes a 20% commission from tutors&apos; monthly fees for each student acquired through the platform.</li>
               <li>Tutors must be at least 13 years old to teach through Alvey.</li>
             </ol>
           </section>
@@ -48,7 +48,7 @@ function TermsOfServicePage() {
             <ol className="space-y-3 text-muted-foreground leading-7 list-decimal pl-5">
               <li>All payments must be made 100% beforehand, and students are connected to the tutor after payment is confirmed.</li>
               <li>Students must not reveal contact information or usernames before payment is confirmed.</li>
-              <li>Alvey holds the first month&apos;s fees and releases them to the tutor at the end of that month to help prevent scams and support refunds. From the second month onward, fees are paid directly to tutors.</li>
+              <li>Alvey collects 100% of fees upfront from students. At the end of each month, Alvey releases the tutor&apos;s earnings after deducting its 20% commission and any applicable refund considerations.</li>
               <li>Prices per class are fixed and decided by the tutor, although the number of classes can change.</li>
             </ol>
           </section>

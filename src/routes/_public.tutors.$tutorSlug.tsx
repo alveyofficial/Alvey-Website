@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+﻿import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   Star,
@@ -278,20 +278,6 @@ function TutorProfilePage() {
                 What {tutor.name.split(" ")[0]} Wants You to Know
               </h2>
 
-              {tutor.testimonial && (
-                <div className="mt-4 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-border/50 p-4">
-                  <div className="flex gap-2">
-                    <span className="text-2xl leading-none text-emerald-600">
-                      “
-                    </span>
-
-                    <p className="text-sm italic leading-6 text-muted-foreground">
-                      {tutor.testimonial}
-                    </p>
-                  </div>
-                </div>
-              )}
-
               <div className="mt-5">
                 <p className="text-sm leading-7 text-slate-700 dark:text-slate-300 whitespace-pre-line">
                   {tutor.about || "This tutor has not added a bio yet."}
@@ -428,50 +414,77 @@ function TutorProfilePage() {
                 </div>
               </div>
 
-              <div className="mt-5 space-y-4">
-                {reviews.length === 0 ? (
-                  <div className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-                    No public reviews available for this tutor yet.
-                  </div>
-                ) : (
-                  reviews.map((review) => (
-                    <div
-                      key={review.id}
-                      className="rounded-xl border border-border/60 p-4"
-                    >
-                      <div className="flex justify-between gap-4">
-                        <div className="flex items-center gap-2">
-                          <div className="h-8 w-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                            <User className="h-4 w-4 text-slate-500" />
-                          </div>
+              <div className="mt-6 space-y-6">
 
-                          <div>
-                            <span className="text-xs font-bold block">
-                              {review.student_name}
-                            </span>
-
-                            <span className="text-[10px] text-muted-foreground">
-                              {new Date(review.created_at).toLocaleDateString()}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="flex gap-0.5 text-amber-500">
-                          {[...Array(review.rating)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className="h-3.5 w-3.5 fill-amber-500"
-                            />
-                          ))}
-                        </div>
+                {/* Tutor-submitted testimonials */}
+                {tutor.testimonial && (
+                  <div>
+                    <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+                      Testimonials
+                    </h3>
+                    <div className="rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-border/50 p-4">
+                      <div className="flex gap-2">
+                        <span className="text-2xl leading-none text-emerald-600">&#x201C;</span>
+                        <p className="text-sm italic leading-6 text-muted-foreground">
+                          {tutor.testimonial}
+                        </p>
                       </div>
-
-                      <p className="mt-3 text-sm leading-relaxed text-slate-700 dark:text-slate-300 italic">
-                        “{review.comment}”
-                      </p>
                     </div>
-                  ))
+                  </div>
                 )}
+
+                {/* Student reviews */}
+                <div>
+                  <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+                    What Our Students Say
+                  </h3>
+                  <div className="space-y-4">
+                    {reviews.length === 0 ? (
+                      <div className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+                        No public reviews available for this tutor yet.
+                      </div>
+                    ) : (
+                      reviews.map((review) => (
+                        <div
+                          key={review.id}
+                          className="rounded-xl border border-border/60 p-4"
+                        >
+                          <div className="flex justify-between gap-4">
+                            <div className="flex items-center gap-2">
+                              <div className="h-8 w-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                                <User className="h-4 w-4 text-slate-500" />
+                              </div>
+
+                              <div>
+                                <span className="text-xs font-bold block">
+                                  {review.student_name}
+                                </span>
+
+                                <span className="text-[10px] text-muted-foreground">
+                                  {new Date(review.created_at).toLocaleDateString()}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="flex gap-0.5 text-amber-500">
+                              {[...Array(review.rating)].map((_, i) => (
+                                <Star
+                                  key={i}
+                                  className="h-3.5 w-3.5 fill-amber-500"
+                                />
+                              ))}
+                            </div>
+                          </div>
+
+                          <p className="mt-3 text-sm leading-relaxed text-slate-700 dark:text-slate-300 italic">
+                            "{review.comment}"
+                          </p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
               </div>
             </section>
           </div>

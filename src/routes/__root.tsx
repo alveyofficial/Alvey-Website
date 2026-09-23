@@ -81,7 +81,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "Find a tutor or Find Students. Alvey makes it easy for both! We connect studetns and tutors all over the world, Weather youre doing IGCSE, GCSE, A-Level, IB, SAT, or University subjects, Alvey has you covered!",
+          "Find a tutor or Find Students. Alvey makes it easy for both! We connect students and tutors all over the world. Whether you're doing IGCSE, AS/A-Levels, IB, SAT, or University subjects, Alvey has you covered!",
       },
       { name: "author", content: "Alvey" },
       // Open Graph fallbacks
@@ -156,7 +156,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           name: "Alvey",
           url: "https://alvey.study",
           description:
-            "Find a tutor or Find Students. Alvey makes it easy for both! We connect studetns and tutors all over the world, Weather youre doing IGCSE, GCSE, A-Level, IB, SAT, or University subjects, Alvey has you covered!",
+            "Find a tutor or Find Students. Alvey makes it easy for both! We connect students and tutors all over the world. Whether you're doing IGCSE, AS/A-Levels, IB, SAT, or University subjects, Alvey has you covered!",
           potentialAction: {
             "@type": "SearchAction",
             target: {

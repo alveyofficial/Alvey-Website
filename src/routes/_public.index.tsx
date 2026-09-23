@@ -2,12 +2,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { DataStore, type PlatformReview } from "@/lib/data-store";
 import { seoMeta, seoLinks, jsonLdScript, websiteSchema, organizationSchema, serviceSchema } from "@/lib/seo";
 import { motion } from "motion/react";
 
 const HOME_DESCRIPTION =
-  "Find a tutor or Find Students. Alvey makes it easy for both! We connect studetns and tutors all over the world, Weather youre doing IGCSE, GCSE, A-Level, IB, SAT, or University subjects, Alvey has you covered!";
+  "Find an online tutor or find students — Alvey makes it easy for both! We connect students and tutors all over the world. Whether you're doing IGCSE or AS/A-Levels, Alvey has you covered. IGCSE Tutors, A-Level Tutors, we have it all!";
 
 export const Route = createFileRoute("/_public/")({
   head: () => ({
@@ -34,18 +35,18 @@ const FALLBACK_LEVELS = [
     slug: "primary",
   },
   {
-    name: "Middle School",
-    description: "Middle school level subjects (grades 6-8)",
+    name: "Lower Secondary",
+    description: "Checkpoints (Grades 6-8)",
     slug: "middle school",
   },
   {
-    name: "High School",
-    description: "High school/Upper Secondary/IGCSE-GCSE",
+    name: "IGCSE/GCSE",
+    description: "High-school (Grades 9 & 10)",
     slug: "high school",
   },
   {
-    name: "College/A-Levels",
-    description: "College/High school/A-Levels",
+    name: "AS/A-Levels",
+    description: "Grades 11 & 12",
     slug: "College",
   },
   {
@@ -197,8 +198,7 @@ function Index() {
               variants={fadeInUp}
               className="text-xl text-muted-foreground dark:text-slate-300 max-w-xl leading-8"
             >
-              Learning shouldn't feel stressful, BUT it does.. :(
-              Sooo... Find yourself a Tutor right away!
+              Learning shouldn't feel stressful, We're here to prove that!
             </motion.p>
 
             <motion.div
@@ -296,7 +296,7 @@ duration-300
           {[
             {
               value: `${stats.tutors}`,
-              label: "Peak Tutors",
+              label: "Tutors",
             },
             {
               value: `${stats.members}`,
@@ -753,6 +753,210 @@ duration-300
         </div>
 
       </section >
+
+      {/* FAQ Section */}
+      <section className="py-24 bg-slate-50 dark:bg-[#08131A] border-t border-border/40">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.5 }}
+          className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8"
+        >
+          <div className="text-center mb-14">
+            <h2 className="text-4xl font-bold tracking-tight text-[#164E5E] dark:text-[#6FD4D8]">
+              Frequently Asked Questions
+            </h2>
+            <p className="mt-4 text-lg text-muted-foreground">
+              Everything you need to know about Alvey
+            </p>
+          </div>
+
+          {/* Students */}
+          <div className="mb-12">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-[#164E5E] dark:text-[#6FD4D8] mb-5 px-1">
+              For Students
+            </h3>
+            <div className="rounded-2xl border border-border/60 bg-white dark:bg-[#0D2330] overflow-hidden shadow-sm">
+              <Accordion type="single" collapsible className="divide-y divide-border/60">
+                <AccordionItem value="s1" className="border-none px-6">
+                  <AccordionTrigger className="text-sm font-semibold text-left py-5 hover:no-underline hover:text-[#164E5E] dark:hover:text-[#6FD4D8] transition-colors [&>svg]:text-[#164E5E] dark:[&>svg]:text-[#6FD4D8]">
+                    Is Alvey free for students?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-sm text-muted-foreground leading-7 pb-5">
+                    Yes. Students only pay the tutor's listed fees. Alvey does not charge students any additional platform fees.
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="s2" className="border-none px-6">
+                  <AccordionTrigger className="text-sm font-semibold text-left py-5 hover:no-underline hover:text-[#164E5E] dark:hover:text-[#6FD4D8] transition-colors [&>svg]:text-[#164E5E] dark:[&>svg]:text-[#6FD4D8]">
+                    How much do tutors cost?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-sm text-muted-foreground leading-7 pb-5">
+                    Tutors set their own prices. Lessons cannot be free, and Alvey may introduce minimum pricing guidelines in the future.
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="s3" className="border-none px-6">
+                  <AccordionTrigger className="text-sm font-semibold text-left py-5 hover:no-underline hover:text-[#164E5E] dark:hover:text-[#6FD4D8] transition-colors [&>svg]:text-[#164E5E] dark:[&>svg]:text-[#6FD4D8]">
+                    Can I speak to a tutor before paying?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-sm text-muted-foreground leading-7 pb-5">
+                    Yes. Students can communicate with tutors anonymously through Alvey without sharing personal contact information.
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="s4" className="border-none px-6">
+                  <AccordionTrigger className="text-sm font-semibold text-left py-5 hover:no-underline hover:text-[#164E5E] dark:hover:text-[#6FD4D8] transition-colors [&>svg]:text-[#164E5E] dark:[&>svg]:text-[#6FD4D8]">
+                    Can I have a trial or demo lesson?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-sm text-muted-foreground leading-7 pb-5">
+                    Yes. All Alvey tutors offer free demo lessons.
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="s5" className="border-none px-6">
+                  <AccordionTrigger className="text-sm font-semibold text-left py-5 hover:no-underline hover:text-[#164E5E] dark:hover:text-[#6FD4D8] transition-colors [&>svg]:text-[#164E5E] dark:[&>svg]:text-[#6FD4D8]">
+                    How does payment work?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-sm text-muted-foreground leading-7 pb-5">
+                    Students pay Alvey 100% upfront for the selected month or package. Tutors receive their earnings at the end of the month, after Alvey's 20% commission and any applicable refund considerations.
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="s6" className="border-none px-6">
+                  <AccordionTrigger className="text-sm font-semibold text-left py-5 hover:no-underline hover:text-[#164E5E] dark:hover:text-[#6FD4D8] transition-colors [&>svg]:text-[#164E5E] dark:[&>svg]:text-[#6FD4D8]">
+                    What happens if I'm not satisfied with my tutor?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-sm text-muted-foreground leading-7 pb-5">
+                    Students can contact Alvey with concerns, leave a review, and may be eligible for a refund or tutor change depending on the situation.
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="s7" className="border-none px-6">
+                  <AccordionTrigger className="text-sm font-semibold text-left py-5 hover:no-underline hover:text-[#164E5E] dark:hover:text-[#6FD4D8] transition-colors [&>svg]:text-[#164E5E] dark:[&>svg]:text-[#6FD4D8]">
+                    Which subjects and exam boards does Alvey support?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-sm text-muted-foreground leading-7 pb-5">
+                    Alvey currently supports IGCSE, AS &amp; A Level, and Checkpoint courses across Cambridge (CIE), Pearson Edexcel, and AQA. Additional curricula and university-level subjects may be introduced in the future.
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="s8" className="border-none px-6">
+                  <AccordionTrigger className="text-sm font-semibold text-left py-5 hover:no-underline hover:text-[#164E5E] dark:hover:text-[#6FD4D8] transition-colors [&>svg]:text-[#164E5E] dark:[&>svg]:text-[#6FD4D8]">
+                    How do students book lessons?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-sm text-muted-foreground leading-7 pb-5">
+                    Visit a tutor's profile and select Book a Demo. You'll then be guided through the process of contacting the tutor and arranging your lesson.
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="s9" className="border-none px-6">
+                  <AccordionTrigger className="text-sm font-semibold text-left py-5 hover:no-underline hover:text-[#164E5E] dark:hover:text-[#6FD4D8] transition-colors [&>svg]:text-[#164E5E] dark:[&>svg]:text-[#6FD4D8]">
+                    Are lessons recorded?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-sm text-muted-foreground leading-7 pb-5">
+                    Yes. Alvey is working on recorded lessons. Recordings will be available for viewing for a limited period and will not be downloadable.
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
+          </div>
+
+          {/* Tutors */}
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-widest text-[#164E5E] dark:text-[#6FD4D8] mb-5 px-1">
+              For Tutors
+            </h3>
+            <div className="rounded-2xl border border-border/60 bg-white dark:bg-[#0D2330] overflow-hidden shadow-sm">
+              <Accordion type="single" collapsible className="divide-y divide-border/60">
+                <AccordionItem value="t1" className="border-none px-6">
+                  <AccordionTrigger className="text-sm font-semibold text-left py-5 hover:no-underline hover:text-[#164E5E] dark:hover:text-[#6FD4D8] transition-colors [&>svg]:text-[#164E5E] dark:[&>svg]:text-[#6FD4D8]">
+                    How do I become an Alvey tutor?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-sm text-muted-foreground leading-7 pb-5">
+                    Complete the Alvey tutor application form. Our team reviews each application and decides whether to accept or reject it.
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="t2" className="border-none px-6">
+                  <AccordionTrigger className="text-sm font-semibold text-left py-5 hover:no-underline hover:text-[#164E5E] dark:hover:text-[#6FD4D8] transition-colors [&>svg]:text-[#164E5E] dark:[&>svg]:text-[#6FD4D8]">
+                    Are tutors paid a salary?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-sm text-muted-foreground leading-7 pb-5">
+                    No. Tutors are independent and earn based on the students they teach and the prices they set. Alvey takes a 20% commission from monthly fees.
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="t3" className="border-none px-6">
+                  <AccordionTrigger className="text-sm font-semibold text-left py-5 hover:no-underline hover:text-[#164E5E] dark:hover:text-[#6FD4D8] transition-colors [&>svg]:text-[#164E5E] dark:[&>svg]:text-[#6FD4D8]">
+                    How much can tutors earn?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-sm text-muted-foreground leading-7 pb-5">
+                    There is no fixed earning limit. Earnings depend on your rates and the number of students who choose to learn with you.
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="t4" className="border-none px-6">
+                  <AccordionTrigger className="text-sm font-semibold text-left py-5 hover:no-underline hover:text-[#164E5E] dark:hover:text-[#6FD4D8] transition-colors [&>svg]:text-[#164E5E] dark:[&>svg]:text-[#6FD4D8]">
+                    When do tutors receive their payments?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-sm text-muted-foreground leading-7 pb-5">
+                    Tutors are currently paid at the end of each month.
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="t5" className="border-none px-6">
+                  <AccordionTrigger className="text-sm font-semibold text-left py-5 hover:no-underline hover:text-[#164E5E] dark:hover:text-[#6FD4D8] transition-colors [&>svg]:text-[#164E5E] dark:[&>svg]:text-[#6FD4D8]">
+                    Can tutors set their own tutoring rates?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-sm text-muted-foreground leading-7 pb-5">
+                    Yes. Tutors set their own prices per class. Alvey has not yet established specific pricing limits, but tutors are expected to set reasonable rates.
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="t6" className="border-none px-6">
+                  <AccordionTrigger className="text-sm font-semibold text-left py-5 hover:no-underline hover:text-[#164E5E] dark:hover:text-[#6FD4D8] transition-colors [&>svg]:text-[#164E5E] dark:[&>svg]:text-[#6FD4D8]">
+                    What qualifications do I need to become a tutor?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-sm text-muted-foreground leading-7 pb-5">
+                    Tutors must have completed the subject at the level they wish to teach and normally achieve an A or A*. Alternatively, applicants may demonstrate their teaching ability through evidence such as testimonials, teaching videos, or past-paper results.
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="t7" className="border-none px-6">
+                  <AccordionTrigger className="text-sm font-semibold text-left py-5 hover:no-underline hover:text-[#164E5E] dark:hover:text-[#6FD4D8] transition-colors [&>svg]:text-[#164E5E] dark:[&>svg]:text-[#6FD4D8]">
+                    Does Alvey take a commission?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-sm text-muted-foreground leading-7 pb-5">
+                    Yes. Alvey takes a 20% commission from tutors' monthly fees.
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="t8" className="border-none px-6">
+                  <AccordionTrigger className="text-sm font-semibold text-left py-5 hover:no-underline hover:text-[#164E5E] dark:hover:text-[#6FD4D8] transition-colors [&>svg]:text-[#164E5E] dark:[&>svg]:text-[#6FD4D8]">
+                    Can tutors choose their availability?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-sm text-muted-foreground leading-7 pb-5">
+                    Yes. Tutors can choose and manage their own availability.
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="t9" className="border-none px-6">
+                  <AccordionTrigger className="text-sm font-semibold text-left py-5 hover:no-underline hover:text-[#164E5E] dark:hover:text-[#6FD4D8] transition-colors [&>svg]:text-[#164E5E] dark:[&>svg]:text-[#6FD4D8]">
+                    What tools does Alvey provide tutors?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-sm text-muted-foreground leading-7 pb-5">
+                    Alvey provides tools for lesson recordings, student communication, homework uploads, and earnings tracking. An integrated Alvey classroom is also planned.
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
+          </div>
+
+        </motion.div>
+      </section>
+
       <footer className="section-blend border-t bg-white dark:bg-[#08131A] dark:border-slate-800 [--section-blend-color:white] dark:[--section-blend-color:#08131A]">
 
         <div className="max-w-7xl mx-auto px-8 py-16">
@@ -929,10 +1133,6 @@ duration-300
 
             <p>
               © {new Date().getFullYear()} Alvey. All rights reserved.
-            </p>
-
-            <p className="font-medium">
-              Built with CHAII HAHAH by the Alvey Team
             </p>
 
           </div>

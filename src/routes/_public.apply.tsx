@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_public/apply")({
     meta: seoMeta({
       title: "Apply as a Tutor",
       description:
-        "Join Alvey as a verified private tutor. Apply with your academic credentials, subject specialties, and teaching experience.",
+        "Join the Alvey tutoring platform as a private tutor and find students online! Apply with your academic credentials, subject specialties, and teaching experience.",
       path: "/apply",
     }),
     links: seoLinks("/apply"),
@@ -360,10 +360,7 @@ function Apply() {
             <div className="p-6 bg-muted/30 rounded-xl space-y-4 border">
               <h3 className="font-semibold text-lg">Alvey Commission Terms</h3>
               <p className="text-sm text-muted-foreground">
-                Alvey will keep 40% fees from students you receive through our platform during the first month only. This money is used for maintaining and improving Alvey, including platform management, community support and growth, and advertising tutors like you!
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Disagreeing with this policy may lead to your application being rejected. From the second month onward, tutors keep 100% of their earnings.
+                Alvey keeps a 20% commission from the fees you receive through our platform every month. This money is used for maintaining and improving Alvey, including platform management, community support and growth, and advertising tutors like you!
               </p>
               <div className="flex items-center space-x-2 pt-2">
                 <Checkbox id="terms" checked={agreedToTerms} onCheckedChange={(c) => setAgreedToTerms(c === true)} />
