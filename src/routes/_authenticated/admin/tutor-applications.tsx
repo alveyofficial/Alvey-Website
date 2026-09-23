@@ -26,12 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -65,12 +60,11 @@ function ReviewModal({
 
   const id = (app.$id || app.id) as string;
 
-  const appName =
-    (app.full_name ||
-      app.fullName ||
-      app.email ||
-      app.Email_address ||
-      "Applicant") as string;
+  const appName = (app.full_name ||
+    app.fullName ||
+    app.email ||
+    app.Email_address ||
+    "Applicant") as string;
 
   const handleSaveNotes = async () => {
     setSaving(true);
@@ -103,13 +97,13 @@ function ReviewModal({
       const subjects = Array.isArray(app.subjects)
         ? (app.subjects as string[])
         : app.subjectName
-          ? [(app.subjectName as string)]
+          ? [app.subjectName as string]
           : ["General"];
 
       const levels = Array.isArray(app.levels)
         ? (app.levels as string[])
         : app.teachingLevel
-          ? [(app.teachingLevel as string)]
+          ? [app.teachingLevel as string]
           : ["General"];
 
       const languages = Array.isArray(app.languagesSpoken)
@@ -122,6 +116,7 @@ function ReviewModal({
 
       await DataStore.saveTutor({
         id: tutorId,
+        authUserId: userId ?? null,
         slug: name
           .trim()
           .toLowerCase()
@@ -130,38 +125,28 @@ function ReviewModal({
 
         name,
 
-        phone:
-          (app.phoneNumber || app.phone) as string | undefined,
+        phone: (app.phoneNumber || app.phone) as string | undefined,
 
-        discordUsername:
-          (app.discordUsername || app.discord_username) as string | undefined,
+        discordUsername: (app.discordUsername || app.discord_username) as string | undefined,
 
-        dateOfBirth:
-          (app.dateOfBirth || app.date_of_birth) as string | undefined,
+        dateOfBirth: (app.dateOfBirth || app.date_of_birth) as string | undefined,
 
-        countryOfResidence:
-          (app.countryOfResidence || app.country_of_residence) as string | undefined,
+        countryOfResidence: (app.countryOfResidence || app.country_of_residence) as
+          string | undefined,
 
-        avatar_url:
-          `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0f172a&color=ffffff&size=256`,
+        avatar_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0f172a&color=ffffff&size=256`,
 
-        headline:
-          (app.headline as string) || "Professional Educator",
+        headline: (app.headline as string) || "Professional Educator",
 
-        about:
-          ((app.teachingExperience || app.cover_letter || "") as string),
+        about: (app.teachingExperience || app.cover_letter || "") as string,
 
-        hourly_rate:
-          Number(app.oneOnOneRateUsd ?? app.hourlyRate ?? 40),
+        hourly_rate: Number(app.oneOnOneRateUsd ?? app.hourlyRate ?? 40),
 
-        rating_avg:
-          5,
+        rating_avg: 5,
 
-        rating_count:
-          0,
+        rating_count: 0,
 
-        years_experience:
-          Number(app.yearsExperience ?? app.years_experience ?? 0),
+        years_experience: Number(app.yearsExperience ?? app.years_experience ?? 0),
 
         languages,
 
@@ -169,95 +154,71 @@ function ReviewModal({
 
         levels,
 
-        availability:
-          (app.availability as string) || "Contact for availability",
+        availability: (app.availability as string) || "Contact for availability",
 
         // Qualifications
-        highestQualification:
-          (app.highestQualification || app.highest_qualification) as string | undefined,
+        highestQualification: (app.highestQualification || app.highest_qualification) as
+          string | undefined,
 
-        highestQualificationLink:
-          (app.highestQualificationLink || app.qualification_link) as string | undefined,
+        highestQualificationLink: (app.highestQualificationLink || app.qualification_link) as
+          string | undefined,
 
-        highestQualificationFileId:
-          (app.highestQualificationFileId || app.highest_qualification_file_id) as string | undefined,
+        highestQualificationFileId: (app.highestQualificationFileId ||
+          app.highest_qualification_file_id) as string | undefined,
 
-        highestQualificationFileName:
-          (app.highestQualificationFileName || app.highest_qualification_file_name) as string | undefined,
+        highestQualificationFileName: (app.highestQualificationFileName ||
+          app.highest_qualification_file_name) as string | undefined,
 
-        highestQualificationFileUrl:
-          (app.highestQualificationFileUrl || app.highest_qualification_file_url) as string | undefined,
+        highestQualificationFileUrl: (app.highestQualificationFileUrl ||
+          app.highest_qualification_file_url) as string | undefined,
 
-        examBoard:
-          (app.examBoard || app.exam_board) as string | undefined,
+        examBoard: (app.examBoard || app.exam_board) as string | undefined,
 
-        examResultSummary:
-          (app.examResultSummary || app.exam_result_summary) as string | undefined,
+        examResultSummary: (app.examResultSummary || app.exam_result_summary) as string | undefined,
 
-        resultDocumentLink:
-          (app.resultDocumentLink || app.result_document_link) as string | undefined,
+        resultDocumentLink: (app.resultDocumentLink || app.result_document_link) as
+          string | undefined,
 
-        resultDocumentFileId:
-          (app.resultDocumentFileId || app.result_document_file_id) as string | undefined,
+        resultDocumentFileId: (app.resultDocumentFileId || app.result_document_file_id) as
+          string | undefined,
 
-        resultDocumentFileName:
-          (app.resultDocumentFileName || app.result_document_file_name) as string | undefined,
+        resultDocumentFileName: (app.resultDocumentFileName || app.result_document_file_name) as
+          string | undefined,
 
-        resultDocumentFileUrl:
-          (app.resultDocumentFileUrl || app.result_document_file_url) as string | undefined,
+        resultDocumentFileUrl: (app.resultDocumentFileUrl || app.result_document_file_url) as
+          string | undefined,
 
         // Teaching
-        teachingExperience:
-          (app.teachingExperience || app.cover_letter) as string | undefined,
+        teachingExperience: (app.teachingExperience || app.cover_letter) as string | undefined,
 
-        teachingFormat:
-          (app.teachingFormat || app.teaching_format) as string | undefined,
+        teachingFormat: (app.teachingFormat || app.teaching_format) as string | undefined,
 
         // Pricing
-        oneOnOneRateUsd:
-          app.oneOnOneRateUsd != null
-            ? Number(app.oneOnOneRateUsd)
-            : undefined,
+        oneOnOneRateUsd: app.oneOnOneRateUsd != null ? Number(app.oneOnOneRateUsd) : undefined,
 
-        groupRateUsd:
-          app.groupRateUsd != null
-            ? Number(app.groupRateUsd)
-            : undefined,
+        groupRateUsd: app.groupRateUsd != null ? Number(app.groupRateUsd) : undefined,
 
-        maxGroupStudents:
-          app.maxGroupStudents != null
-            ? Number(app.maxGroupStudents)
-            : undefined,
+        maxGroupStudents: app.maxGroupStudents != null ? Number(app.maxGroupStudents) : undefined,
 
         weeklyClassesPerStudent:
-          app.weeklyClassesPerStudent != null
-            ? Number(app.weeklyClassesPerStudent)
-            : undefined,
+          app.weeklyClassesPerStudent != null ? Number(app.weeklyClassesPerStudent) : undefined,
 
         classDurationMinutes:
-          app.classDurationMinutes != null
-            ? Number(app.classDurationMinutes)
-            : undefined,
+          app.classDurationMinutes != null ? Number(app.classDurationMinutes) : undefined,
 
         // Social
-        videoLink:
-          app.videoLink as string | undefined,
+        videoLink: app.videoLink as string | undefined,
 
-        instagramHandle:
-          (app.instagramHandle || app.instagram_handle) as string | undefined,
+        instagramHandle: (app.instagramHandle || app.instagram_handle) as string | undefined,
 
-        testimonial:
-          app.testimonial as string | undefined,
+        testimonial: app.testimonial as string | undefined,
 
         // Admin
-        is_featured:
-          false,
+        is_featured: false,
 
-        is_verified:
-          true,
+        is_verified: true,
 
-        is_active:
-          true,
+        is_active: true,
       });
 
       // 3. Assign role
@@ -352,7 +313,10 @@ function ReviewModal({
                 {field("Instagram", app.instagramHandle || app.instagram_handle)}
                 {field("Country", app.countryOfResidence || app.country_of_residence)}
                 {field("Date of Birth", app.dateOfBirth || app.date_of_birth)}
-                {arrayField("Languages", app.languagesSpoken || app.languagesFluent || app.languages)}
+                {arrayField(
+                  "Languages",
+                  app.languagesSpoken || app.languagesFluent || app.languages,
+                )}
               </CardContent>
             </Card>
 
@@ -364,13 +328,19 @@ function ReviewModal({
                 </CardTitle>
               </CardHeader>
               <CardContent className="grid sm:grid-cols-2 gap-4">
-                {field("Highest Qualification", app.highestQualification || app.highest_qualification)}
+                {field(
+                  "Highest Qualification",
+                  app.highestQualification || app.highest_qualification,
+                )}
                 {field("Subject Name", app.subjectName || app.subject_name)}
                 {field("Subject Code", app.subjectCode || app.subject_code)}
                 {field("Exam Board", app.examBoard || app.exam_board)}
                 {field("Teaching Level", app.teachingLevel || app.teaching_level)}
                 {field("Teaching Format", app.teachingFormat || app.teaching_format)}
-                {field("Qualification Link", app.highestQualificationLink || app.qualification_link)}
+                {field(
+                  "Qualification Link",
+                  app.highestQualificationLink || app.qualification_link,
+                )}
               </CardContent>
             </Card>
 
@@ -414,8 +384,14 @@ function ReviewModal({
                 </CardTitle>
               </CardHeader>
               <CardContent className="grid sm:grid-cols-3 gap-4">
-                {field("1-on-1 Rate (USD)", app.oneOnOneRateUsd != null ? `$${app.oneOnOneRateUsd}` : null)}
-                {field("Group Rate (USD)", app.groupRateUsd != null ? `$${app.groupRateUsd}` : null)}
+                {field(
+                  "1-on-1 Rate (USD)",
+                  app.oneOnOneRateUsd != null ? `$${app.oneOnOneRateUsd}` : null,
+                )}
+                {field(
+                  "Group Rate (USD)",
+                  app.groupRateUsd != null ? `$${app.groupRateUsd}` : null,
+                )}
                 {field("Max Group Students", app.maxGroupStudents)}
                 {field("Weekly Classes / Student", app.weeklyClassesPerStudent)}
                 {field("Class Duration (min)", app.classDurationMinutes)}
@@ -572,12 +548,12 @@ function AdminTutorApplications() {
     const subjects = Array.isArray(app.subjects)
       ? (app.subjects as string[])
       : app.subjectName
-        ? [(app.subjectName as string)]
+        ? [app.subjectName as string]
         : ["General"];
     const levels = Array.isArray(app.levels)
       ? (app.levels as string[])
       : app.teachingLevel
-        ? [(app.teachingLevel as string)]
+        ? [app.teachingLevel as string]
         : ["General"];
     const languages = Array.isArray(app.languagesSpoken)
       ? (app.languagesSpoken as string[])
@@ -590,6 +566,7 @@ function AdminTutorApplications() {
     await DataStore.updateTutorApplicationStatus(id, "approved");
     await DataStore.saveTutor({
       id: tutorId,
+      authUserId: userId ?? null,
       slug: name
         .trim()
         .toLowerCase()
@@ -597,38 +574,28 @@ function AdminTutorApplications() {
         .replace(/^-|-$/g, ""),
       name,
 
-      phone:
-        (app.phoneNumber || app.phone) as string | undefined,
+      phone: (app.phoneNumber || app.phone) as string | undefined,
 
-      discordUsername:
-        (app.discordUsername || app.discord_username) as string | undefined,
+      discordUsername: (app.discordUsername || app.discord_username) as string | undefined,
 
-      dateOfBirth:
-        (app.dateOfBirth || app.date_of_birth) as string | undefined,
+      dateOfBirth: (app.dateOfBirth || app.date_of_birth) as string | undefined,
 
-      countryOfResidence:
-        (app.countryOfResidence || app.country_of_residence) as string | undefined,
+      countryOfResidence: (app.countryOfResidence || app.country_of_residence) as
+        string | undefined,
 
-      avatar_url:
-        `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0f172a&color=ffffff&size=256`,
+      avatar_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0f172a&color=ffffff&size=256`,
 
-      headline:
-        (app.headline as string) || "Professional Educator",
+      headline: (app.headline as string) || "Professional Educator",
 
-      about:
-        ((app.teachingExperience || app.cover_letter || "") as string),
+      about: (app.teachingExperience || app.cover_letter || "") as string,
 
-      hourly_rate:
-        Number(app.oneOnOneRateUsd ?? app.hourlyRate ?? 40),
+      hourly_rate: Number(app.oneOnOneRateUsd ?? app.hourlyRate ?? 40),
 
-      rating_avg:
-        5,
+      rating_avg: 5,
 
-      rating_count:
-        0,
+      rating_count: 0,
 
-      years_experience:
-        Number(app.yearsExperience ?? app.years_experience ?? 0),
+      years_experience: Number(app.yearsExperience ?? app.years_experience ?? 0),
 
       languages,
 
@@ -636,95 +603,71 @@ function AdminTutorApplications() {
 
       levels,
 
-      availability:
-        (app.availability as string) || "Contact for availability",
+      availability: (app.availability as string) || "Contact for availability",
 
       // Qualifications
-      highestQualification:
-        (app.highestQualification || app.highest_qualification) as string | undefined,
+      highestQualification: (app.highestQualification || app.highest_qualification) as
+        string | undefined,
 
-      highestQualificationLink:
-        (app.highestQualificationLink || app.qualification_link) as string | undefined,
+      highestQualificationLink: (app.highestQualificationLink || app.qualification_link) as
+        string | undefined,
 
-      highestQualificationFileId:
-        (app.highestQualificationFileId || app.highest_qualification_file_id) as string | undefined,
+      highestQualificationFileId: (app.highestQualificationFileId ||
+        app.highest_qualification_file_id) as string | undefined,
 
-      highestQualificationFileName:
-        (app.highestQualificationFileName || app.highest_qualification_file_name) as string | undefined,
+      highestQualificationFileName: (app.highestQualificationFileName ||
+        app.highest_qualification_file_name) as string | undefined,
 
-      highestQualificationFileUrl:
-        (app.highestQualificationFileUrl || app.highest_qualification_file_url) as string | undefined,
+      highestQualificationFileUrl: (app.highestQualificationFileUrl ||
+        app.highest_qualification_file_url) as string | undefined,
 
-      examBoard:
-        (app.examBoard || app.exam_board) as string | undefined,
+      examBoard: (app.examBoard || app.exam_board) as string | undefined,
 
-      examResultSummary:
-        (app.examResultSummary || app.exam_result_summary) as string | undefined,
+      examResultSummary: (app.examResultSummary || app.exam_result_summary) as string | undefined,
 
-      resultDocumentLink:
-        (app.resultDocumentLink || app.result_document_link) as string | undefined,
+      resultDocumentLink: (app.resultDocumentLink || app.result_document_link) as
+        string | undefined,
 
-      resultDocumentFileId:
-        (app.resultDocumentFileId || app.result_document_file_id) as string | undefined,
+      resultDocumentFileId: (app.resultDocumentFileId || app.result_document_file_id) as
+        string | undefined,
 
-      resultDocumentFileName:
-        (app.resultDocumentFileName || app.result_document_file_name) as string | undefined,
+      resultDocumentFileName: (app.resultDocumentFileName || app.result_document_file_name) as
+        string | undefined,
 
-      resultDocumentFileUrl:
-        (app.resultDocumentFileUrl || app.result_document_file_url) as string | undefined,
+      resultDocumentFileUrl: (app.resultDocumentFileUrl || app.result_document_file_url) as
+        string | undefined,
 
       // Teaching
-      teachingExperience:
-        (app.teachingExperience || app.cover_letter) as string | undefined,
+      teachingExperience: (app.teachingExperience || app.cover_letter) as string | undefined,
 
-      teachingFormat:
-        (app.teachingFormat || app.teaching_format) as string | undefined,
+      teachingFormat: (app.teachingFormat || app.teaching_format) as string | undefined,
 
       // Pricing
-      oneOnOneRateUsd:
-        app.oneOnOneRateUsd != null
-          ? Number(app.oneOnOneRateUsd)
-          : undefined,
+      oneOnOneRateUsd: app.oneOnOneRateUsd != null ? Number(app.oneOnOneRateUsd) : undefined,
 
-      groupRateUsd:
-        app.groupRateUsd != null
-          ? Number(app.groupRateUsd)
-          : undefined,
+      groupRateUsd: app.groupRateUsd != null ? Number(app.groupRateUsd) : undefined,
 
-      maxGroupStudents:
-        app.maxGroupStudents != null
-          ? Number(app.maxGroupStudents)
-          : undefined,
+      maxGroupStudents: app.maxGroupStudents != null ? Number(app.maxGroupStudents) : undefined,
 
       weeklyClassesPerStudent:
-        app.weeklyClassesPerStudent != null
-          ? Number(app.weeklyClassesPerStudent)
-          : undefined,
+        app.weeklyClassesPerStudent != null ? Number(app.weeklyClassesPerStudent) : undefined,
 
       classDurationMinutes:
-        app.classDurationMinutes != null
-          ? Number(app.classDurationMinutes)
-          : undefined,
+        app.classDurationMinutes != null ? Number(app.classDurationMinutes) : undefined,
 
       // Social
-      videoLink:
-        app.videoLink as string | undefined,
+      videoLink: app.videoLink as string | undefined,
 
-      instagramHandle:
-        (app.instagramHandle || app.instagram_handle) as string | undefined,
+      instagramHandle: (app.instagramHandle || app.instagram_handle) as string | undefined,
 
-      testimonial:
-        app.testimonial as string | undefined,
+      testimonial: app.testimonial as string | undefined,
 
       // Admin
-      is_featured:
-        false,
+      is_featured: false,
 
-      is_verified:
-        true,
+      is_verified: true,
 
-      is_active:
-        true,
+      is_active: true,
     });
     if (userId) await DataStore.assignUserRole(userId, "tutor");
     if (email) await DataStore.addToTeam("tutors", email, userId);
@@ -740,15 +683,17 @@ function AdminTutorApplications() {
   };
 
   // Active = not rejected/archived; archived = rejected
-  const active = applications.filter(
-    (a) => a.status !== "rejected",
-  );
+  const active = applications.filter((a) => a.status !== "rejected");
   const visible = (filterStatus === "active" ? active : applications).filter((a) => {
     if (!search) return true;
     const q = search.toLowerCase();
     return (
-      String(a.full_name || a.fullName || "").toLowerCase().includes(q) ||
-      String(a.email || "").toLowerCase().includes(q) ||
+      String(a.full_name || a.fullName || "")
+        .toLowerCase()
+        .includes(q) ||
+      String(a.email || "")
+        .toLowerCase()
+        .includes(q) ||
       String(a.subjectName || (Array.isArray(a.subjects) ? a.subjects[0] : "") || "")
         .toLowerCase()
         .includes(q)

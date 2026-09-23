@@ -1,11 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, no-empty */
 import { ID, Permission, Query, Role } from "appwrite";
-import { appwrite, APPWRITE_DATABASE_ID, APPWRITE_ENDPOINT, APPWRITE_PROJECT_ID, getCurrentUser } from "@/integrations/appwrite/client";
-
+import {
+  appwrite,
+  APPWRITE_DATABASE_ID,
+  APPWRITE_ENDPOINT,
+  APPWRITE_PROJECT_ID,
+  getCurrentUser,
+} from "@/integrations/appwrite/client";
 
 export interface Tutor {
   id: string;
   slug: string;
+  authUserId?: string | null;
 
   // Basic information
   name: string;
@@ -149,7 +155,6 @@ export interface CMSContent {
   faqs: { question: string; answer: string; category: string }[];
 }
 
-
 const defaultTutors: Tutor[] = [
   {
     id: "tutor_1",
@@ -158,8 +163,7 @@ const defaultTutors: Tutor[] = [
     avatar_url:
       "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
     headline: "A test tutor, the headline shows here.",
-    about:
-      "I am not a tutor, this profile is fake. and this section is my about.",
+    about: "I am not a tutor, this profile is fake. and this section is my about.",
     hourly_rate: 67,
     rating_avg: 6.7,
     rating_count: 69,
@@ -178,8 +182,7 @@ const defaultTestimonials: Testimonial[] = [
     id: "test_1",
     name: "Fake testimonial (Name shows here)",
     rating: 5,
-    comment:
-      "Dr ghost helped me alot... the message shows here",
+    comment: "Dr ghost helped me alot... the message shows here",
     role: "role of the person that wrote this review shows here. usually the student or thier parent",
     is_featured: true,
   },
@@ -303,13 +306,7 @@ const defaultSubjects = [
   "Arabic",
   "Quran",
 ];
-const defaultLevels = [
-  "Secondary",
-  "GCSE",
-  "IGCSE",
-  "A-Level",
-  "University",
-];
+const defaultLevels = ["Secondary", "GCSE", "IGCSE", "A-Level", "University"];
 
 const KEYS = {
   TUTORS: "tl_tutors",
@@ -386,10 +383,10 @@ function safeNumber(value: unknown, fallback = 0): number {
 function nameToSlug(name: string): string {
   return name
     .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, "")   // strip punctuation / special chars
+    .replace(/[^a-z0-9\s-]/g, "") // strip punctuation / special chars
     .trim()
-    .replace(/\s+/g, "-")            // spaces → hyphens
-    .replace(/-+/g, "-");            // collapse repeated hyphens
+    .replace(/\s+/g, "-") // spaces → hyphens
+    .replace(/-+/g, "-"); // collapse repeated hyphens
 }
 
 function initials(name: string): string {
@@ -402,7 +399,6 @@ function initials(name: string): string {
       .slice(0, 2) || "TL"
   );
 }
-
 
 function avatarFor(name: string): string {
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0f172a&color=ffffff&size=256`;
@@ -452,7 +448,7 @@ async function upsertDocument(collectionId: string, documentId: string, data: Re
         databaseId: APPWRITE_DATABASE_ID,
         collectionId,
         documentId,
-        data
+        data,
       });
     }
     throw e;
@@ -466,7 +462,6 @@ async function deleteDocument(collectionId: string, documentId: string) {
     documentId,
   });
 }
-
 
 async function createDocument(
   collectionId: string,
@@ -485,59 +480,39 @@ async function createDocument(
 }
 
 function mapTutorDoc(doc: any): Tutor {
-  const name = safeString(
-    doc.displayName || doc.name || doc.fullName,
-    "Certified Tutor",
-  );
+  const name = safeString(doc.displayName || doc.name || doc.fullName, "Certified Tutor");
 
   // Prefer an explicit slug stored in Appwrite, then fall back to
   // generating one from the tutor's display name so the URL is always
   // human-readable and stable.
-  const slug =
-    safeString(doc.slug, "") ||
-    nameToSlug(name) ||
-    (doc.$id as string);
+  const slug = safeString(doc.slug, "") || nameToSlug(name) || (doc.$id as string);
 
   return {
     id: doc.$id || doc.id,
     slug,
+    authUserId: safeString(doc.authUserId) || null,
 
     name,
 
-    avatar_url:
-      doc.avatarUrl ||
-      avatarFor(doc.displayName || doc.name || "Tutor"),
+    avatar_url: doc.avatarUrl || avatarFor(doc.displayName || doc.name || "Tutor"),
 
     headline: safeString(doc.headline),
 
-    about: safeString(
-      doc.fullBio || doc.shortBio,
-    ),
+    about: safeString(doc.fullBio || doc.shortBio),
 
-    hourly_rate: safeNumber(
-      doc.hourlyRate ?? doc.hourly_rate,
-    ),
+    hourly_rate: safeNumber(doc.hourlyRate ?? doc.hourly_rate),
 
-    rating_avg: safeNumber(
-      doc.rating ?? doc.rating_avg,
-    ),
+    rating_avg: safeNumber(doc.rating ?? doc.rating_avg),
 
-    rating_count: safeNumber(
-      doc.reviewCount ?? doc.rating_count,
-    ),
+    rating_count: safeNumber(doc.reviewCount ?? doc.rating_count),
 
-    years_experience: safeNumber(
-      doc.experienceYears ?? doc.years_experience,
-    ),
+    years_experience: safeNumber(doc.experienceYears ?? doc.years_experience),
 
     languages: asArray(doc.languages || doc.languagesSpoken),
     subjects: asArray(doc.subjects),
     levels: asArray(doc.levels || doc.teachingLevel),
 
-    availability: safeString(
-      doc.availability,
-      "Contact tutor",
-    ),
+    availability: safeString(doc.availability, "Contact tutor"),
 
     is_featured: safeBool(doc.featured),
     is_verified: safeBool(doc.verified),
@@ -568,6 +543,91 @@ function mapTutorDoc(doc: any): Tutor {
   };
 }
 
+async function getCurrentAuthIdentity(): Promise<{ id: string; email: string } | null> {
+  try {
+    const user = await getCurrentUser();
+    const id = safeString(user?.id ?? user?.$id);
+    if (!id) return null;
+    return {
+      id,
+      email: safeString(user?.email),
+    };
+  } catch {
+    return null;
+  }
+}
+
+function uniqueIds(ids: Array<string | null | undefined>): string[] {
+  return [
+    ...new Set(
+      ids.filter((value): value is string => typeof value === "string" && value.length > 0),
+    ),
+  ];
+}
+
+async function resolveTutorIdCandidates(tutorId: string): Promise<string[]> {
+  const ids = new Set<string>([tutorId]);
+
+  try {
+    const directDoc = await getDocument(COLLECTIONS.TUTOR_PROFILES, tutorId);
+    const linkedAuthUserId = safeString(directDoc?.authUserId);
+    if (linkedAuthUserId) ids.add(linkedAuthUserId);
+  } catch {}
+
+  const identity = await getCurrentAuthIdentity();
+  if (!identity || identity.id !== tutorId) return [...ids];
+
+  const [byAuthUserId, byEmail] = await Promise.all([
+    listDocuments(COLLECTIONS.TUTOR_PROFILES, [
+      Query.equal("authUserId", identity.id),
+      Query.limit(20),
+    ]),
+    identity.email
+      ? listDocuments(COLLECTIONS.TUTOR_PROFILES, [
+          Query.equal("contactEmail", identity.email),
+          Query.limit(20),
+        ])
+      : Promise.resolve([] as any[]),
+  ]);
+
+  for (const doc of [...byAuthUserId, ...byEmail]) {
+    const profileId = safeString(doc.$id || doc.id);
+    const linkedAuthUserId = safeString(doc.authUserId);
+    if (profileId) ids.add(profileId);
+    if (linkedAuthUserId) ids.add(linkedAuthUserId);
+  }
+
+  return [...ids];
+}
+
+async function resolveStudentIdCandidates(studentId: string): Promise<string[]> {
+  const ids = new Set<string>([studentId]);
+
+  try {
+    const directDoc = await getDocument(COLLECTIONS.USERS, studentId);
+    const linkedAuthUserId = safeString(directDoc?.authUserId);
+    if (linkedAuthUserId) ids.add(linkedAuthUserId);
+  } catch {}
+
+  const identity = await getCurrentAuthIdentity();
+  if (!identity || identity.id !== studentId) return [...ids];
+
+  const [byAuthUserId, byEmail] = await Promise.all([
+    listDocuments(COLLECTIONS.USERS, [Query.equal("authUserId", identity.id), Query.limit(20)]),
+    identity.email
+      ? listDocuments(COLLECTIONS.USERS, [Query.equal("email", identity.email), Query.limit(20)])
+      : Promise.resolve([] as any[]),
+  ]);
+
+  for (const doc of [...byAuthUserId, ...byEmail]) {
+    const userDocId = safeString(doc.$id || doc.id);
+    const linkedAuthUserId = safeString(doc.authUserId);
+    if (userDocId) ids.add(userDocId);
+    if (linkedAuthUserId) ids.add(linkedAuthUserId);
+  }
+
+  return [...ids];
+}
 
 function mapReviewDoc(doc: any): Review {
   return {
@@ -640,7 +700,7 @@ function asObject<T extends Record<string, any>>(value: unknown, fallback: T): T
     try {
       const parsed = JSON.parse(value);
       if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) return parsed as T;
-    } catch { }
+    } catch {}
   }
   return fallback;
 }
@@ -649,7 +709,7 @@ function parseJson(value: unknown) {
   if (typeof value === "string" && value.trim()) {
     try {
       return JSON.parse(value);
-    } catch { }
+    } catch {}
   }
   return value;
 }
@@ -665,15 +725,10 @@ export const DataStore = {
 
     await upsertDocument(COLLECTIONS.USERS, user.id, {
       authUserId: user.id,
-      email: safeString(
-        user.email,
-        existing?.email ?? `${user.id}@tutorslink.local`
-      ),
+      email: safeString(user.email, existing?.email ?? `${user.id}@tutorslink.local`),
       displayName: safeString(
         user.displayName,
-        existing?.displayName ??
-        user.email?.split("@")[0] ??
-        "Alvey User"
+        existing?.displayName ?? user.email?.split("@")[0] ?? "Alvey User",
       ),
 
       // KEEP THE EXISTING ROLE
@@ -684,20 +739,22 @@ export const DataStore = {
     });
   },
   getUserRecord: async (userId: string): Promise<any | null> => {
-    try {
-      return await getDocument(COLLECTIONS.USERS, userId);
-    } catch {
-      return null;
+    const candidates = await resolveStudentIdCandidates(userId);
+
+    for (const candidateId of candidates) {
+      try {
+        const doc = await getDocument(COLLECTIONS.USERS, candidateId);
+        if (doc) return doc;
+      } catch {}
     }
+
+    return null;
   },
 
   // --- TUTORS ---
   getTutors: async (): Promise<Tutor[]> => {
     try {
-      const docs = await listDocuments(
-        COLLECTIONS.TUTOR_PROFILES,
-        [Query.equal("active", true)]
-      );
+      const docs = await listDocuments(COLLECTIONS.TUTOR_PROFILES, [Query.equal("active", true)]);
 
       console.log("APPWRITE TUTOR DOCS:", docs);
       console.log("APPWRITE TUTOR COUNT:", docs.length);
@@ -710,11 +767,10 @@ export const DataStore = {
     }
   },
 
-
-
   getTutorById: async (id: string): Promise<Tutor | null> => {
+    const aliases = await resolveTutorIdCandidates(id);
     const tutors = await DataStore.getTutors();
-    return tutors.find((t) => t.id === id) || null;
+    return tutors.find((t) => aliases.includes(t.id)) || null;
   },
 
   /**
@@ -723,14 +779,8 @@ export const DataStore = {
    */
   getTutorBySlug: async (slug: string): Promise<Tutor | null> => {
     const tutors = await DataStore.getTutors();
-    return (
-      tutors.find((t) => t.slug === slug) ||
-      tutors.find((t) => t.id === slug) ||
-      null
-    );
+    return tutors.find((t) => t.slug === slug) || tutors.find((t) => t.id === slug) || null;
   },
-
-
 
   saveTutor: async (tutor: Tutor): Promise<void> => {
     const payload = {
@@ -760,112 +810,75 @@ export const DataStore = {
       levels: tutor.levels ?? [],
 
       // Qualification
-      highestQualification:
-        tutor.highestQualification ?? null,
+      highestQualification: tutor.highestQualification ?? null,
 
-      highestQualificationLink:
-        tutor.highestQualificationLink ?? null,
+      highestQualificationLink: tutor.highestQualificationLink ?? null,
 
-      highestQualificationFileId:
-        tutor.highestQualificationFileId ?? null,
+      highestQualificationFileId: tutor.highestQualificationFileId ?? null,
 
-      highestQualificationFileName:
-        tutor.highestQualificationFileName ?? null,
+      highestQualificationFileName: tutor.highestQualificationFileName ?? null,
 
-      highestQualificationFileUrl:
-        tutor.highestQualificationFileUrl?.trim()
-          ? tutor.highestQualificationFileUrl.trim()
-          : undefined,
+      highestQualificationFileUrl: tutor.highestQualificationFileUrl?.trim()
+        ? tutor.highestQualificationFileUrl.trim()
+        : undefined,
 
-      examBoard:
-        tutor.examBoard ?? null,
+      examBoard: tutor.examBoard ?? null,
 
-      examResultSummary:
-        tutor.examResultSummary ?? null,
+      examResultSummary: tutor.examResultSummary ?? null,
 
-      resultDocumentLink:
-        tutor.resultDocumentLink?.trim()
-          ? tutor.resultDocumentLink.trim()
-          : undefined,
+      resultDocumentLink: tutor.resultDocumentLink?.trim()
+        ? tutor.resultDocumentLink.trim()
+        : undefined,
 
-      resultDocumentFileId:
-        tutor.resultDocumentFileId ?? null,
+      resultDocumentFileId: tutor.resultDocumentFileId ?? null,
 
-      resultDocumentFileName:
-        tutor.resultDocumentFileName ?? null,
+      resultDocumentFileName: tutor.resultDocumentFileName ?? null,
 
-      resultDocumentFileUrl:
-        tutor.resultDocumentFileUrl?.trim()
-          ? tutor.resultDocumentFileUrl.trim()
-          : undefined,
+      resultDocumentFileUrl: tutor.resultDocumentFileUrl?.trim()
+        ? tutor.resultDocumentFileUrl.trim()
+        : undefined,
 
-      teachingExperience:
-        tutor.teachingExperience ?? null,
+      teachingExperience: tutor.teachingExperience ?? null,
 
-      teachingFormat:
-        tutor.teachingFormat ?? "online",
+      teachingFormat: tutor.teachingFormat ?? "online",
 
       // Pricing
-      oneOnOneRateUsd:
-        tutor.oneOnOneRateUsd ??
-        tutor.hourly_rate ??
-        0,
+      oneOnOneRateUsd: tutor.oneOnOneRateUsd ?? tutor.hourly_rate ?? 0,
 
-      groupRateUsd:
-        tutor.groupRateUsd ?? 0,
+      groupRateUsd: tutor.groupRateUsd ?? 0,
 
-      maxGroupStudents:
-        tutor.maxGroupStudents ?? 1,
+      maxGroupStudents: tutor.maxGroupStudents ?? 1,
 
-      weeklyClassesPerStudent:
-        tutor.weeklyClassesPerStudent ?? 1,
+      weeklyClassesPerStudent: tutor.weeklyClassesPerStudent ?? 1,
 
-      classDurationMinutes:
-        tutor.classDurationMinutes ?? 60,
+      classDurationMinutes: tutor.classDurationMinutes ?? 60,
 
       // Extra profile
-      videoLink:
-        tutor.videoLink?.trim()
-          ? tutor.videoLink.trim()
-          : undefined,
+      videoLink: tutor.videoLink?.trim() ? tutor.videoLink.trim() : undefined,
 
-      instagramHandle:
-        tutor.instagramHandle ?? null,
+      instagramHandle: tutor.instagramHandle ?? null,
 
-      testimonial:
-        tutor.testimonial ?? null,
+      testimonial: tutor.testimonial ?? null,
 
-      responseTime:
-        tutor.responseTime ?? "Within 24 hours",
+      responseTime: tutor.responseTime ?? "Within 24 hours",
 
-      availability:
-        tutor.availability ?? "",
+      availability: tutor.availability ?? "",
 
       // Status
-      publicBadges:
-        tutor.is_verified ? ["Verified"] : [],
+      publicBadges: tutor.is_verified ? ["Verified"] : [],
 
-      featured:
-        tutor.is_featured ?? false,
+      featured: tutor.is_featured ?? false,
 
-      verified:
-        tutor.is_verified ?? false,
+      verified: tutor.is_verified ?? false,
 
-      active:
-        tutor.is_active ?? true,
+      active: tutor.is_active ?? true,
     };
 
-    await upsertDocument(
-      COLLECTIONS.TUTOR_PROFILES,
-      tutor.id,
-      payload
-    );
+    await upsertDocument(COLLECTIONS.TUTOR_PROFILES, tutor.id, payload);
 
     const tutors = await DataStore.getTutors();
 
-    const idx = tutors.findIndex(
-      (t) => t.id === tutor.id
-    );
+    const idx = tutors.findIndex((t) => t.id === tutor.id);
 
     if (idx !== -1) {
       tutors[idx] = tutor;
@@ -876,91 +889,42 @@ export const DataStore = {
     setLocal(KEYS.TUTORS, tutors);
   },
 
-
-  updateTutorProfile: async (
-    tutor: Partial<Tutor> & { id: string }
-  ): Promise<void> => {
-    const existing = (await DataStore.getAllTutors()).find(
-      (t) => t.id === tutor.id
-    );
+  updateTutorProfile: async (tutor: Partial<Tutor> & { id: string }): Promise<void> => {
+    const existing = (await DataStore.getAllTutors()).find((t) => t.id === tutor.id);
 
     const merged: Tutor = {
       id: tutor.id,
 
-      name:
-        tutor.name ??
-        existing?.name ??
-        "Certified Tutor",
+      name: tutor.name ?? existing?.name ?? "Certified Tutor",
 
-      avatar_url:
-        tutor.avatar_url ??
-        existing?.avatar_url ??
-        avatarFor(tutor.name || "Tutor"),
+      avatar_url: tutor.avatar_url ?? existing?.avatar_url ?? avatarFor(tutor.name || "Tutor"),
 
-      headline:
-        tutor.headline ??
-        existing?.headline ??
-        "Alvey Educator",
+      headline: tutor.headline ?? existing?.headline ?? "Alvey Educator",
 
-      about:
-        tutor.about ??
-        existing?.about ??
-        "",
+      about: tutor.about ?? existing?.about ?? "",
 
-      hourly_rate:
-        tutor.hourly_rate ??
-        existing?.hourly_rate ??
-        40,
+      hourly_rate: tutor.hourly_rate ?? existing?.hourly_rate ?? 40,
 
-      rating_avg:
-        tutor.rating_avg ??
-        existing?.rating_avg ??
-        5,
+      rating_avg: tutor.rating_avg ?? existing?.rating_avg ?? 5,
 
-      rating_count:
-        tutor.rating_count ??
-        existing?.rating_count ??
-        0,
+      rating_count: tutor.rating_count ?? existing?.rating_count ?? 0,
 
-      years_experience:
-        tutor.years_experience ??
-        existing?.years_experience ??
-        0,
+      years_experience: tutor.years_experience ?? existing?.years_experience ?? 0,
 
-      languages:
-        tutor.languages ??
-        existing?.languages ??
-        ["English"],
+      languages: tutor.languages ?? existing?.languages ?? ["English"],
 
-      subjects:
-        tutor.subjects ??
-        existing?.subjects ??
-        [],
+      subjects: tutor.subjects ?? existing?.subjects ?? [],
 
-      levels:
-        tutor.levels ??
-        existing?.levels ??
-        [],
+      levels: tutor.levels ?? existing?.levels ?? [],
 
-      is_featured:
-        tutor.is_featured ??
-        existing?.is_featured ??
-        false,
+      is_featured: tutor.is_featured ?? existing?.is_featured ?? false,
 
-      is_verified:
-        tutor.is_verified ??
-        existing?.is_verified ??
-        false,
+      is_verified: tutor.is_verified ?? existing?.is_verified ?? false,
 
-      slug:
-        tutor.slug ??
-        existing?.slug ??
-        tutor.id,
+      slug: tutor.slug ?? existing?.slug ?? tutor.id,
 
       availability:
-        tutor.availability ??
-        existing?.availability ??
-        "Flexible schedule (contact us)",
+        tutor.availability ?? existing?.availability ?? "Flexible schedule (contact us)",
     };
 
     const payload = {
@@ -968,256 +932,149 @@ export const DataStore = {
       // Public profile
       // ─────────────────────────────────────────────
 
-      slug:
-        tutor.slug ??
-        existing?.slug ??
-        merged.id,
+      slug: tutor.slug ?? existing?.slug ?? merged.id,
 
-      displayName:
-        merged.name,
+      displayName: merged.name,
 
-      headline:
-        merged.headline,
+      headline: merged.headline,
 
-      shortBio:
-        merged.about.slice(0, 240),
+      shortBio: merged.about.slice(0, 240),
 
-      fullBio:
-        merged.about,
+      fullBio: merged.about,
 
-      avatarInitials:
-        initials(merged.name),
+      avatarInitials: initials(merged.name),
 
-      avatarUrl:
-        merged.avatar_url || null,
+      avatarUrl: merged.avatar_url || null,
 
-      education:
-        [],
+      education: [],
 
-      subjects:
-        merged.subjects,
+      subjects: merged.subjects,
 
-      levels:
-        merged.levels,
+      levels: merged.levels,
 
-      languages:
-        merged.languages,
+      languages: merged.languages,
 
-      publicBadges:
-        merged.is_verified
-          ? ["Verified"]
-          : [],
+      publicBadges: merged.is_verified ? ["Verified"] : [],
 
-      responseTime:
-        tutor.responseTime ??
-        existing?.responseTime ??
-        "Within 24 hours",
+      responseTime: tutor.responseTime ?? existing?.responseTime ?? "Within 24 hours",
 
-      availability:
-        merged.availability,
+      availability: merged.availability,
 
       // ─────────────────────────────────────────────
       // Contact
       // ─────────────────────────────────────────────
 
-      contactEmail:
-        tutor.email ??
-        existing?.email ??
+      contactEmail: tutor.email ?? existing?.email ?? null,
+
+      authUserId:
+        (tutor as Tutor & { authUserId?: string | null }).authUserId ??
+        existing?.authUserId ??
         null,
 
-      contactUrl:
-        tutor.contactUrl ??
-        existing?.contactUrl ??
-        null,
+      contactUrl: tutor.contactUrl ?? existing?.contactUrl ?? null,
 
-      inquiryUrl:
-        tutor.inquiryUrl ??
-        existing?.inquiryUrl ??
-        null,
+      inquiryUrl: tutor.inquiryUrl ?? existing?.inquiryUrl ?? null,
 
-      phone:
-        tutor.phone ??
-        existing?.phone ??
-        null,
+      phone: tutor.phone ?? existing?.phone ?? null,
 
-      discordUsername:
-        tutor.discordUsername ??
-        existing?.discordUsername ??
-        null,
+      discordUsername: tutor.discordUsername ?? existing?.discordUsername ?? null,
 
-      countryOfResidence:
-        tutor.countryOfResidence ??
-        existing?.countryOfResidence ??
-        null,
+      countryOfResidence: tutor.countryOfResidence ?? existing?.countryOfResidence ?? null,
 
       // ─────────────────────────────────────────────
       // Personal
       // ─────────────────────────────────────────────
 
-      dateOfBirth:
-        tutor.dateOfBirth ??
-        existing?.dateOfBirth ??
-        null,
+      dateOfBirth: tutor.dateOfBirth ?? existing?.dateOfBirth ?? null,
 
       // ─────────────────────────────────────────────
       // Qualifications
       // ─────────────────────────────────────────────
 
-      highestQualification:
-        tutor.highestQualification ??
-        existing?.highestQualification ??
-        null,
+      highestQualification: tutor.highestQualification ?? existing?.highestQualification ?? null,
 
       highestQualificationLink:
-        tutor.highestQualificationLink ??
-        existing?.highestQualificationLink ??
-        null,
+        tutor.highestQualificationLink ?? existing?.highestQualificationLink ?? null,
 
       highestQualificationFileId:
-        tutor.highestQualificationFileId ??
-        existing?.highestQualificationFileId ??
-        null,
+        tutor.highestQualificationFileId ?? existing?.highestQualificationFileId ?? null,
 
       highestQualificationFileName:
-        tutor.highestQualificationFileName ??
-        existing?.highestQualificationFileName ??
-        null,
+        tutor.highestQualificationFileName ?? existing?.highestQualificationFileName ?? null,
 
       highestQualificationFileUrl:
-        tutor.highestQualificationFileUrl ??
-        existing?.highestQualificationFileUrl ??
-        null,
+        tutor.highestQualificationFileUrl ?? existing?.highestQualificationFileUrl ?? null,
 
-      examBoard:
-        tutor.examBoard ??
-        existing?.examBoard ??
-        null,
+      examBoard: tutor.examBoard ?? existing?.examBoard ?? null,
 
-      examResultSummary:
-        tutor.examResultSummary ??
-        existing?.examResultSummary ??
-        null,
+      examResultSummary: tutor.examResultSummary ?? existing?.examResultSummary ?? null,
 
-      resultDocumentLink:
-        tutor.resultDocumentLink ??
-        existing?.resultDocumentLink ??
-        null,
+      resultDocumentLink: tutor.resultDocumentLink ?? existing?.resultDocumentLink ?? null,
 
-      resultDocumentFileId:
-        tutor.resultDocumentFileId ??
-        existing?.resultDocumentFileId ??
-        null,
+      resultDocumentFileId: tutor.resultDocumentFileId ?? existing?.resultDocumentFileId ?? null,
 
       resultDocumentFileName:
-        tutor.resultDocumentFileName ??
-        existing?.resultDocumentFileName ??
-        null,
+        tutor.resultDocumentFileName ?? existing?.resultDocumentFileName ?? null,
 
-      resultDocumentFileUrl:
-        tutor.resultDocumentFileUrl ??
-        existing?.resultDocumentFileUrl ??
-        null,
+      resultDocumentFileUrl: tutor.resultDocumentFileUrl ?? existing?.resultDocumentFileUrl ?? null,
 
       // ─────────────────────────────────────────────
       // Teaching
       // ─────────────────────────────────────────────
 
-      teachingExperience:
-        tutor.teachingExperience ??
-        existing?.teachingExperience ??
-        null,
+      teachingExperience: tutor.teachingExperience ?? existing?.teachingExperience ?? null,
 
-      teachingFormat:
-        tutor.teachingFormat ??
-        existing?.teachingFormat ??
-        null,
+      teachingFormat: tutor.teachingFormat ?? existing?.teachingFormat ?? null,
 
       // ─────────────────────────────────────────────
       // Pricing / scheduling
       // ─────────────────────────────────────────────
 
-      oneOnOneRateUsd:
-        tutor.oneOnOneRateUsd ??
-        existing?.oneOnOneRateUsd ??
-        null,
+      oneOnOneRateUsd: tutor.oneOnOneRateUsd ?? existing?.oneOnOneRateUsd ?? null,
 
-      groupRateUsd:
-        tutor.groupRateUsd ??
-        existing?.groupRateUsd ??
-        null,
+      groupRateUsd: tutor.groupRateUsd ?? existing?.groupRateUsd ?? null,
 
-      maxGroupStudents:
-        tutor.maxGroupStudents ??
-        existing?.maxGroupStudents ??
-        null,
+      maxGroupStudents: tutor.maxGroupStudents ?? existing?.maxGroupStudents ?? null,
 
       weeklyClassesPerStudent:
-        tutor.weeklyClassesPerStudent ??
-        existing?.weeklyClassesPerStudent ??
-        null,
+        tutor.weeklyClassesPerStudent ?? existing?.weeklyClassesPerStudent ?? null,
 
-      classDurationMinutes:
-        tutor.classDurationMinutes ??
-        existing?.classDurationMinutes ??
-        null,
+      classDurationMinutes: tutor.classDurationMinutes ?? existing?.classDurationMinutes ?? null,
 
       // ─────────────────────────────────────────────
       // Public/social
       // ─────────────────────────────────────────────
 
-      videoLink:
-        tutor.videoLink ??
-        existing?.videoLink ??
-        null,
+      videoLink: tutor.videoLink ?? existing?.videoLink ?? null,
 
-      instagramHandle:
-        tutor.instagramHandle ??
-        existing?.instagramHandle ??
-        null,
+      instagramHandle: tutor.instagramHandle ?? existing?.instagramHandle ?? null,
 
-      testimonial:
-        tutor.testimonial ??
-        existing?.testimonial ??
-        null,
+      testimonial: tutor.testimonial ?? existing?.testimonial ?? null,
 
       // ─────────────────────────────────────────────
       // Stats / admin state
       // ─────────────────────────────────────────────
 
-      rating:
-        merged.rating_avg,
+      rating: merged.rating_avg,
 
-      reviewCount:
-        merged.rating_count,
+      reviewCount: merged.rating_count,
 
-      hourlyRate:
-        Math.round(merged.hourly_rate),
+      hourlyRate: Math.round(merged.hourly_rate),
 
-      experienceYears:
-        merged.years_experience,
+      experienceYears: merged.years_experience,
 
-      featured:
-        merged.is_featured,
+      featured: merged.is_featured,
 
-      verified:
-        merged.is_verified,
+      verified: merged.is_verified,
 
-      active:
-        existing?.is_active ??
-        true,
+      active: existing?.is_active ?? true,
     };
 
-    await upsertDocument(
-      COLLECTIONS.TUTOR_PROFILES,
-      tutor.id,
-      payload
-    );
+    await upsertDocument(COLLECTIONS.TUTOR_PROFILES, tutor.id, payload);
 
     const tutors = await DataStore.getTutors();
 
-    const index = tutors.findIndex(
-      (t) => t.id === tutor.id
-    );
+    const index = tutors.findIndex((t) => t.id === tutor.id);
 
     if (index !== -1) {
       tutors[index] = merged;
@@ -1245,7 +1102,7 @@ export const DataStore = {
       if (response.ok) {
         return await response.json();
       }
-    } catch { }
+    } catch {}
 
     const tutors = await this.getAllTutors();
     const docs = await listDocuments(COLLECTIONS.USERS, [Query.equal("active", true)]);
@@ -1268,7 +1125,6 @@ export const DataStore = {
       subjects: subjectSet.size,
       rating: Number(rating.toFixed(1)),
     };
-
   },
 
   // --- SUBJECTS & LEVELS ---
@@ -1282,12 +1138,12 @@ export const DataStore = {
       ).sort((a, b) => a.localeCompare(b));
 
       if (tutorSubjects.length > 0) return tutorSubjects;
-    } catch { }
+    } catch {}
 
     try {
       const docs = await listDocuments(COLLECTIONS.SUBJECTS, [Query.equal("active", true)]);
       if (docs.length > 0) return docs.map((d) => safeString(d.name)).filter(Boolean);
-    } catch { }
+    } catch {}
     return defaultSubjects;
   },
 
@@ -1320,9 +1176,7 @@ export const DataStore = {
       const response = await appwrite.databases.listDocuments({
         databaseId: APPWRITE_DATABASE_ID,
         collectionId: "credits",
-        queries: [
-          Query.orderAsc("order"),
-        ],
+        queries: [Query.orderAsc("order")],
       });
 
       return response.documents.map((doc: any) => ({
@@ -1359,9 +1213,7 @@ export const DataStore = {
     }
   },
 
-  createCredit: async (
-    credit: Omit<Credit, "id">,
-  ): Promise<Credit | null> => {
+  createCredit: async (credit: Omit<Credit, "id">): Promise<Credit | null> => {
     try {
       const doc = await appwrite.databases.createDocument({
         databaseId: APPWRITE_DATABASE_ID,
@@ -1388,10 +1240,7 @@ export const DataStore = {
     }
   },
 
-  updateCredit: async (
-    id: string,
-    credit: Partial<Omit<Credit, "id">>,
-  ): Promise<Credit | null> => {
+  updateCredit: async (id: string, credit: Partial<Omit<Credit, "id">>): Promise<Credit | null> => {
     try {
       const doc = await appwrite.databases.updateDocument({
         databaseId: APPWRITE_DATABASE_ID,
@@ -1625,7 +1474,7 @@ export const DataStore = {
         Query.orderDesc("$createdAt"),
       ]);
       if (docs.length > 0) return docs;
-    } catch { }
+    } catch {}
     return getLocal<any[]>(KEYS.APPLICATIONS, []);
   },
 
@@ -1649,142 +1498,98 @@ export const DataStore = {
 
         await DataStore.saveTutor({
           id: userId,
+          authUserId: userId,
           slug: userId,
 
           name: application.full_name || "Certified Tutor",
 
-          phone:
-            (application.phoneNumber ||
-              application.phone ||
-              "") as string,
+          phone: (application.phoneNumber || application.phone || "") as string,
 
-          discordUsername:
-            (application.discordUsername ||
-              application.discord_username ||
-              "") as string,
+          discordUsername: (application.discordUsername ||
+            application.discord_username ||
+            "") as string,
 
-          dateOfBirth:
-            (application.dateOfBirth ||
-              application.date_of_birth ||
-              "") as string,
+          dateOfBirth: (application.dateOfBirth || application.date_of_birth || "") as string,
 
-          countryOfResidence:
-            (application.countryOfResidence ||
-              application.country_of_residence ||
-              "") as string,
+          countryOfResidence: (application.countryOfResidence ||
+            application.country_of_residence ||
+            "") as string,
 
-          avatar_url: avatarFor(
-            application.full_name || "Certified Tutor",
+          avatar_url: avatarFor(application.full_name || "Certified Tutor"),
+
+          headline: (application.headline as string) || "Professional Educator",
+
+          about: (application.teachingExperience ||
+            application.teaching_experience ||
+            application.cover_letter ||
+            "") as string,
+
+          highestQualification: (application.highestQualification ||
+            application.highest_qualification ||
+            "") as string,
+
+          highestQualificationLink: (application.highestQualificationLink ||
+            application.qualification_link ||
+            "") as string,
+
+          examBoard: (application.examBoard || application.exam_board || "") as string,
+
+          examResultSummary: (application.examResultSummary ||
+            application.exam_result_summary ||
+            "") as string,
+
+          teachingExperience: (application.teachingExperience ||
+            application.teaching_experience ||
+            application.cover_letter ||
+            "") as string,
+
+          teachingFormat: (application.teachingFormat ||
+            application.teaching_format ||
+            "online") as string,
+
+          oneOnOneRateUsd: Number(
+            application.oneOnOneRateUsd ?? application.hourlyRate ?? application.expected_rate ?? 0,
           ),
 
-          headline:
-            (application.headline as string) ||
-            "Professional Educator",
+          groupRateUsd: Number(application.groupRateUsd ?? 0),
 
-          about:
-            (application.teachingExperience ||
-              application.teaching_experience ||
-              application.cover_letter ||
-              "") as string,
+          maxGroupStudents: Number(application.maxGroupStudents ?? 0),
 
-          highestQualification:
-            (application.highestQualification ||
-              application.highest_qualification ||
-              "") as string,
+          weeklyClassesPerStudent: Number(application.weeklyClassesPerStudent ?? 0),
 
-          highestQualificationLink:
-            (application.highestQualificationLink ||
-              application.qualification_link ||
-              "") as string,
+          classDurationMinutes: Number(application.classDurationMinutes ?? 0),
 
-          examBoard:
-            (application.examBoard ||
-              application.exam_board ||
-              "") as string,
+          videoLink: (application.videoLink || "") as string,
 
-          examResultSummary:
-            (application.examResultSummary ||
-              application.exam_result_summary ||
-              "") as string,
+          instagramHandle: (application.instagramHandle ||
+            application.instagram_handle ||
+            "") as string,
 
-          teachingExperience:
-            (application.teachingExperience ||
-              application.teaching_experience ||
-              application.cover_letter ||
-              "") as string,
-
-          teachingFormat:
-            (application.teachingFormat ||
-              application.teaching_format ||
-              "online") as string,
-
-          oneOnOneRateUsd:
-            Number(
-              application.oneOnOneRateUsd ??
-              application.hourlyRate ??
-              application.expected_rate ??
-              0,
-            ),
-
-          groupRateUsd:
-            Number(application.groupRateUsd ?? 0),
-
-          maxGroupStudents:
-            Number(application.maxGroupStudents ?? 0),
-
-          weeklyClassesPerStudent:
-            Number(application.weeklyClassesPerStudent ?? 0),
-
-          classDurationMinutes:
-            Number(application.classDurationMinutes ?? 0),
-
-          videoLink:
-            (application.videoLink || "") as string,
-
-          instagramHandle:
-            (application.instagramHandle ||
-              application.instagram_handle ||
-              "") as string,
-
-          testimonial:
-            (application.testimonial || "") as string,
+          testimonial: (application.testimonial || "") as string,
 
           responseTime: "Within 24 hours",
 
-          hourly_rate:
-            Number(
-              application.oneOnOneRateUsd ??
+          hourly_rate: Number(
+            application.oneOnOneRateUsd ??
               application.hourlyRate ??
               application.expected_rate ??
               40,
-            ),
+          ),
 
           rating_avg: 5,
           rating_count: 0,
 
-          years_experience:
-            Number(
-              application.yearsExperience ??
-              application.years_experience ??
-              0,
-            ),
+          years_experience: Number(
+            application.yearsExperience ?? application.years_experience ?? 0,
+          ),
 
-          languages:
-            application.languages ||
-            application.languagesSpoken ||
-            [],
+          languages: application.languages || application.languagesSpoken || [],
 
           subjects:
-            application.subjects ||
-            (application.subjectName
-              ? [application.subjectName]
-              : []),
+            application.subjects || (application.subjectName ? [application.subjectName] : []),
 
           levels:
-            application.levels ||
-            (application.teachingLevel
-              ? [application.teachingLevel]
-              : []),
+            application.levels || (application.teachingLevel ? [application.teachingLevel] : []),
 
           is_featured: false,
           is_verified: true,
@@ -1858,7 +1663,7 @@ export const DataStore = {
         Query.orderDesc("$createdAt"),
       ]);
       if (docs.length > 0) return docs;
-    } catch { }
+    } catch {}
     return getLocal<any[]>(KEYS.RECRUITMENT, []);
   },
 
@@ -1893,7 +1698,7 @@ export const DataStore = {
 
       console.log("USER TEAMS FULL:", JSON.stringify(teams, null, 2));
 
-      return teams.map(team => team.$id);
+      return teams.map((team) => team.$id);
     } catch (err) {
       console.error(err);
       return [];
@@ -1906,14 +1711,12 @@ export const DataStore = {
       await upsertDocument(COLLECTIONS.USERS, userId, {
         authUserId: userId,
         email: safeString(user?.email, `${userId}@tutorslink.local`),
-        displayName: safeString(
-          user?.displayName,
-          user?.email?.split("@")[0] || userId
-        ), role,
+        displayName: safeString(user?.displayName, user?.email?.split("@")[0] || userId),
+        role,
         discordId: null,
         active: true,
       });
-    } catch { }
+    } catch {}
 
     const mockRoles = getLocal<Record<string, string[]>>("user_roles_map", {});
     if (!mockRoles[userId]) mockRoles[userId] = ["student"];
@@ -1927,7 +1730,7 @@ export const DataStore = {
       if (doc?.role === role) {
         await upsertDocument(COLLECTIONS.USERS, userId, { ...doc, role: "student" });
       }
-    } catch { }
+    } catch {}
 
     const mockRoles = getLocal<Record<string, string[]>>("user_roles_map", {});
     if (mockRoles[userId]) {
@@ -1939,8 +1742,9 @@ export const DataStore = {
     const tutors = await DataStore.getTutors();
 
     try {
+      const studentIds = await resolveStudentIdCandidates(studentId);
       const docs = await listDocuments(COLLECTIONS.ASSIGNMENTS, [
-        Query.equal("studentId", studentId),
+        Query.equal("studentId", studentIds),
         Query.equal("isActive", true),
       ]);
 
@@ -1951,9 +1755,7 @@ export const DataStore = {
       return docs.map((a) => {
         const tutorId = a.tutorId || a.tutor_id;
 
-        const tutor = tutors.find(
-          (t) => String(t.id) === String(tutorId)
-        );
+        const tutor = tutors.find((t) => String(t.id) === String(tutorId));
 
         return {
           ...a,
@@ -2008,10 +1810,7 @@ export const DataStore = {
     return newLess;
   },
 
-  createStudentAssignment: async (
-    studentId: string,
-    tutorId: string,
-  ): Promise<void> => {
+  createStudentAssignment: async (studentId: string, tutorId: string): Promise<void> => {
     await createDocument(COLLECTIONS.ASSIGNMENTS, {
       studentId,
       tutorId,
@@ -2021,17 +1820,13 @@ export const DataStore = {
     });
   },
 
-  getStudentAssignment: async (
-    studentId: string
-  ): Promise<any | null> => {
+  getStudentAssignment: async (studentId: string): Promise<any | null> => {
     try {
-      const docs = await listDocuments(
-        COLLECTIONS.ASSIGNMENTS,
-        [
-          Query.equal("studentId", studentId),
-          Query.equal("isActive", true),
-        ]
-      );
+      const studentIds = await resolveStudentIdCandidates(studentId);
+      const docs = await listDocuments(COLLECTIONS.ASSIGNMENTS, [
+        Query.equal("studentId", studentIds),
+        Query.equal("isActive", true),
+      ]);
 
       const assignment = docs[0] || null;
 
@@ -2048,10 +1843,7 @@ export const DataStore = {
     }
   },
 
-  updateStudentAssignment: async (
-    assignmentId: string,
-    tutorId: string,
-  ): Promise<void> => {
+  updateStudentAssignment: async (assignmentId: string, tutorId: string): Promise<void> => {
     console.log("=== UPDATE ASSIGNMENT DEBUG ===");
     console.log("assignmentId:", assignmentId);
     console.log("assignmentId length:", assignmentId?.length);
@@ -2059,9 +1851,7 @@ export const DataStore = {
     console.log("tutorId:", tutorId);
 
     if (!assignmentId || assignmentId.length > 36) {
-      throw new Error(
-        `Invalid assignment document ID: ${assignmentId}`
-      );
+      throw new Error(`Invalid assignment document ID: ${assignmentId}`);
     }
 
     await appwrite.databases.updateDocument({
@@ -2095,25 +1885,18 @@ export const DataStore = {
   },
 
   createBlogPost: async (
-    post: Omit<BlogPost, "$id" | "$createdAt" | "$updatedAt">
+    post: Omit<BlogPost, "$id" | "$createdAt" | "$updatedAt">,
   ): Promise<BlogPost> => {
-    const doc = await createDocument(
-      COLLECTIONS.BLOG_POSTS,
-      post
-    );
+    const doc = await createDocument(COLLECTIONS.BLOG_POSTS, post);
 
     return doc as unknown as BlogPost;
   },
 
   updateBlogPost: async (
     id: string,
-    post: Partial<Omit<BlogPost, "$id" | "$createdAt" | "$updatedAt">>
+    post: Partial<Omit<BlogPost, "$id" | "$createdAt" | "$updatedAt">>,
   ): Promise<BlogPost> => {
-    const doc = await upsertDocument(
-      COLLECTIONS.BLOG_POSTS,
-      id,
-      post
-    );
+    const doc = await upsertDocument(COLLECTIONS.BLOG_POSTS, id, post);
 
     return doc as unknown as BlogPost;
   },
@@ -2176,10 +1959,7 @@ export const DataStore = {
       return docs.map((doc) => ({
         id: doc.$id,
         authorName: safeString(doc.authorName, "Anonymous"),
-        authorInitials: safeString(
-          doc.authorInitials,
-          initials(doc.authorName || "Anonymous"),
-        ),
+        authorInitials: safeString(doc.authorInitials, initials(doc.authorName || "Anonymous")),
         title: safeString(doc.title, ""),
         body: safeString(doc.body, ""),
         rating: safeNumber(doc.rating, 5),
@@ -2207,10 +1987,7 @@ export const DataStore = {
       return docs.map((doc) => ({
         id: doc.$id,
         authorName: safeString(doc.authorName, "Anonymous"),
-        authorInitials: safeString(
-          doc.authorInitials,
-          initials(doc.authorName || "Anonymous"),
-        ),
+        authorInitials: safeString(doc.authorInitials, initials(doc.authorName || "Anonymous")),
         title: safeString(doc.title, ""),
         body: safeString(doc.body, ""),
         rating: safeNumber(doc.rating, 5),
@@ -2219,11 +1996,7 @@ export const DataStore = {
         isDeleted: Boolean(doc.isDeleted),
         helpfulCount: safeNumber(doc.helpfulCount, 0),
         createdAt: doc.$createdAt || new Date().toISOString(),
-        status: doc.isDeleted
-          ? "rejected"
-          : doc.isPublic
-            ? "approved"
-            : "pending",
+        status: doc.isDeleted ? "rejected" : doc.isPublic ? "approved" : "pending",
       }));
     } catch (error) {
       console.error("Failed to load all platform reviews:", error);
@@ -2280,28 +2053,22 @@ export const DataStore = {
     rating: number;
     isPublic?: boolean;
   }): Promise<PlatformReview> => {
-    const newReview = await createDocument(
-      COLLECTIONS.PLATFORM_REVIEWS,
-      {
-        authorName: review.authorName.trim(),
-        authorInitials: initials(review.authorName),
-        title: review.title?.trim() || "",
-        body: review.body?.trim() || "",
-        rating: review.rating,
-        authorid: review.authorid,
-        isPublic: review.isPublic ?? false,
-        isDeleted: false,
-        helpfulCount: 0,
-      },
-    );
+    const newReview = await createDocument(COLLECTIONS.PLATFORM_REVIEWS, {
+      authorName: review.authorName.trim(),
+      authorInitials: initials(review.authorName),
+      title: review.title?.trim() || "",
+      body: review.body?.trim() || "",
+      rating: review.rating,
+      authorid: review.authorid,
+      isPublic: review.isPublic ?? false,
+      isDeleted: false,
+      helpfulCount: 0,
+    });
 
     return {
       id: newReview.$id,
       authorName: safeString(newReview.authorName, review.authorName),
-      authorInitials: safeString(
-        newReview.authorInitials,
-        initials(review.authorName),
-      ),
+      authorInitials: safeString(newReview.authorInitials, initials(review.authorName)),
       title: safeString(newReview.title, ""),
       body: safeString(newReview.body, ""),
       rating: safeNumber(newReview.rating, review.rating),
@@ -2313,7 +2080,6 @@ export const DataStore = {
     };
   },
 
-
   submitPlatformReview: async (review: {
     authorid: string;
     authorName: string;
@@ -2321,28 +2087,22 @@ export const DataStore = {
     body?: string;
     rating: number;
   }): Promise<PlatformReview> => {
-    const newReview = await createDocument(
-      COLLECTIONS.PLATFORM_REVIEWS,
-      {
-        authorName: review.authorName,
-        authorInitials: initials(review.authorName),
-        title: review.title || "",
-        body: review.body || "",
-        rating: review.rating,
-        authorid: review.authorid,
-        isPublic: false,
-        isDeleted: false,
-        helpfulCount: 0,
-      },
-    );
+    const newReview = await createDocument(COLLECTIONS.PLATFORM_REVIEWS, {
+      authorName: review.authorName,
+      authorInitials: initials(review.authorName),
+      title: review.title || "",
+      body: review.body || "",
+      rating: review.rating,
+      authorid: review.authorid,
+      isPublic: false,
+      isDeleted: false,
+      helpfulCount: 0,
+    });
 
     return {
       id: newReview.$id,
       authorName: safeString(newReview.authorName, review.authorName),
-      authorInitials: safeString(
-        newReview.authorInitials,
-        initials(review.authorName),
-      ),
+      authorInitials: safeString(newReview.authorInitials, initials(review.authorName)),
       title: safeString(newReview.title, ""),
       body: safeString(newReview.body, ""),
       rating: safeNumber(newReview.rating, review.rating),
@@ -2386,16 +2146,14 @@ export const DataStore = {
   },
   getReviews: async (tutorId?: string): Promise<Review[]> => {
     try {
-      const queries = [
-        Query.equal("isPublic", true),
-      ];
+      const queries = [Query.equal("isPublic", true)];
 
       if (tutorId) {
         queries.push(Query.equal("tutorId", tutorId));
       }
       const docs = await listDocuments(COLLECTIONS.REVIEWS, queries);
       if (docs.length > 0) return docs.map(mapReviewDoc);
-    } catch { }
+    } catch {}
 
     const localRevs = getLocal<Review[]>(KEYS.REVIEWS, [
       {
@@ -2412,10 +2170,7 @@ export const DataStore = {
     return localRevs;
   },
 
-  updateReviewStatus: async (
-    id: string,
-    status: "pending" | "approved" | "rejected",
-  ) => {
+  updateReviewStatus: async (id: string, status: "pending" | "approved" | "rejected") => {
     const list = getLocal<Review[]>(KEYS.REVIEWS, []);
     const idx = list.findIndex((r) => r.id === id);
 
@@ -2450,12 +2205,7 @@ export const DataStore = {
 
       const ratingAvg =
         ratingCount > 0
-          ? Number(
-            (
-              ratings.reduce((sum, rating) => sum + rating, 0) /
-              ratingCount
-            ).toFixed(2)
-          )
+          ? Number((ratings.reduce((sum, rating) => sum + rating, 0) / ratingCount).toFixed(2))
           : 0;
 
       await upsertDocument(COLLECTIONS.TUTOR_PROFILES, tutorId, {
@@ -2504,7 +2254,7 @@ export const DataStore = {
         Query.limit(100),
       ]);
       if (docs.length > 0) return docs;
-    } catch { }
+    } catch {}
     return getLocal<any[]>("tl_audit_logs", []);
   },
 
@@ -2516,7 +2266,7 @@ export const DataStore = {
         Query.orderAsc("displayOrder"),
       ]);
       if (docs.length > 0) return docs;
-    } catch { }
+    } catch {}
     return [];
   },
 
@@ -2528,7 +2278,7 @@ export const DataStore = {
         Query.orderDesc("updatedAt"),
       ]);
       if (docs.length > 0) return docs.map(mapPageDoc);
-    } catch { }
+    } catch {}
     return getLocal<any[]>("tl_pages", []);
   },
 
@@ -2541,7 +2291,7 @@ export const DataStore = {
         Query.limit(1),
       ]);
       if (docs[0]) return mapPageDoc(docs[0]);
-    } catch { }
+    } catch {}
     return null;
   },
 
@@ -2575,7 +2325,7 @@ export const DataStore = {
     try {
       const doc = await getDocument(COLLECTIONS.HOMEPAGE, "homepage");
       if (doc) return doc;
-    } catch { }
+    } catch {}
     return null;
   },
 
@@ -2603,7 +2353,7 @@ export const DataStore = {
     try {
       const doc = await getDocument(COLLECTIONS.PLATFORM_SETTINGS, key);
       if (doc) return asObject(doc.value, doc.value);
-    } catch { }
+    } catch {}
     return null;
   },
 
@@ -2620,11 +2370,19 @@ export const DataStore = {
 
   // --- NOTIFICATION PREFERENCES ---
   getNotificationPreferences: async (userId: string): Promise<any | null> => {
-    try {
-      return await getDocument(COLLECTIONS.NOTIFICATION_PREFERENCES, userId);
-    } catch {
-      return null;
+    const userIds = uniqueIds([
+      ...(await resolveStudentIdCandidates(userId)),
+      ...(await resolveTutorIdCandidates(userId)),
+    ]);
+
+    for (const candidateId of userIds) {
+      try {
+        const doc = await getDocument(COLLECTIONS.NOTIFICATION_PREFERENCES, candidateId);
+        if (doc) return doc;
+      } catch {}
     }
+
+    return null;
   },
 
   saveNotificationPreferences: async (prefs: {
@@ -2650,21 +2408,29 @@ export const DataStore = {
   // --- NOTIFICATIONS ---
   getNotifications: async (userId: string): Promise<any[]> => {
     try {
+      const userIds = uniqueIds([
+        ...(await resolveStudentIdCandidates(userId)),
+        ...(await resolveTutorIdCandidates(userId)),
+      ]);
       const docs = await listDocuments(COLLECTIONS.NOTIFICATIONS, [
-        Query.equal("userId", userId),
+        Query.equal("userId", userIds),
         Query.equal("isDeleted", false),
         Query.orderDesc("createdAt"),
         Query.limit(50),
       ]);
       if (docs.length > 0) return docs.map(mapNotificationDoc);
-    } catch { }
+    } catch {}
     return getLocal<any[]>(KEYS.NOTIFICATIONS, []);
   },
 
   getUnreadNotificationCount: async (userId: string): Promise<number> => {
     try {
+      const userIds = uniqueIds([
+        ...(await resolveStudentIdCandidates(userId)),
+        ...(await resolveTutorIdCandidates(userId)),
+      ]);
       const docs = await listDocuments(COLLECTIONS.NOTIFICATIONS, [
-        Query.equal("userId", userId),
+        Query.equal("userId", userIds),
         Query.equal("isRead", false),
         Query.equal("isDeleted", false),
       ]);
@@ -2699,28 +2465,35 @@ export const DataStore = {
 
   markAllNotificationsRead: async (userId: string): Promise<void> => {
     try {
+      const userIds = uniqueIds([
+        ...(await resolveStudentIdCandidates(userId)),
+        ...(await resolveTutorIdCandidates(userId)),
+      ]);
       const docs = await listDocuments(COLLECTIONS.NOTIFICATIONS, [
-        Query.equal("userId", userId),
+        Query.equal("userId", userIds),
         Query.equal("isRead", false),
       ]);
       for (const doc of docs) {
         await upsertDocument(COLLECTIONS.NOTIFICATIONS, doc.$id || doc.id, { isRead: true });
       }
-    } catch { }
+    } catch {}
   },
 
   // --- LESSONS ---
   getLessonsForUser: async (userId: string, isTutor = false): Promise<any[]> => {
     try {
+      const scopedUserIds = isTutor
+        ? await resolveTutorIdCandidates(userId)
+        : await resolveStudentIdCandidates(userId);
       const queries = [
         Query.equal("isDeleted", false),
         Query.orderAsc("startsAt"),
         Query.limit(200),
       ];
-      queries.push(Query.equal(isTutor ? "tutorId" : "studentId", userId));
+      queries.push(Query.equal(isTutor ? "tutorId" : "studentId", scopedUserIds));
       const docs = await listDocuments(COLLECTIONS.LESSONS, queries);
       if (docs.length > 0) return docs.map(mapLessonDoc);
-    } catch { }
+    } catch {}
     return getLocal<any[]>(KEYS.LESSONS, []);
   },
 
@@ -2749,7 +2522,7 @@ export const DataStore = {
           };
         });
       }
-    } catch { }
+    } catch {}
     return [];
   },
 
@@ -2805,8 +2578,9 @@ export const DataStore = {
   // --- REVIEWS ---
   getReviewsForTutor: async (tutorId: string): Promise<any[]> => {
     try {
+      const tutorIds = await resolveTutorIdCandidates(tutorId);
       const docs = await listDocuments(COLLECTIONS.REVIEWS, [
-        Query.equal("tutorId", tutorId),
+        Query.equal("tutorId", tutorIds),
         Query.equal("isPublic", true),
         Query.equal("isDeleted", false),
         Query.orderDesc("createdAt"),
@@ -2835,11 +2609,7 @@ export const DataStore = {
       if (docs.length > 0) {
         return docs.map((doc) => ({
           ...mapReviewDoc(doc),
-          status: doc.isDeleted
-            ? "rejected"
-            : doc.isPublic
-              ? "approved"
-              : "pending",
+          status: doc.isDeleted ? "rejected" : doc.isPublic ? "approved" : "pending",
         }));
       }
     } catch (error) {
@@ -2861,10 +2631,7 @@ export const DataStore = {
       setLocal(KEYS.REVIEWS, list);
     }
 
-    const docs = await listDocuments(COLLECTIONS.REVIEWS, [
-      Query.equal("$id", id),
-      Query.limit(1),
-    ]);
+    const docs = await listDocuments(COLLECTIONS.REVIEWS, [Query.equal("$id", id), Query.limit(1)]);
 
     const reviewDoc = docs[0];
 
@@ -2918,7 +2685,7 @@ export const DataStore = {
     teamId: string,
     email: string,
     userId?: string,
-    roles: string[] = ["tutor"]
+    roles: string[] = ["tutor"],
   ): Promise<string> => {
     try {
       console.log("=== APPWRITE TEAM DEBUG ===");
@@ -2978,12 +2745,12 @@ export const DataStore = {
     }
   },
 
-
   getStudentAssignmentsFromDB: async (studentId: string): Promise<any[]> => {
     try {
       const tutors = await DataStore.getTutors();
+      const studentIds = await resolveStudentIdCandidates(studentId);
       const docs = await listDocuments(COLLECTIONS.ASSIGNMENTS, [
-        Query.equal("studentId", studentId),
+        Query.equal("studentId", studentIds),
         Query.equal("isActive", true),
       ]);
       if (docs.length > 0) {
@@ -3002,7 +2769,7 @@ export const DataStore = {
           };
         });
       }
-    } catch { }
+    } catch {}
     return DataStore.getStudentAssignments(studentId);
   },
 
@@ -3010,10 +2777,7 @@ export const DataStore = {
     try {
       const response = await appwrite.teams.listMemberships("Students");
 
-      console.log(
-        "STUDENTS TEAM MEMBERS:",
-        JSON.stringify(response.memberships, null, 2)
-      );
+      console.log("STUDENTS TEAM MEMBERS:", JSON.stringify(response.memberships, null, 2));
 
       return response.memberships;
     } catch (error) {
@@ -3031,8 +2795,7 @@ export const DataStore = {
 
       return docs.map((user: any) => {
         const userId = user.authUserId || user.$id;
-        const name =
-          user.displayName || user.name || user.email || "Student";
+        const name = user.displayName || user.name || user.email || "Student";
 
         return {
           id: userId,
@@ -3074,10 +2837,7 @@ export const DataStore = {
 
   getAllTutors: async (): Promise<Tutor[]> => {
     try {
-      const docs = await listDocuments(
-        COLLECTIONS.TUTOR_PROFILES,
-        [Query.equal("active", true)]
-      );
+      const docs = await listDocuments(COLLECTIONS.TUTOR_PROFILES, [Query.equal("active", true)]);
 
       console.log("ALL TUTORS:", docs);
 
@@ -3095,7 +2855,7 @@ export const DataStore = {
         Query.limit(200),
       ]);
       if (docs.length > 0) return docs;
-    } catch { }
+    } catch {}
     return getLocal<any[]>(KEYS.APPLICATIONS, []);
   },
 
@@ -3114,14 +2874,15 @@ export const DataStore = {
         role_applied_for: doc.Role_you_want_to_apply_for,
         created_at: doc.createdAt ?? doc.$createdAt,
       }));
-    } catch { }
+    } catch {}
     return getLocal<any[]>(KEYS.RECRUITMENT, []);
   },
   // --- AVAILABILITY ---
   getTutorAvailability: async (tutorId: string): Promise<any[]> => {
     try {
+      const tutorIds = await resolveTutorIdCandidates(tutorId);
       return await listDocuments(COLLECTIONS.SCHEDULES, [
-        Query.equal("tutorId", tutorId),
+        Query.equal("tutorId", tutorIds),
         Query.equal("isActive", true),
         Query.orderAsc("dayOfWeek"),
       ]);
@@ -3135,8 +2896,9 @@ export const DataStore = {
     schedules: { day_of_week: number; start_time: string; end_time: string; timezone: string }[],
   ): Promise<void> => {
     try {
+      const tutorIds = await resolveTutorIdCandidates(tutorId);
       const existing = await listDocuments(COLLECTIONS.SCHEDULES, [
-        Query.equal("tutorId", tutorId),
+        Query.equal("tutorId", tutorIds),
       ]);
       for (const doc of existing) {
         await deleteDocument(COLLECTIONS.SCHEDULES, doc.$id || doc.id);
@@ -3154,7 +2916,7 @@ export const DataStore = {
           });
         }
       }
-    } catch { }
+    } catch {}
   },
 
   // --- ADVERTISEMENTS ---
@@ -3180,8 +2942,9 @@ export const DataStore = {
 
   getTutorAdvertisements: async (tutorId: string): Promise<any[]> => {
     try {
+      const tutorIds = await resolveTutorIdCandidates(tutorId);
       return await listDocuments(COLLECTIONS.TUTOR_ADS, [
-        Query.equal("tutorId", tutorId),
+        Query.equal("tutorId", tutorIds),
         Query.equal("isDeleted", false),
         Query.orderDesc("$createdAt"),
       ]);
@@ -3237,8 +3000,9 @@ export const DataStore = {
   // ─────────────────────────────────────────────────────────────────────────────
   getStudentsForTutor: async (tutorId: string): Promise<any[]> => {
     try {
+      const tutorIds = await resolveTutorIdCandidates(tutorId);
       const docs = await listDocuments(COLLECTIONS.ASSIGNMENTS, [
-        Query.equal("tutorId", tutorId),
+        Query.equal("tutorId", tutorIds),
         Query.equal("isActive", true),
       ]);
       if (docs.length === 0) return [];
@@ -3250,7 +3014,9 @@ export const DataStore = {
           let userRecord: any = null;
           try {
             userRecord = await getDocument(COLLECTIONS.USERS, userId);
-          } catch { /* user record may not exist yet */ }
+          } catch {
+            /* user record may not exist yet */
+          }
           const name = userRecord?.displayName || userRecord?.email || "Student";
           return {
             assignmentId: a.$id,
@@ -3261,7 +3027,7 @@ export const DataStore = {
             email: userRecord?.email || "",
             avatar_url: avatarFor(name),
           };
-        })
+        }),
       );
       return students;
     } catch (error) {
@@ -3275,15 +3041,16 @@ export const DataStore = {
   // ─────────────────────────────────────────────────────────────────────────────
   getLessonsForTutor: async (tutorId: string): Promise<any[]> => {
     try {
+      const tutorIds = await resolveTutorIdCandidates(tutorId);
       const [docs, assignments] = await Promise.all([
         listDocuments(COLLECTIONS.LESSONS, [
-          Query.equal("tutorId", tutorId),
+          Query.equal("tutorId", tutorIds),
           Query.equal("isDeleted", false),
           Query.orderAsc("startsAt"),
           Query.limit(200),
         ]),
         listDocuments(COLLECTIONS.ASSIGNMENTS, [
-          Query.equal("tutorId", tutorId),
+          Query.equal("tutorId", tutorIds),
           Query.equal("isActive", true),
         ]),
       ]);
@@ -3296,8 +3063,10 @@ export const DataStore = {
           try {
             const u = await getDocument(COLLECTIONS.USERS, sid);
             nameMap[sid] = u?.displayName || u?.email || "Student";
-          } catch { nameMap[sid] = "Student"; }
-        })
+          } catch {
+            nameMap[sid] = "Student";
+          }
+        }),
       );
 
       return docs.map((doc: any) => ({
@@ -3313,8 +3082,9 @@ export const DataStore = {
 
   getLessonsForStudent: async (studentId: string): Promise<any[]> => {
     try {
+      const studentIds = await resolveStudentIdCandidates(studentId);
       const docs = await listDocuments(COLLECTIONS.LESSONS, [
-        Query.equal("studentId", studentId),
+        Query.equal("studentId", studentIds),
         Query.equal("isDeleted", false),
         Query.orderAsc("startsAt"),
         Query.limit(200),
@@ -3345,8 +3115,9 @@ export const DataStore = {
   // ─────────────────────────────────────────────────────────────────────────────
   getHomeworkForTutor: async (tutorId: string): Promise<any[]> => {
     try {
+      const tutorIds = await resolveTutorIdCandidates(tutorId);
       const docs = await listDocuments("homework", [
-        Query.equal("tutorId", tutorId),
+        Query.equal("tutorId", tutorIds),
         Query.equal("isDeleted", false),
         Query.orderDesc("createdAt"),
         Query.limit(100),
@@ -3359,17 +3130,26 @@ export const DataStore = {
           try {
             const u = await getDocument(COLLECTIONS.USERS, sid);
             nameMap[sid] = u?.displayName || u?.email || "Student";
-          } catch { nameMap[sid] = "Student"; }
-        })
+          } catch {
+            nameMap[sid] = "Student";
+          }
+        }),
       );
-      return docs.map((d: any) => ({ ...d, id: d.$id, studentName: nameMap[d.studentId] || "Student" }));
-    } catch { return []; }
+      return docs.map((d: any) => ({
+        ...d,
+        id: d.$id,
+        studentName: nameMap[d.studentId] || "Student",
+      }));
+    } catch {
+      return [];
+    }
   },
 
   getHomeworkForStudent: async (studentId: string): Promise<any[]> => {
     try {
+      const studentIds = await resolveStudentIdCandidates(studentId);
       const docs = await listDocuments("homework", [
-        Query.equal("studentId", studentId),
+        Query.equal("studentId", studentIds),
         Query.equal("isDeleted", false),
         Query.orderDesc("createdAt"),
         Query.limit(100),
@@ -3379,7 +3159,9 @@ export const DataStore = {
         const tutor = tutors.find((t) => t.id === d.tutorId);
         return { ...d, id: d.$id, tutorName: tutor?.name || "Tutor" };
       });
-    } catch { return []; }
+    } catch {
+      return [];
+    }
   },
 
   createHomework: async (hw: {
@@ -3418,7 +3200,12 @@ export const DataStore = {
     return doc;
   },
 
-  submitHomework: async (homeworkId: string, studentId: string, fileIds: string[], fileNames: string[]): Promise<void> => {
+  submitHomework: async (
+    homeworkId: string,
+    studentId: string,
+    fileIds: string[],
+    fileNames: string[],
+  ): Promise<void> => {
     const doc = await getDocument("homework", homeworkId);
     if (!doc) throw new Error("Homework not found");
     const now = new Date().toISOString();
@@ -3461,7 +3248,9 @@ export const DataStore = {
         Query.limit(1),
       ]);
       if (docs.length > 0) return { ...docs[0], id: docs[0].$id };
-    } catch { /* fall through to create */ }
+    } catch {
+      /* fall through to create */
+    }
     const doc = await createDocument("chat_conversations", {
       studentId,
       tutorId,
@@ -3477,8 +3266,9 @@ export const DataStore = {
 
   getConversationsForTutor: async (tutorId: string): Promise<any[]> => {
     try {
+      const tutorIds = await resolveTutorIdCandidates(tutorId);
       const docs = await listDocuments("chat_conversations", [
-        Query.equal("tutorId", tutorId),
+        Query.equal("tutorId", tutorIds),
         Query.equal("isDeleted", false),
         Query.orderDesc("lastMessageAt"),
       ]);
@@ -3488,18 +3278,23 @@ export const DataStore = {
           try {
             const u = await getDocument(COLLECTIONS.USERS, d.studentId);
             studentName = u?.displayName || u?.email || "Student";
-          } catch { /* ignore */ }
+          } catch {
+            /* ignore */
+          }
           return { ...d, id: d.$id, studentName, studentAvatar: avatarFor(studentName) };
-        })
+        }),
       );
       return result;
-    } catch { return []; }
+    } catch {
+      return [];
+    }
   },
 
   getConversationsForStudent: async (studentId: string): Promise<any[]> => {
     try {
+      const studentIds = await resolveStudentIdCandidates(studentId);
       const docs = await listDocuments("chat_conversations", [
-        Query.equal("studentId", studentId),
+        Query.equal("studentId", studentIds),
         Query.equal("isDeleted", false),
         Query.orderDesc("lastMessageAt"),
       ]);
@@ -3507,12 +3302,15 @@ export const DataStore = {
       return docs.map((d: any) => {
         const tutor = tutors.find((t) => t.id === d.tutorId);
         return {
-          ...d, id: d.$id,
+          ...d,
+          id: d.$id,
           tutorName: tutor?.name || "Tutor",
           tutorAvatar: tutor?.avatar_url || avatarFor("Tutor"),
         };
       });
-    } catch { return []; }
+    } catch {
+      return [];
+    }
   },
 
   getMessages: async (conversationId: string, limit = 50): Promise<any[]> => {
@@ -3524,7 +3322,9 @@ export const DataStore = {
         Query.limit(limit),
       ]);
       return docs.map((d: any) => ({ ...d, id: d.$id }));
-    } catch { return []; }
+    } catch {
+      return [];
+    }
   },
 
   sendMessage: async (msg: {
@@ -3578,7 +3378,10 @@ export const DataStore = {
     return { ...doc, id: doc.$id };
   },
 
-  markMessagesRead: async (conversationId: string, readerRole: "student" | "tutor"): Promise<void> => {
+  markMessagesRead: async (
+    conversationId: string,
+    readerRole: "student" | "tutor",
+  ): Promise<void> => {
     try {
       const unreadField = readerRole === "student" ? "studentUnreadCount" : "tutorUnreadCount";
       await upsertDocument("chat_conversations", conversationId, { [unreadField]: 0 });
@@ -3590,9 +3393,11 @@ export const DataStore = {
       await Promise.all(
         msgs
           .filter((m: any) => m.senderRole !== readerRole)
-          .map((m: any) => upsertDocument("chat_messages", m.$id, { isRead: true }))
+          .map((m: any) => upsertDocument("chat_messages", m.$id, { isRead: true })),
       );
-    } catch { /* non-critical */ }
+    } catch {
+      /* non-critical */
+    }
   },
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -3600,29 +3405,36 @@ export const DataStore = {
   // ─────────────────────────────────────────────────────────────────────────────
   getRecordingsForTutor: async (tutorId: string): Promise<any[]> => {
     try {
+      const tutorIds = await resolveTutorIdCandidates(tutorId);
       const docs = await listDocuments("recordings", [
-        Query.equal("tutorId", tutorId),
+        Query.equal("tutorId", tutorIds),
         Query.equal("isDeleted", false),
         Query.orderDesc("recordedAt"),
         Query.limit(50),
       ]);
       return docs.map((d: any) => ({ ...d, id: d.$id }));
-    } catch { return []; }
+    } catch {
+      return [];
+    }
   },
 
   getRecordingsForStudent: async (studentId: string): Promise<any[]> => {
     try {
+      const studentIds = await resolveStudentIdCandidates(studentId);
       const docs = await listDocuments("recordings", [
         Query.equal("isDeleted", false),
         Query.orderDesc("recordedAt"),
         Query.limit(100),
       ]);
       // Filter where studentId appears in studentIds array
-      const filtered = docs.filter((d: any) =>
-        Array.isArray(d.studentIds) && d.studentIds.includes(studentId)
+      const filtered = docs.filter(
+        (d: any) =>
+          Array.isArray(d.studentIds) && studentIds.some((id) => d.studentIds.includes(id)),
       );
       return filtered.map((d: any) => ({ ...d, id: d.$id }));
-    } catch { return []; }
+    } catch {
+      return [];
+    }
   },
 
   createRecording: async (rec: {
@@ -3678,14 +3490,17 @@ export const DataStore = {
   // ─────────────────────────────────────────────────────────────────────────────
   getPaymentsForTutor: async (tutorId: string): Promise<any[]> => {
     try {
+      const tutorIds = await resolveTutorIdCandidates(tutorId);
       const docs = await listDocuments("payments", [
-        Query.equal("tutorId", tutorId),
+        Query.equal("tutorId", tutorIds),
         Query.equal("isDeleted", false),
         Query.orderDesc("createdAt"),
         Query.limit(100),
       ]);
       return docs.map((d: any) => ({ ...d, id: d.$id }));
-    } catch { return []; }
+    } catch {
+      return [];
+    }
   },
 
   createPayment: async (payment: {
@@ -3723,7 +3538,10 @@ export const DataStore = {
   // ─────────────────────────────────────────────────────────────────────────────
   // PROFILE PICTURE (Appwrite Storage)
   // ─────────────────────────────────────────────────────────────────────────────
-  uploadProfilePicture: async (file: File, userId: string): Promise<{ fileId: string; url: string }> => {
+  uploadProfilePicture: async (
+    file: File,
+    userId: string,
+  ): Promise<{ fileId: string; url: string }> => {
     const result = await appwrite.storage.createFile({
       bucketId: "profile-media",
       fileId: ID.unique(),
@@ -3747,19 +3565,33 @@ export const DataStore = {
 
   getFilePreviewUrl: (bucketId: string, fileId: string, width = 256): string => {
     try {
-      const result = appwrite.storage.getFilePreview({ bucketId, fileId, width, height: width, quality: 80 });
+      const result = appwrite.storage.getFilePreview({
+        bucketId,
+        fileId,
+        width,
+        height: width,
+        quality: 80,
+      });
       return typeof result === "string" ? result : String(result);
-    } catch { return ""; }
+    } catch {
+      return "";
+    }
   },
 
   getFileDownloadUrl: (bucketId: string, fileId: string): string => {
     try {
       const result = appwrite.storage.getFileDownload({ bucketId, fileId });
       return typeof result === "string" ? result : String(result);
-    } catch { return ""; }
+    } catch {
+      return "";
+    }
   },
 
-  uploadFile: async (file: File, bucketId: string, userId: string): Promise<{ fileId: string; fileName: string }> => {
+  uploadFile: async (
+    file: File,
+    bucketId: string,
+    userId: string,
+  ): Promise<{ fileId: string; fileName: string }> => {
     const result = await appwrite.storage.createFile({
       bucketId,
       fileId: ID.unique(),
@@ -3778,12 +3610,15 @@ export const DataStore = {
   // ─────────────────────────────────────────────────────────────────────────────
   getScheduleExceptions: async (tutorId: string): Promise<any[]> => {
     try {
+      const tutorIds = await resolveTutorIdCandidates(tutorId);
       const docs = await listDocuments("schedule_exceptions", [
-        Query.equal("tutorId", tutorId),
+        Query.equal("tutorId", tutorIds),
         Query.orderAsc("date"),
       ]);
       return docs.map((d: any) => ({ ...d, id: d.$id }));
-    } catch { return []; }
+    } catch {
+      return [];
+    }
   },
 
   addScheduleException: async (tutorId: string, date: string, reason?: string): Promise<void> => {
@@ -3856,7 +3691,6 @@ export const DataStore = {
       });
     }
   },
-
 };
 
 export type { Tutor as TutorData };
