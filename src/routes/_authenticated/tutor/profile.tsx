@@ -1,39 +1,121 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { IdCard, Save, Upload } from "lucide-react";
-import { PageHeader } from "@/components/portal-shared";
+import { useEffect, useState } from "react";
+import { IdCard, Save, ExternalLink } from "lucide-react";
+import { PageHeader, LoadingSpinner } from "@/components/portal-shared";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { DataStore, type Tutor } from "@/lib/data-store";
+import { appwrite } from "@/integrations/appwrite/client";
 
 export const Route = createFileRoute("/_authenticated/tutor/profile")({
   component: TutorPublicProfile,
 });
 
 function TutorPublicProfile() {
-  const [profile, setProfile] = useState({
-    headline: "",
-    bio: "",
-    philosophy: "",
-    languages: [] as string[],
-    subjects: [] as string[],
-    levels: [] as string[],
-    yearsExperience: 0,
-    qualifications: "",
-  });
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [tutor, setTutor] = useState<Tutor | null>(null);
+  const [form, setForm] = useState({
+    headline: "",
+    about: "",
+    languages: "",
+    subjects: "",
+    levels: "",
+    yearsExperience: "",
+    teachingFormat: "",
+    oneOnOneRateUsd: "",
+    groupRateUsd: "",
+    videoLink: "",
+    instagramHandle: "",
+    highestQualification: "",
+    teachingExperience: "",
+    examBoard: "",
+    examResultSummary: "",
+  });
 
-  // TODO: On mount, load the tutor's profile via DataStore.getTutorProfile(uid)
-  // and populate the fields above. On save, write back with DataStore.saveTutorProfile(uid, profile).
-  const handleSave = () => {
+  useEffect(() => {
+    (async () => {
+      const { data: userData } = await appwrite.auth.getUser();
+      const uid = userData.user?.id;
+      if (!uid) { setLoading(false); return; }
+
+      const t = await DataStore.getTutorById(uid);
+      if (t) {
+        setTutor(t);
+        setForm({
+          headline: t.headline || "",
+          about: t.about || "",
+          languages: (t.languages || []).join(", "),
+          subjects: (t.subjects || []).join(", "),
+          levels: (t.levels || []).join(", "),
+          yearsExperience: String(t.years_experience || ""),
+          teachingFormat: t.teachingFormat || "",
+          oneOnOneRateUsd: String(t.oneOnOneRateUsd || ""),
+          groupRateUsd: String(t.groupRateUsd || ""),
+          videoLink: t.videoLink || "",
+          instagramHandle: t.instagramHandle || "",
+          highestQualification: t.highestQualification || "",
+          teachingExperience: t.teachingExperience || "",
+          examBoard: t.examBoard || "",
+          examResultSummary: t.examResultSummary || "",
+        });
+      }
+      setLoading(false);
+    })();
+  }, []);
+
+  const splitList = (s: string) =>
+    s.split(",").map((x) => x.trim()).filter(Boolean);
+
+  const handleSave = async () => {
+    if (!tutor) { toast.error("Profile not loaded yet."); return; }
     setSaving(true);
-    // TODO: Replace with a real DataStore.saveTutorProfile() call.
-    setTimeout(() => {
+    try {
+      const updated: Tutor = {
+        ...tutor,
+        headline: form.headline,
+        about: form.about,
+        languages: splitList(form.languages),
+        subjects: splitList(form.subjects),
+        levels: splitList(form.levels),
+        years_experience: Number(form.yearsExperience) || 0,
+        teachingFormat: form.teachingFormat,
+        oneOnOneRateUsd: Number(form.oneOnOneRateUsd) || null,
+        groupRateUsd: Number(form.groupRateUsd) || null,
+        videoLink: form.videoLink || null,
+        instagramHandle: form.instagramHandle || null,
+        highestQualification: form.highestQualification || null,
+        teachingExperience: form.teachingExperience || null,
+        examBoard: form.examBoard || null,
+        examResultSummary: form.examResultSummary || null,
+      };
+      await DataStore.saveTutor(updated);
+      setTutor(updated);
+      toast.success("Public profile saved.");
+    } catch {
+      toast.error("Failed to save profile.");
+    } finally {
       setSaving(false);
-      toast.success("Connect DataStore.saveTutorProfile() to persist these changes.");
-    }, 800);
+    }
   };
+
+  if (loading) return <LoadingSpinner />;
+
+  if (!tutor) {
+    return (
+      <div>
+        <PageHeader title="Public Profile" description="Manage how students see you on the marketplace." />
+        <div className="rounded-lg border p-6 text-center text-sm text-muted-foreground">
+          No tutor profile found. Contact Alvey support if this is unexpected.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -41,149 +123,192 @@ function TutorPublicProfile() {
         title="Public Profile"
         description="Manage how students see you on the marketplace."
         action={
-          <Button onClick={handleSave} disabled={saving}>
-            {saving ? (
-              <span className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-            ) : (
-              <Save className="h-4 w-4 mr-2" />
+          <div className="flex gap-2">
+            {tutor.slug && (
+              <Button variant="outline" className="gap-2" asChild>
+                <a href={`/tutors/${tutor.slug}`} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="h-4 w-4" /> View Public Page
+                </a>
+              </Button>
             )}
-            Save Profile
-          </Button>
+            <Button onClick={handleSave} disabled={saving} className="gap-2">
+              {saving
+                ? <span className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                : <Save className="h-4 w-4" />}
+              Save Profile
+            </Button>
+          </div>
         }
       />
 
-      {/* TODO: Render Verified / Featured badges once tutor_profiles fields are populated from Appwrite. */}
+      {/* Status badges */}
+      <div className="flex gap-2 mb-6">
+        {tutor.is_verified && <Badge className="bg-blue-600 text-white">Verified</Badge>}
+        {tutor.is_featured && <Badge className="bg-amber-500 text-white">Featured</Badge>}
+        {tutor.rating_avg > 0 && (
+          <Badge variant="outline">⭐ {tutor.rating_avg.toFixed(1)} ({tutor.rating_count} reviews)</Badge>
+        )}
+      </div>
 
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <IdCard className="h-4 w-4" /> Profile Information
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-5">
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Professional Headline
-            </label>
-            <Input
-              value={profile.headline}
-              onChange={(e) => setProfile({ ...profile, headline: e.target.value })}
-              className="rounded-xl"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Biography
-            </label>
-            <textarea
-              value={profile.bio}
-              onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
-              rows={4}
-              className="w-full bg-background border border-border rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Teaching Philosophy
-            </label>
-            <textarea
-              value={profile.philosophy}
-              onChange={(e) => setProfile({ ...profile, philosophy: e.target.value })}
-              rows={3}
-              className="w-full bg-background border border-border rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-            />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-6">
+        {/* Core profile */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <IdCard className="h-4 w-4" /> Profile Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-5">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Languages (comma separated)
-              </label>
+              <Label>Professional Headline</Label>
               <Input
-                value={profile.languages.join(", ")}
-                onChange={(e) =>
-                  setProfile({
-                    ...profile,
-                    languages: e.target.value.split(",").map((s) => s.trim()),
-                  })
-                }
-                className="rounded-xl"
+                placeholder="e.g. Expert A-Level Mathematics Tutor"
+                value={form.headline}
+                onChange={(e) => setForm({ ...form, headline: e.target.value })}
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Years of Experience
-              </label>
+              <Label>About Me</Label>
+              <Textarea
+                rows={5}
+                placeholder="Tell students about yourself, your teaching style, and your experience…"
+                value={form.about}
+                onChange={(e) => setForm({ ...form, about: e.target.value })}
+              />
+            </div>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label>Teaching Experience</Label>
+                <Textarea
+                  rows={3}
+                  placeholder="Describe your teaching background…"
+                  value={form.teachingExperience}
+                  onChange={(e) => setForm({ ...form, teachingExperience: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Highest Qualification</Label>
+                <Input
+                  placeholder="e.g. BSc Mathematics, University of Oxford"
+                  value={form.highestQualification}
+                  onChange={(e) => setForm({ ...form, highestQualification: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Exam Board</Label>
+                <Input
+                  placeholder="e.g. Edexcel, AQA, OCR, Cambridge"
+                  value={form.examBoard}
+                  onChange={(e) => setForm({ ...form, examBoard: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Exam Result Summary</Label>
+                <Input
+                  placeholder="e.g. A* in Further Maths"
+                  value={form.examResultSummary}
+                  onChange={(e) => setForm({ ...form, examResultSummary: e.target.value })}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Teaching details */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Teaching Details</CardTitle>
+          </CardHeader>
+          <CardContent className="grid sm:grid-cols-2 gap-5">
+            <div className="space-y-1.5">
+              <Label>Subjects <span className="text-muted-foreground font-normal">(comma-separated)</span></Label>
+              <Input
+                placeholder="Mathematics, Physics, Chemistry"
+                value={form.subjects}
+                onChange={(e) => setForm({ ...form, subjects: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Academic Levels <span className="text-muted-foreground font-normal">(comma-separated)</span></Label>
+              <Input
+                placeholder="GCSE, A-Level, IB"
+                value={form.levels}
+                onChange={(e) => setForm({ ...form, levels: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Languages <span className="text-muted-foreground font-normal">(comma-separated)</span></Label>
+              <Input
+                placeholder="English, Arabic"
+                value={form.languages}
+                onChange={(e) => setForm({ ...form, languages: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Years of Experience</Label>
               <Input
                 type="number"
-                value={profile.yearsExperience}
-                onChange={(e) =>
-                  setProfile({ ...profile, yearsExperience: Number(e.target.value) })
-                }
-                className="rounded-xl"
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Subjects (comma separated)
-              </label>
-              <Input
-                value={profile.subjects.join(", ")}
-                onChange={(e) =>
-                  setProfile({
-                    ...profile,
-                    subjects: e.target.value.split(",").map((s) => s.trim()),
-                  })
-                }
-                className="rounded-xl"
+                min={0}
+                value={form.yearsExperience}
+                onChange={(e) => setForm({ ...form, yearsExperience: e.target.value })}
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Academic Levels (comma separated)
-              </label>
+              <Label>Teaching Format</Label>
               <Input
-                value={profile.levels.join(", ")}
-                onChange={(e) =>
-                  setProfile({ ...profile, levels: e.target.value.split(",").map((s) => s.trim()) })
-                }
-                className="rounded-xl"
+                placeholder="Online, In-person, Both"
+                value={form.teachingFormat}
+                onChange={(e) => setForm({ ...form, teachingFormat: e.target.value })}
               />
             </div>
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Qualifications
-            </label>
-            <Input
-              value={profile.qualifications}
-              onChange={(e) => setProfile({ ...profile, qualifications: e.target.value })}
-              className="rounded-xl"
-            />
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Profile Photograph</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-4">
-            {/* TODO: Load avatar from Appwrite Storage using the tutor's profile photo file ID. */}
-            <div className="h-20 w-20 rounded-2xl border bg-muted flex items-center justify-center text-xs text-muted-foreground">
-              No photo
+        {/* Pricing & links */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Pricing & Links</CardTitle>
+          </CardHeader>
+          <CardContent className="grid sm:grid-cols-2 gap-5">
+            <div className="space-y-1.5">
+              <Label>1-on-1 Rate (USD/hr)</Label>
+              <Input
+                type="number"
+                min={0}
+                placeholder="50"
+                value={form.oneOnOneRateUsd}
+                onChange={(e) => setForm({ ...form, oneOnOneRateUsd: e.target.value })}
+              />
             </div>
-            <Button variant="outline">
-              <Upload className="h-4 w-4 mr-2" /> Upload New Photo
-            </Button>
-          </div>
-          <p className="text-xs text-muted-foreground mt-3">
-            Profile photo changes may require staff approval.
-          </p>
-        </CardContent>
-      </Card>
+            <div className="space-y-1.5">
+              <Label>Group Rate (USD/hr)</Label>
+              <Input
+                type="number"
+                min={0}
+                placeholder="30"
+                value={form.groupRateUsd}
+                onChange={(e) => setForm({ ...form, groupRateUsd: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Intro Video URL</Label>
+              <Input
+                placeholder="https://youtube.com/…"
+                value={form.videoLink}
+                onChange={(e) => setForm({ ...form, videoLink: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Instagram Handle</Label>
+              <Input
+                placeholder="@yourhandle"
+                value={form.instagramHandle}
+                onChange={(e) => setForm({ ...form, instagramHandle: e.target.value })}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

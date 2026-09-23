@@ -21,6 +21,8 @@ dist-ssr
 .dev.vars
 
 # Editor directories and files
+.kiro/*
+.mcp.json
 .vscode/*
 !.vscode/extensions.json
 .idea

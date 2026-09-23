@@ -25,13 +25,8 @@ import { Route as PublicCreditsRouteImport } from './routes/_public.credits'
 import { Route as PublicContactRouteImport } from './routes/_public.contact'
 import { Route as PublicBlogsRouteImport } from './routes/_public.blogs'
 import { Route as PublicApplyRouteImport } from './routes/_public.apply'
-import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated.settings'
-import { Route as AuthenticatedScheduleRouteImport } from './routes/_authenticated.schedule'
 import { Route as AuthenticatedReviewsRouteImport } from './routes/_authenticated.reviews'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated.profile'
-import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated.notifications'
-import { Route as AuthenticatedMyTutorsRouteImport } from './routes/_authenticated.my-tutors'
-import { Route as AuthenticatedLessonsRouteImport } from './routes/_authenticated.lessons'
 import { Route as AuthenticatedCmsRouteImport } from './routes/_authenticated.cms'
 import { Route as PublicBlogsIndexRouteImport } from './routes/_public.blogs.index'
 import { Route as AuthenticatedTutorIndexRouteImport } from './routes/_authenticated/tutor/index'
@@ -46,13 +41,24 @@ import { Route as AuthenticatedTutorStudentsRouteImport } from './routes/_authen
 import { Route as AuthenticatedTutorSettingsRouteImport } from './routes/_authenticated/tutor/settings'
 import { Route as AuthenticatedTutorScheduleRouteImport } from './routes/_authenticated/tutor/schedule'
 import { Route as AuthenticatedTutorReviewsRouteImport } from './routes/_authenticated/tutor/reviews'
+import { Route as AuthenticatedTutorRecordingsRouteImport } from './routes/_authenticated/tutor/recordings'
 import { Route as AuthenticatedTutorProfileRouteImport } from './routes/_authenticated/tutor/profile'
 import { Route as AuthenticatedTutorNotificationsRouteImport } from './routes/_authenticated/tutor/notifications'
+import { Route as AuthenticatedTutorHomeworkRouteImport } from './routes/_authenticated/tutor/homework'
 import { Route as AuthenticatedTutorEarningsRouteImport } from './routes/_authenticated/tutor/earnings'
+import { Route as AuthenticatedTutorChatRouteImport } from './routes/_authenticated/tutor/chat'
 import { Route as AuthenticatedTutorAvailabilityRouteImport } from './routes/_authenticated/tutor/availability'
 import { Route as AuthenticatedTutorAdvertisementRouteImport } from './routes/_authenticated/tutor/advertisement'
 import { Route as AuthenticatedTutorAccountRouteImport } from './routes/_authenticated/tutor/account'
+import { Route as AuthenticatedStudentSettingsRouteImport } from './routes/_authenticated/student/settings'
+import { Route as AuthenticatedStudentScheduleRouteImport } from './routes/_authenticated/student/schedule'
+import { Route as AuthenticatedStudentRecordingsRouteImport } from './routes/_authenticated/student/recordings'
+import { Route as AuthenticatedStudentNotificationsRouteImport } from './routes/_authenticated/student/notifications'
+import { Route as AuthenticatedStudentMyTutorsRouteImport } from './routes/_authenticated/student/my-tutors'
+import { Route as AuthenticatedStudentLessonsRouteImport } from './routes/_authenticated/student/lessons'
+import { Route as AuthenticatedStudentHomeworkRouteImport } from './routes/_authenticated/student/homework'
 import { Route as AuthenticatedStudentDashboardRouteImport } from './routes/_authenticated/student/dashboard'
+import { Route as AuthenticatedStudentChatRouteImport } from './routes/_authenticated/student/chat'
 import { Route as AuthenticatedRecruitmentNotificationsRouteImport } from './routes/_authenticated/recruitment/notifications'
 import { Route as AuthenticatedRecruitmentNotesRouteImport } from './routes/_authenticated/recruitment/notes'
 import { Route as AuthenticatedRecruitmentDocumentsRouteImport } from './routes/_authenticated/recruitment/documents'
@@ -154,16 +160,6 @@ const PublicApplyRoute = PublicApplyRouteImport.update({
   path: '/apply',
   getParentRoute: () => PublicRoute,
 } as any)
-const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedScheduleRoute = AuthenticatedScheduleRouteImport.update({
-  id: '/schedule',
-  path: '/schedule',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
 const AuthenticatedReviewsRoute = AuthenticatedReviewsRouteImport.update({
   id: '/reviews',
   path: '/reviews',
@@ -172,22 +168,6 @@ const AuthenticatedReviewsRoute = AuthenticatedReviewsRouteImport.update({
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedNotificationsRoute =
-  AuthenticatedNotificationsRouteImport.update({
-    id: '/notifications',
-    path: '/notifications',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedMyTutorsRoute = AuthenticatedMyTutorsRouteImport.update({
-  id: '/my-tutors',
-  path: '/my-tutors',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedLessonsRoute = AuthenticatedLessonsRouteImport.update({
-  id: '/lessons',
-  path: '/lessons',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedCmsRoute = AuthenticatedCmsRouteImport.update({
@@ -265,6 +245,12 @@ const AuthenticatedTutorReviewsRoute =
     path: '/tutor/reviews',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedTutorRecordingsRoute =
+  AuthenticatedTutorRecordingsRouteImport.update({
+    id: '/tutor/recordings',
+    path: '/tutor/recordings',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedTutorProfileRoute =
   AuthenticatedTutorProfileRouteImport.update({
     id: '/tutor/profile',
@@ -277,12 +263,23 @@ const AuthenticatedTutorNotificationsRoute =
     path: '/tutor/notifications',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedTutorHomeworkRoute =
+  AuthenticatedTutorHomeworkRouteImport.update({
+    id: '/tutor/homework',
+    path: '/tutor/homework',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedTutorEarningsRoute =
   AuthenticatedTutorEarningsRouteImport.update({
     id: '/tutor/earnings',
     path: '/tutor/earnings',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedTutorChatRoute = AuthenticatedTutorChatRouteImport.update({
+  id: '/tutor/chat',
+  path: '/tutor/chat',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedTutorAvailabilityRoute =
   AuthenticatedTutorAvailabilityRouteImport.update({
     id: '/tutor/availability',
@@ -301,10 +298,58 @@ const AuthenticatedTutorAccountRoute =
     path: '/tutor/account',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedStudentSettingsRoute =
+  AuthenticatedStudentSettingsRouteImport.update({
+    id: '/student/settings',
+    path: '/student/settings',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedStudentScheduleRoute =
+  AuthenticatedStudentScheduleRouteImport.update({
+    id: '/student/schedule',
+    path: '/student/schedule',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedStudentRecordingsRoute =
+  AuthenticatedStudentRecordingsRouteImport.update({
+    id: '/student/recordings',
+    path: '/student/recordings',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedStudentNotificationsRoute =
+  AuthenticatedStudentNotificationsRouteImport.update({
+    id: '/student/notifications',
+    path: '/student/notifications',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedStudentMyTutorsRoute =
+  AuthenticatedStudentMyTutorsRouteImport.update({
+    id: '/student/my-tutors',
+    path: '/student/my-tutors',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedStudentLessonsRoute =
+  AuthenticatedStudentLessonsRouteImport.update({
+    id: '/student/lessons',
+    path: '/student/lessons',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedStudentHomeworkRoute =
+  AuthenticatedStudentHomeworkRouteImport.update({
+    id: '/student/homework',
+    path: '/student/homework',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedStudentDashboardRoute =
   AuthenticatedStudentDashboardRouteImport.update({
     id: '/student/dashboard',
     path: '/student/dashboard',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedStudentChatRoute =
+  AuthenticatedStudentChatRouteImport.update({
+    id: '/student/chat',
+    path: '/student/chat',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedRecruitmentNotificationsRoute =
@@ -444,13 +489,8 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/verify-email': typeof VerifyEmailRoute
   '/cms': typeof AuthenticatedCmsRoute
-  '/lessons': typeof AuthenticatedLessonsRoute
-  '/my-tutors': typeof AuthenticatedMyTutorsRoute
-  '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/reviews': typeof AuthenticatedReviewsRoute
-  '/schedule': typeof AuthenticatedScheduleRoute
-  '/settings': typeof AuthenticatedSettingsRoute
   '/apply': typeof PublicApplyRoute
   '/blogs': typeof PublicBlogsRouteWithChildren
   '/contact': typeof PublicContactRoute
@@ -483,13 +523,24 @@ export interface FileRoutesByFullPath {
   '/recruitment/documents': typeof AuthenticatedRecruitmentDocumentsRoute
   '/recruitment/notes': typeof AuthenticatedRecruitmentNotesRoute
   '/recruitment/notifications': typeof AuthenticatedRecruitmentNotificationsRoute
+  '/student/chat': typeof AuthenticatedStudentChatRoute
   '/student/dashboard': typeof AuthenticatedStudentDashboardRoute
+  '/student/homework': typeof AuthenticatedStudentHomeworkRoute
+  '/student/lessons': typeof AuthenticatedStudentLessonsRoute
+  '/student/my-tutors': typeof AuthenticatedStudentMyTutorsRoute
+  '/student/notifications': typeof AuthenticatedStudentNotificationsRoute
+  '/student/recordings': typeof AuthenticatedStudentRecordingsRoute
+  '/student/schedule': typeof AuthenticatedStudentScheduleRoute
+  '/student/settings': typeof AuthenticatedStudentSettingsRoute
   '/tutor/account': typeof AuthenticatedTutorAccountRoute
   '/tutor/advertisement': typeof AuthenticatedTutorAdvertisementRoute
   '/tutor/availability': typeof AuthenticatedTutorAvailabilityRoute
+  '/tutor/chat': typeof AuthenticatedTutorChatRoute
   '/tutor/earnings': typeof AuthenticatedTutorEarningsRoute
+  '/tutor/homework': typeof AuthenticatedTutorHomeworkRoute
   '/tutor/notifications': typeof AuthenticatedTutorNotificationsRoute
   '/tutor/profile': typeof AuthenticatedTutorProfileRoute
+  '/tutor/recordings': typeof AuthenticatedTutorRecordingsRoute
   '/tutor/reviews': typeof AuthenticatedTutorReviewsRoute
   '/tutor/schedule': typeof AuthenticatedTutorScheduleRoute
   '/tutor/settings': typeof AuthenticatedTutorSettingsRoute
@@ -510,13 +561,8 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/verify-email': typeof VerifyEmailRoute
   '/cms': typeof AuthenticatedCmsRoute
-  '/lessons': typeof AuthenticatedLessonsRoute
-  '/my-tutors': typeof AuthenticatedMyTutorsRoute
-  '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/reviews': typeof AuthenticatedReviewsRoute
-  '/schedule': typeof AuthenticatedScheduleRoute
-  '/settings': typeof AuthenticatedSettingsRoute
   '/apply': typeof PublicApplyRoute
   '/contact': typeof PublicContactRoute
   '/credits': typeof PublicCreditsRoute
@@ -548,13 +594,24 @@ export interface FileRoutesByTo {
   '/recruitment/documents': typeof AuthenticatedRecruitmentDocumentsRoute
   '/recruitment/notes': typeof AuthenticatedRecruitmentNotesRoute
   '/recruitment/notifications': typeof AuthenticatedRecruitmentNotificationsRoute
+  '/student/chat': typeof AuthenticatedStudentChatRoute
   '/student/dashboard': typeof AuthenticatedStudentDashboardRoute
+  '/student/homework': typeof AuthenticatedStudentHomeworkRoute
+  '/student/lessons': typeof AuthenticatedStudentLessonsRoute
+  '/student/my-tutors': typeof AuthenticatedStudentMyTutorsRoute
+  '/student/notifications': typeof AuthenticatedStudentNotificationsRoute
+  '/student/recordings': typeof AuthenticatedStudentRecordingsRoute
+  '/student/schedule': typeof AuthenticatedStudentScheduleRoute
+  '/student/settings': typeof AuthenticatedStudentSettingsRoute
   '/tutor/account': typeof AuthenticatedTutorAccountRoute
   '/tutor/advertisement': typeof AuthenticatedTutorAdvertisementRoute
   '/tutor/availability': typeof AuthenticatedTutorAvailabilityRoute
+  '/tutor/chat': typeof AuthenticatedTutorChatRoute
   '/tutor/earnings': typeof AuthenticatedTutorEarningsRoute
+  '/tutor/homework': typeof AuthenticatedTutorHomeworkRoute
   '/tutor/notifications': typeof AuthenticatedTutorNotificationsRoute
   '/tutor/profile': typeof AuthenticatedTutorProfileRoute
+  '/tutor/recordings': typeof AuthenticatedTutorRecordingsRoute
   '/tutor/reviews': typeof AuthenticatedTutorReviewsRoute
   '/tutor/schedule': typeof AuthenticatedTutorScheduleRoute
   '/tutor/settings': typeof AuthenticatedTutorSettingsRoute
@@ -577,13 +634,8 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/verify-email': typeof VerifyEmailRoute
   '/_authenticated/cms': typeof AuthenticatedCmsRoute
-  '/_authenticated/lessons': typeof AuthenticatedLessonsRoute
-  '/_authenticated/my-tutors': typeof AuthenticatedMyTutorsRoute
-  '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/reviews': typeof AuthenticatedReviewsRoute
-  '/_authenticated/schedule': typeof AuthenticatedScheduleRoute
-  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_public/apply': typeof PublicApplyRoute
   '/_public/blogs': typeof PublicBlogsRouteWithChildren
   '/_public/contact': typeof PublicContactRoute
@@ -617,13 +669,24 @@ export interface FileRoutesById {
   '/_authenticated/recruitment/documents': typeof AuthenticatedRecruitmentDocumentsRoute
   '/_authenticated/recruitment/notes': typeof AuthenticatedRecruitmentNotesRoute
   '/_authenticated/recruitment/notifications': typeof AuthenticatedRecruitmentNotificationsRoute
+  '/_authenticated/student/chat': typeof AuthenticatedStudentChatRoute
   '/_authenticated/student/dashboard': typeof AuthenticatedStudentDashboardRoute
+  '/_authenticated/student/homework': typeof AuthenticatedStudentHomeworkRoute
+  '/_authenticated/student/lessons': typeof AuthenticatedStudentLessonsRoute
+  '/_authenticated/student/my-tutors': typeof AuthenticatedStudentMyTutorsRoute
+  '/_authenticated/student/notifications': typeof AuthenticatedStudentNotificationsRoute
+  '/_authenticated/student/recordings': typeof AuthenticatedStudentRecordingsRoute
+  '/_authenticated/student/schedule': typeof AuthenticatedStudentScheduleRoute
+  '/_authenticated/student/settings': typeof AuthenticatedStudentSettingsRoute
   '/_authenticated/tutor/account': typeof AuthenticatedTutorAccountRoute
   '/_authenticated/tutor/advertisement': typeof AuthenticatedTutorAdvertisementRoute
   '/_authenticated/tutor/availability': typeof AuthenticatedTutorAvailabilityRoute
+  '/_authenticated/tutor/chat': typeof AuthenticatedTutorChatRoute
   '/_authenticated/tutor/earnings': typeof AuthenticatedTutorEarningsRoute
+  '/_authenticated/tutor/homework': typeof AuthenticatedTutorHomeworkRoute
   '/_authenticated/tutor/notifications': typeof AuthenticatedTutorNotificationsRoute
   '/_authenticated/tutor/profile': typeof AuthenticatedTutorProfileRoute
+  '/_authenticated/tutor/recordings': typeof AuthenticatedTutorRecordingsRoute
   '/_authenticated/tutor/reviews': typeof AuthenticatedTutorReviewsRoute
   '/_authenticated/tutor/schedule': typeof AuthenticatedTutorScheduleRoute
   '/_authenticated/tutor/settings': typeof AuthenticatedTutorSettingsRoute
@@ -646,13 +709,8 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/verify-email'
     | '/cms'
-    | '/lessons'
-    | '/my-tutors'
-    | '/notifications'
     | '/profile'
     | '/reviews'
-    | '/schedule'
-    | '/settings'
     | '/apply'
     | '/blogs'
     | '/contact'
@@ -685,13 +743,24 @@ export interface FileRouteTypes {
     | '/recruitment/documents'
     | '/recruitment/notes'
     | '/recruitment/notifications'
+    | '/student/chat'
     | '/student/dashboard'
+    | '/student/homework'
+    | '/student/lessons'
+    | '/student/my-tutors'
+    | '/student/notifications'
+    | '/student/recordings'
+    | '/student/schedule'
+    | '/student/settings'
     | '/tutor/account'
     | '/tutor/advertisement'
     | '/tutor/availability'
+    | '/tutor/chat'
     | '/tutor/earnings'
+    | '/tutor/homework'
     | '/tutor/notifications'
     | '/tutor/profile'
+    | '/tutor/recordings'
     | '/tutor/reviews'
     | '/tutor/schedule'
     | '/tutor/settings'
@@ -712,13 +781,8 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/verify-email'
     | '/cms'
-    | '/lessons'
-    | '/my-tutors'
-    | '/notifications'
     | '/profile'
     | '/reviews'
-    | '/schedule'
-    | '/settings'
     | '/apply'
     | '/contact'
     | '/credits'
@@ -750,13 +814,24 @@ export interface FileRouteTypes {
     | '/recruitment/documents'
     | '/recruitment/notes'
     | '/recruitment/notifications'
+    | '/student/chat'
     | '/student/dashboard'
+    | '/student/homework'
+    | '/student/lessons'
+    | '/student/my-tutors'
+    | '/student/notifications'
+    | '/student/recordings'
+    | '/student/schedule'
+    | '/student/settings'
     | '/tutor/account'
     | '/tutor/advertisement'
     | '/tutor/availability'
+    | '/tutor/chat'
     | '/tutor/earnings'
+    | '/tutor/homework'
     | '/tutor/notifications'
     | '/tutor/profile'
+    | '/tutor/recordings'
     | '/tutor/reviews'
     | '/tutor/schedule'
     | '/tutor/settings'
@@ -778,13 +853,8 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/verify-email'
     | '/_authenticated/cms'
-    | '/_authenticated/lessons'
-    | '/_authenticated/my-tutors'
-    | '/_authenticated/notifications'
     | '/_authenticated/profile'
     | '/_authenticated/reviews'
-    | '/_authenticated/schedule'
-    | '/_authenticated/settings'
     | '/_public/apply'
     | '/_public/blogs'
     | '/_public/contact'
@@ -818,13 +888,24 @@ export interface FileRouteTypes {
     | '/_authenticated/recruitment/documents'
     | '/_authenticated/recruitment/notes'
     | '/_authenticated/recruitment/notifications'
+    | '/_authenticated/student/chat'
     | '/_authenticated/student/dashboard'
+    | '/_authenticated/student/homework'
+    | '/_authenticated/student/lessons'
+    | '/_authenticated/student/my-tutors'
+    | '/_authenticated/student/notifications'
+    | '/_authenticated/student/recordings'
+    | '/_authenticated/student/schedule'
+    | '/_authenticated/student/settings'
     | '/_authenticated/tutor/account'
     | '/_authenticated/tutor/advertisement'
     | '/_authenticated/tutor/availability'
+    | '/_authenticated/tutor/chat'
     | '/_authenticated/tutor/earnings'
+    | '/_authenticated/tutor/homework'
     | '/_authenticated/tutor/notifications'
     | '/_authenticated/tutor/profile'
+    | '/_authenticated/tutor/recordings'
     | '/_authenticated/tutor/reviews'
     | '/_authenticated/tutor/schedule'
     | '/_authenticated/tutor/settings'
@@ -967,20 +1048,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicApplyRouteImport
       parentRoute: typeof PublicRoute
     }
-    '/_authenticated/settings': {
-      id: '/_authenticated/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/schedule': {
-      id: '/_authenticated/schedule'
-      path: '/schedule'
-      fullPath: '/schedule'
-      preLoaderRoute: typeof AuthenticatedScheduleRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/reviews': {
       id: '/_authenticated/reviews'
       path: '/reviews'
@@ -993,27 +1060,6 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/notifications': {
-      id: '/_authenticated/notifications'
-      path: '/notifications'
-      fullPath: '/notifications'
-      preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/my-tutors': {
-      id: '/_authenticated/my-tutors'
-      path: '/my-tutors'
-      fullPath: '/my-tutors'
-      preLoaderRoute: typeof AuthenticatedMyTutorsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/lessons': {
-      id: '/_authenticated/lessons'
-      path: '/lessons'
-      fullPath: '/lessons'
-      preLoaderRoute: typeof AuthenticatedLessonsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/cms': {
@@ -1114,6 +1160,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTutorReviewsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/tutor/recordings': {
+      id: '/_authenticated/tutor/recordings'
+      path: '/tutor/recordings'
+      fullPath: '/tutor/recordings'
+      preLoaderRoute: typeof AuthenticatedTutorRecordingsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/tutor/profile': {
       id: '/_authenticated/tutor/profile'
       path: '/tutor/profile'
@@ -1128,11 +1181,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTutorNotificationsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/tutor/homework': {
+      id: '/_authenticated/tutor/homework'
+      path: '/tutor/homework'
+      fullPath: '/tutor/homework'
+      preLoaderRoute: typeof AuthenticatedTutorHomeworkRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/tutor/earnings': {
       id: '/_authenticated/tutor/earnings'
       path: '/tutor/earnings'
       fullPath: '/tutor/earnings'
       preLoaderRoute: typeof AuthenticatedTutorEarningsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/tutor/chat': {
+      id: '/_authenticated/tutor/chat'
+      path: '/tutor/chat'
+      fullPath: '/tutor/chat'
+      preLoaderRoute: typeof AuthenticatedTutorChatRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/tutor/availability': {
@@ -1156,11 +1223,67 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTutorAccountRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/student/settings': {
+      id: '/_authenticated/student/settings'
+      path: '/student/settings'
+      fullPath: '/student/settings'
+      preLoaderRoute: typeof AuthenticatedStudentSettingsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/student/schedule': {
+      id: '/_authenticated/student/schedule'
+      path: '/student/schedule'
+      fullPath: '/student/schedule'
+      preLoaderRoute: typeof AuthenticatedStudentScheduleRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/student/recordings': {
+      id: '/_authenticated/student/recordings'
+      path: '/student/recordings'
+      fullPath: '/student/recordings'
+      preLoaderRoute: typeof AuthenticatedStudentRecordingsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/student/notifications': {
+      id: '/_authenticated/student/notifications'
+      path: '/student/notifications'
+      fullPath: '/student/notifications'
+      preLoaderRoute: typeof AuthenticatedStudentNotificationsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/student/my-tutors': {
+      id: '/_authenticated/student/my-tutors'
+      path: '/student/my-tutors'
+      fullPath: '/student/my-tutors'
+      preLoaderRoute: typeof AuthenticatedStudentMyTutorsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/student/lessons': {
+      id: '/_authenticated/student/lessons'
+      path: '/student/lessons'
+      fullPath: '/student/lessons'
+      preLoaderRoute: typeof AuthenticatedStudentLessonsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/student/homework': {
+      id: '/_authenticated/student/homework'
+      path: '/student/homework'
+      fullPath: '/student/homework'
+      preLoaderRoute: typeof AuthenticatedStudentHomeworkRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/student/dashboard': {
       id: '/_authenticated/student/dashboard'
       path: '/student/dashboard'
       fullPath: '/student/dashboard'
       preLoaderRoute: typeof AuthenticatedStudentDashboardRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/student/chat': {
+      id: '/_authenticated/student/chat'
+      path: '/student/chat'
+      fullPath: '/student/chat'
+      preLoaderRoute: typeof AuthenticatedStudentChatRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/recruitment/notifications': {
@@ -1322,13 +1445,8 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedCmsRoute: typeof AuthenticatedCmsRoute
-  AuthenticatedLessonsRoute: typeof AuthenticatedLessonsRoute
-  AuthenticatedMyTutorsRoute: typeof AuthenticatedMyTutorsRoute
-  AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedReviewsRoute: typeof AuthenticatedReviewsRoute
-  AuthenticatedScheduleRoute: typeof AuthenticatedScheduleRoute
-  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedAdminAdvertisementsRoute: typeof AuthenticatedAdminAdvertisementsRoute
   AuthenticatedAdminAiAssistantRoute: typeof AuthenticatedAdminAiAssistantRoute
   AuthenticatedAdminAnalyticsRoute: typeof AuthenticatedAdminAnalyticsRoute
@@ -1351,13 +1469,24 @@ interface AuthenticatedRouteChildren {
   AuthenticatedRecruitmentDocumentsRoute: typeof AuthenticatedRecruitmentDocumentsRoute
   AuthenticatedRecruitmentNotesRoute: typeof AuthenticatedRecruitmentNotesRoute
   AuthenticatedRecruitmentNotificationsRoute: typeof AuthenticatedRecruitmentNotificationsRoute
+  AuthenticatedStudentChatRoute: typeof AuthenticatedStudentChatRoute
   AuthenticatedStudentDashboardRoute: typeof AuthenticatedStudentDashboardRoute
+  AuthenticatedStudentHomeworkRoute: typeof AuthenticatedStudentHomeworkRoute
+  AuthenticatedStudentLessonsRoute: typeof AuthenticatedStudentLessonsRoute
+  AuthenticatedStudentMyTutorsRoute: typeof AuthenticatedStudentMyTutorsRoute
+  AuthenticatedStudentNotificationsRoute: typeof AuthenticatedStudentNotificationsRoute
+  AuthenticatedStudentRecordingsRoute: typeof AuthenticatedStudentRecordingsRoute
+  AuthenticatedStudentScheduleRoute: typeof AuthenticatedStudentScheduleRoute
+  AuthenticatedStudentSettingsRoute: typeof AuthenticatedStudentSettingsRoute
   AuthenticatedTutorAccountRoute: typeof AuthenticatedTutorAccountRoute
   AuthenticatedTutorAdvertisementRoute: typeof AuthenticatedTutorAdvertisementRoute
   AuthenticatedTutorAvailabilityRoute: typeof AuthenticatedTutorAvailabilityRoute
+  AuthenticatedTutorChatRoute: typeof AuthenticatedTutorChatRoute
   AuthenticatedTutorEarningsRoute: typeof AuthenticatedTutorEarningsRoute
+  AuthenticatedTutorHomeworkRoute: typeof AuthenticatedTutorHomeworkRoute
   AuthenticatedTutorNotificationsRoute: typeof AuthenticatedTutorNotificationsRoute
   AuthenticatedTutorProfileRoute: typeof AuthenticatedTutorProfileRoute
+  AuthenticatedTutorRecordingsRoute: typeof AuthenticatedTutorRecordingsRoute
   AuthenticatedTutorReviewsRoute: typeof AuthenticatedTutorReviewsRoute
   AuthenticatedTutorScheduleRoute: typeof AuthenticatedTutorScheduleRoute
   AuthenticatedTutorSettingsRoute: typeof AuthenticatedTutorSettingsRoute
@@ -1369,13 +1498,8 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedCmsRoute: AuthenticatedCmsRoute,
-  AuthenticatedLessonsRoute: AuthenticatedLessonsRoute,
-  AuthenticatedMyTutorsRoute: AuthenticatedMyTutorsRoute,
-  AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedReviewsRoute: AuthenticatedReviewsRoute,
-  AuthenticatedScheduleRoute: AuthenticatedScheduleRoute,
-  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedAdminAdvertisementsRoute: AuthenticatedAdminAdvertisementsRoute,
   AuthenticatedAdminAiAssistantRoute: AuthenticatedAdminAiAssistantRoute,
   AuthenticatedAdminAnalyticsRoute: AuthenticatedAdminAnalyticsRoute,
@@ -1406,13 +1530,25 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedRecruitmentNotesRoute: AuthenticatedRecruitmentNotesRoute,
   AuthenticatedRecruitmentNotificationsRoute:
     AuthenticatedRecruitmentNotificationsRoute,
+  AuthenticatedStudentChatRoute: AuthenticatedStudentChatRoute,
   AuthenticatedStudentDashboardRoute: AuthenticatedStudentDashboardRoute,
+  AuthenticatedStudentHomeworkRoute: AuthenticatedStudentHomeworkRoute,
+  AuthenticatedStudentLessonsRoute: AuthenticatedStudentLessonsRoute,
+  AuthenticatedStudentMyTutorsRoute: AuthenticatedStudentMyTutorsRoute,
+  AuthenticatedStudentNotificationsRoute:
+    AuthenticatedStudentNotificationsRoute,
+  AuthenticatedStudentRecordingsRoute: AuthenticatedStudentRecordingsRoute,
+  AuthenticatedStudentScheduleRoute: AuthenticatedStudentScheduleRoute,
+  AuthenticatedStudentSettingsRoute: AuthenticatedStudentSettingsRoute,
   AuthenticatedTutorAccountRoute: AuthenticatedTutorAccountRoute,
   AuthenticatedTutorAdvertisementRoute: AuthenticatedTutorAdvertisementRoute,
   AuthenticatedTutorAvailabilityRoute: AuthenticatedTutorAvailabilityRoute,
+  AuthenticatedTutorChatRoute: AuthenticatedTutorChatRoute,
   AuthenticatedTutorEarningsRoute: AuthenticatedTutorEarningsRoute,
+  AuthenticatedTutorHomeworkRoute: AuthenticatedTutorHomeworkRoute,
   AuthenticatedTutorNotificationsRoute: AuthenticatedTutorNotificationsRoute,
   AuthenticatedTutorProfileRoute: AuthenticatedTutorProfileRoute,
+  AuthenticatedTutorRecordingsRoute: AuthenticatedTutorRecordingsRoute,
   AuthenticatedTutorReviewsRoute: AuthenticatedTutorReviewsRoute,
   AuthenticatedTutorScheduleRoute: AuthenticatedTutorScheduleRoute,
   AuthenticatedTutorSettingsRoute: AuthenticatedTutorSettingsRoute,

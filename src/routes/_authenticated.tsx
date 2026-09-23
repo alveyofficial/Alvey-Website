@@ -25,7 +25,9 @@ import {
   BarChart3,
   Archive,
   Home,
-  Newspaper
+  Newspaper,
+  BookMarked,
+  Video,
 } from "lucide-react";
 
 type Role =
@@ -77,14 +79,14 @@ const guestNav: NavItem[] = [
 // ─────────────────────────────────────────────────────────────────────────────
 
 const studentNav: NavItem[] = [
-  { name: "Dashboard", href: "/student/dashboard", icon: LayoutDashboard },
-  { name: "My Tutors", href: "/my-tutors", icon: Users },
-  { name: "Schedule", href: "/schedule", icon: Calendar },
-  { name: "Lesson History", href: "/lessons", icon: Clock },
-  { name: "Reviews", href: "/reviews", icon: Star },
-  { name: "Notifications", href: "/notifications", icon: Bell },
-  { name: "Profile", href: "/profile", icon: User },
-  { name: "Settings", href: "/settings", icon: Settings },
+  { name: "Dashboard",    href: "/student/dashboard",   icon: LayoutDashboard },
+  { name: "My Tutors",    href: "/student/my-tutors",   icon: Users },
+  { name: "Schedule",     href: "/student/schedule",    icon: Calendar },
+  { name: "Homework",     href: "/student/homework",    icon: BookMarked },
+  { name: "Chat",         href: "/student/chat",        icon: MessageSquare },
+  { name: "Recordings",   href: "/student/recordings",  icon: Video },
+  { name: "Notifications",href: "/student/notifications",icon: Bell },
+  { name: "Settings",     href: "/student/settings",    icon: Settings },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -92,17 +94,19 @@ const studentNav: NavItem[] = [
 // ─────────────────────────────────────────────────────────────────────────────
 
 const tutorNav: NavItem[] = [
-  { name: "Dashboard", href: "/tutor-dashboard", icon: LayoutDashboard },
-  { name: "My Students", href: "/tutor-students", icon: Users },
-  { name: "Schedule", href: "/tutor-schedule", icon: Calendar },
-  { name: "Availability", href: "/tutor-availability", icon: Clock },
-  { name: "Advertisement", href: "/tutor-advertisement", icon: Megaphone },
-  { name: "Public Profile", href: "/tutor-profile", icon: IdCard },
-  { name: "Reviews", href: "/tutor-reviews", icon: Star },
-  { name: "Earnings", href: "/tutor-earnings", icon: DollarSign },
-  { name: "Notifications", href: "/tutor-notifications", icon: Bell },
-  { name: "Profile", href: "/tutor-account", icon: User },
-  { name: "Settings", href: "/tutor-settings", icon: Settings },
+  { name: "Dashboard",    href: "/tutor/",              icon: LayoutDashboard },
+  { name: "My Students",  href: "/tutor/students",      icon: Users },
+  { name: "Schedule",     href: "/tutor/schedule",      icon: Calendar },
+  { name: "Homework",     href: "/tutor/homework",      icon: BookMarked },
+  { name: "Chat",         href: "/tutor/chat",          icon: MessageSquare },
+  { name: "Recordings",   href: "/tutor/recordings",    icon: Video },
+  { name: "Availability", href: "/tutor/availability",  icon: Clock },
+  { name: "Earnings",     href: "/tutor/earnings",      icon: DollarSign },
+  { name: "Reviews",      href: "/tutor/reviews",       icon: Star },
+  { name: "Public Profile",href: "/tutor/profile",      icon: IdCard },
+  { name: "Advertisement",href: "/tutor/advertisement", icon: Megaphone },
+  { name: "Notifications",href: "/tutor/notifications", icon: Bell },
+  { name: "Settings",     href: "/tutor/settings",      icon: Settings },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, no-empty */
 import { ID, Permission, Query, Role } from "appwrite";
-import { appwrite, APPWRITE_DATABASE_ID, getCurrentUser } from "@/integrations/appwrite/client";
+import { appwrite, APPWRITE_DATABASE_ID, APPWRITE_ENDPOINT, APPWRITE_PROJECT_ID, getCurrentUser } from "@/integrations/appwrite/client";
 
 
 export interface Tutor {
@@ -3230,6 +3230,631 @@ export const DataStore = {
 
   archiveAdvertisement: async (id: string): Promise<void> => {
     await upsertDocument(COLLECTIONS.TUTOR_ADS, id, { isDeleted: true, status: "archived" });
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // TUTOR — get students assigned to a specific tutor
+  // ─────────────────────────────────────────────────────────────────────────────
+  getStudentsForTutor: async (tutorId: string): Promise<any[]> => {
+    try {
+      const docs = await listDocuments(COLLECTIONS.ASSIGNMENTS, [
+        Query.equal("tutorId", tutorId),
+        Query.equal("isActive", true),
+      ]);
+      if (docs.length === 0) return [];
+
+      // Fetch user records for each student
+      const students = await Promise.all(
+        docs.map(async (a: any) => {
+          const userId = a.studentId;
+          let userRecord: any = null;
+          try {
+            userRecord = await getDocument(COLLECTIONS.USERS, userId);
+          } catch { /* user record may not exist yet */ }
+          const name = userRecord?.displayName || userRecord?.email || "Student";
+          return {
+            assignmentId: a.$id,
+            studentId: userId,
+            remainingClasses: a.remainingClasses ?? 0,
+            assignedAt: a.createdAt || a.$createdAt,
+            name,
+            email: userRecord?.email || "",
+            avatar_url: avatarFor(name),
+          };
+        })
+      );
+      return students;
+    } catch (error) {
+      console.error("Failed to load students for tutor:", error);
+      return [];
+    }
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // LESSONS — enriched with student/tutor display names
+  // ─────────────────────────────────────────────────────────────────────────────
+  getLessonsForTutor: async (tutorId: string): Promise<any[]> => {
+    try {
+      const [docs, assignments] = await Promise.all([
+        listDocuments(COLLECTIONS.LESSONS, [
+          Query.equal("tutorId", tutorId),
+          Query.equal("isDeleted", false),
+          Query.orderAsc("startsAt"),
+          Query.limit(200),
+        ]),
+        listDocuments(COLLECTIONS.ASSIGNMENTS, [
+          Query.equal("tutorId", tutorId),
+          Query.equal("isActive", true),
+        ]),
+      ]);
+
+      // Build a student name map from user records
+      const studentIds = [...new Set(docs.map((d: any) => d.studentId).filter(Boolean))];
+      const nameMap: Record<string, string> = {};
+      await Promise.all(
+        studentIds.map(async (sid: string) => {
+          try {
+            const u = await getDocument(COLLECTIONS.USERS, sid);
+            nameMap[sid] = u?.displayName || u?.email || "Student";
+          } catch { nameMap[sid] = "Student"; }
+        })
+      );
+
+      return docs.map((doc: any) => ({
+        ...mapLessonDoc(doc),
+        studentName: nameMap[doc.studentId] || "Student",
+        studentAvatar: avatarFor(nameMap[doc.studentId] || "Student"),
+      }));
+    } catch (error) {
+      console.error("Failed to load lessons for tutor:", error);
+      return [];
+    }
+  },
+
+  getLessonsForStudent: async (studentId: string): Promise<any[]> => {
+    try {
+      const docs = await listDocuments(COLLECTIONS.LESSONS, [
+        Query.equal("studentId", studentId),
+        Query.equal("isDeleted", false),
+        Query.orderAsc("startsAt"),
+        Query.limit(200),
+      ]);
+
+      const tutors = await DataStore.getTutors();
+      return docs.map((doc: any) => {
+        const lesson = mapLessonDoc(doc);
+        const tutor = tutors.find((t) => t.id === lesson.tutor_id);
+        return {
+          ...lesson,
+          tutorName: tutor?.name || "Tutor",
+          tutorAvatar: tutor?.avatar_url || avatarFor("Tutor"),
+        };
+      });
+    } catch (error) {
+      console.error("Failed to load lessons for student:", error);
+      return [];
+    }
+  },
+
+  updateLessonStatus: async (lessonId: string, status: string): Promise<void> => {
+    await upsertDocument(COLLECTIONS.LESSONS, lessonId, { status });
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // HOMEWORK
+  // ─────────────────────────────────────────────────────────────────────────────
+  getHomeworkForTutor: async (tutorId: string): Promise<any[]> => {
+    try {
+      const docs = await listDocuments("homework", [
+        Query.equal("tutorId", tutorId),
+        Query.equal("isDeleted", false),
+        Query.orderDesc("createdAt"),
+        Query.limit(100),
+      ]);
+      // Enrich with student names
+      const nameMap: Record<string, string> = {};
+      const studentIds = [...new Set(docs.map((d: any) => d.studentId).filter(Boolean))];
+      await Promise.all(
+        studentIds.map(async (sid: string) => {
+          try {
+            const u = await getDocument(COLLECTIONS.USERS, sid);
+            nameMap[sid] = u?.displayName || u?.email || "Student";
+          } catch { nameMap[sid] = "Student"; }
+        })
+      );
+      return docs.map((d: any) => ({ ...d, id: d.$id, studentName: nameMap[d.studentId] || "Student" }));
+    } catch { return []; }
+  },
+
+  getHomeworkForStudent: async (studentId: string): Promise<any[]> => {
+    try {
+      const docs = await listDocuments("homework", [
+        Query.equal("studentId", studentId),
+        Query.equal("isDeleted", false),
+        Query.orderDesc("createdAt"),
+        Query.limit(100),
+      ]);
+      const tutors = await DataStore.getTutors();
+      return docs.map((d: any) => {
+        const tutor = tutors.find((t) => t.id === d.tutorId);
+        return { ...d, id: d.$id, tutorName: tutor?.name || "Tutor" };
+      });
+    } catch { return []; }
+  },
+
+  createHomework: async (hw: {
+    tutorId: string;
+    studentId: string;
+    title: string;
+    instructions?: string;
+    dueDate?: string;
+    fileIds?: string[];
+    fileNames?: string[];
+  }): Promise<any> => {
+    const doc = await createDocument("homework", {
+      tutorId: hw.tutorId,
+      studentId: hw.studentId,
+      title: hw.title,
+      instructions: hw.instructions || "",
+      dueDate: hw.dueDate || null,
+      status: "assigned",
+      fileIds: hw.fileIds || [],
+      fileNames: hw.fileNames || [],
+      submissionFileIds: [],
+      submissionFileNames: [],
+      submittedAt: null,
+      createdAt: new Date().toISOString(),
+      isDeleted: false,
+    });
+    // Notify student
+    await DataStore.notifyUser({
+      userId: hw.studentId,
+      userRole: "student",
+      type: "homework",
+      title: "New Homework Assigned",
+      body: `New homework: "${hw.title}"${hw.dueDate ? ` — due ${new Date(hw.dueDate).toLocaleDateString()}` : ""}`,
+      link: "/student/homework",
+    });
+    return doc;
+  },
+
+  submitHomework: async (homeworkId: string, studentId: string, fileIds: string[], fileNames: string[]): Promise<void> => {
+    const doc = await getDocument("homework", homeworkId);
+    if (!doc) throw new Error("Homework not found");
+    const now = new Date().toISOString();
+    const dueDate = doc.dueDate ? new Date(doc.dueDate) : null;
+    const isLate = dueDate ? new Date() > dueDate : false;
+    await upsertDocument("homework", homeworkId, {
+      submissionFileIds: fileIds,
+      submissionFileNames: fileNames,
+      submittedAt: now,
+      status: isLate ? "late" : "submitted",
+    });
+    // Notify tutor
+    await DataStore.notifyUser({
+      userId: doc.tutorId,
+      userRole: "tutor",
+      type: "homework",
+      title: "Homework Submitted",
+      body: `A student submitted homework: "${doc.title}"`,
+      link: "/tutor/homework",
+    });
+  },
+
+  updateHomeworkStatus: async (homeworkId: string, status: string): Promise<void> => {
+    await upsertDocument("homework", homeworkId, { status });
+  },
+
+  deleteHomework: async (homeworkId: string): Promise<void> => {
+    await upsertDocument("homework", homeworkId, { isDeleted: true });
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // CHAT
+  // ─────────────────────────────────────────────────────────────────────────────
+  getOrCreateConversation: async (studentId: string, tutorId: string): Promise<any> => {
+    try {
+      const docs = await listDocuments("chat_conversations", [
+        Query.equal("studentId", studentId),
+        Query.equal("tutorId", tutorId),
+        Query.equal("isDeleted", false),
+        Query.limit(1),
+      ]);
+      if (docs.length > 0) return { ...docs[0], id: docs[0].$id };
+    } catch { /* fall through to create */ }
+    const doc = await createDocument("chat_conversations", {
+      studentId,
+      tutorId,
+      lastMessageAt: null,
+      lastMessagePreview: "",
+      studentUnreadCount: 0,
+      tutorUnreadCount: 0,
+      createdAt: new Date().toISOString(),
+      isDeleted: false,
+    });
+    return { ...doc, id: doc.$id };
+  },
+
+  getConversationsForTutor: async (tutorId: string): Promise<any[]> => {
+    try {
+      const docs = await listDocuments("chat_conversations", [
+        Query.equal("tutorId", tutorId),
+        Query.equal("isDeleted", false),
+        Query.orderDesc("lastMessageAt"),
+      ]);
+      const result = await Promise.all(
+        docs.map(async (d: any) => {
+          let studentName = "Student";
+          try {
+            const u = await getDocument(COLLECTIONS.USERS, d.studentId);
+            studentName = u?.displayName || u?.email || "Student";
+          } catch { /* ignore */ }
+          return { ...d, id: d.$id, studentName, studentAvatar: avatarFor(studentName) };
+        })
+      );
+      return result;
+    } catch { return []; }
+  },
+
+  getConversationsForStudent: async (studentId: string): Promise<any[]> => {
+    try {
+      const docs = await listDocuments("chat_conversations", [
+        Query.equal("studentId", studentId),
+        Query.equal("isDeleted", false),
+        Query.orderDesc("lastMessageAt"),
+      ]);
+      const tutors = await DataStore.getTutors();
+      return docs.map((d: any) => {
+        const tutor = tutors.find((t) => t.id === d.tutorId);
+        return {
+          ...d, id: d.$id,
+          tutorName: tutor?.name || "Tutor",
+          tutorAvatar: tutor?.avatar_url || avatarFor("Tutor"),
+        };
+      });
+    } catch { return []; }
+  },
+
+  getMessages: async (conversationId: string, limit = 50): Promise<any[]> => {
+    try {
+      const docs = await listDocuments("chat_messages", [
+        Query.equal("conversationId", conversationId),
+        Query.equal("isDeleted", false),
+        Query.orderAsc("createdAt"),
+        Query.limit(limit),
+      ]);
+      return docs.map((d: any) => ({ ...d, id: d.$id }));
+    } catch { return []; }
+  },
+
+  sendMessage: async (msg: {
+    conversationId: string;
+    senderId: string;
+    senderRole: "student" | "tutor";
+    body?: string;
+    fileIds?: string[];
+    fileNames?: string[];
+    otherUserId: string;
+  }): Promise<any> => {
+    const now = new Date().toISOString();
+    const preview = msg.body
+      ? msg.body.slice(0, 80)
+      : msg.fileNames?.[0]
+        ? `📎 ${msg.fileNames[0]}`
+        : "New message";
+
+    const doc = await createDocument("chat_messages", {
+      conversationId: msg.conversationId,
+      senderId: msg.senderId,
+      senderRole: msg.senderRole,
+      body: msg.body || "",
+      fileIds: msg.fileIds || [],
+      fileNames: msg.fileNames || [],
+      isRead: false,
+      createdAt: now,
+      isDeleted: false,
+    });
+
+    // Update conversation last message
+    const unreadField = msg.senderRole === "tutor" ? "studentUnreadCount" : "tutorUnreadCount";
+    const conv = await getDocument("chat_conversations", msg.conversationId).catch(() => null);
+    const currentUnread = (conv as any)?.[unreadField] ?? 0;
+    await upsertDocument("chat_conversations", msg.conversationId, {
+      lastMessageAt: now,
+      lastMessagePreview: preview,
+      [unreadField]: currentUnread + 1,
+    });
+
+    // Notify the recipient
+    await DataStore.notifyUser({
+      userId: msg.otherUserId,
+      userRole: msg.senderRole === "tutor" ? "student" : "tutor",
+      type: "chat",
+      title: "New Message",
+      body: preview,
+      link: msg.senderRole === "tutor" ? "/student/chat" : "/tutor/chat",
+    });
+
+    return { ...doc, id: doc.$id };
+  },
+
+  markMessagesRead: async (conversationId: string, readerRole: "student" | "tutor"): Promise<void> => {
+    try {
+      const unreadField = readerRole === "student" ? "studentUnreadCount" : "tutorUnreadCount";
+      await upsertDocument("chat_conversations", conversationId, { [unreadField]: 0 });
+      const msgs = await listDocuments("chat_messages", [
+        Query.equal("conversationId", conversationId),
+        Query.equal("isRead", false),
+        Query.equal("isDeleted", false),
+      ]);
+      await Promise.all(
+        msgs
+          .filter((m: any) => m.senderRole !== readerRole)
+          .map((m: any) => upsertDocument("chat_messages", m.$id, { isRead: true }))
+      );
+    } catch { /* non-critical */ }
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // RECORDINGS
+  // ─────────────────────────────────────────────────────────────────────────────
+  getRecordingsForTutor: async (tutorId: string): Promise<any[]> => {
+    try {
+      const docs = await listDocuments("recordings", [
+        Query.equal("tutorId", tutorId),
+        Query.equal("isDeleted", false),
+        Query.orderDesc("recordedAt"),
+        Query.limit(50),
+      ]);
+      return docs.map((d: any) => ({ ...d, id: d.$id }));
+    } catch { return []; }
+  },
+
+  getRecordingsForStudent: async (studentId: string): Promise<any[]> => {
+    try {
+      const docs = await listDocuments("recordings", [
+        Query.equal("isDeleted", false),
+        Query.orderDesc("recordedAt"),
+        Query.limit(100),
+      ]);
+      // Filter where studentId appears in studentIds array
+      const filtered = docs.filter((d: any) =>
+        Array.isArray(d.studentIds) && d.studentIds.includes(studentId)
+      );
+      return filtered.map((d: any) => ({ ...d, id: d.$id }));
+    } catch { return []; }
+  },
+
+  createRecording: async (rec: {
+    tutorId: string;
+    studentIds?: string[];
+    lessonId?: string;
+    title: string;
+    description?: string;
+    fileId?: string;
+    fileName?: string;
+    externalUrl?: string;
+    storageProvider?: string;
+    durationSeconds?: number;
+    subject?: string;
+    recordedAt?: string;
+  }): Promise<any> => {
+    const doc = await createDocument("recordings", {
+      tutorId: rec.tutorId,
+      studentIds: rec.studentIds || [],
+      lessonId: rec.lessonId || null,
+      title: rec.title,
+      description: rec.description || "",
+      fileId: rec.fileId || null,
+      fileName: rec.fileName || null,
+      externalUrl: rec.externalUrl || null,
+      storageProvider: rec.storageProvider || "appwrite",
+      durationSeconds: rec.durationSeconds || null,
+      subject: rec.subject || "",
+      recordedAt: rec.recordedAt || new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      isDeleted: false,
+    });
+    // Notify students
+    for (const sid of rec.studentIds || []) {
+      await DataStore.notifyUser({
+        userId: sid,
+        userRole: "student",
+        type: "recording",
+        title: "New Class Recording Available",
+        body: `A recording of "${rec.title}" is now available.`,
+        link: "/student/recordings",
+      });
+    }
+    return { ...doc, id: doc.$id };
+  },
+
+  deleteRecording: async (id: string): Promise<void> => {
+    await upsertDocument("recordings", id, { isDeleted: true });
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // PAYMENTS / EARNINGS
+  // ─────────────────────────────────────────────────────────────────────────────
+  getPaymentsForTutor: async (tutorId: string): Promise<any[]> => {
+    try {
+      const docs = await listDocuments("payments", [
+        Query.equal("tutorId", tutorId),
+        Query.equal("isDeleted", false),
+        Query.orderDesc("createdAt"),
+        Query.limit(100),
+      ]);
+      return docs.map((d: any) => ({ ...d, id: d.$id }));
+    } catch { return []; }
+  },
+
+  createPayment: async (payment: {
+    tutorId: string;
+    studentId?: string;
+    lessonId?: string;
+    amountGbp: number;
+    status?: string;
+    description?: string;
+    periodStart?: string;
+    periodEnd?: string;
+  }): Promise<void> => {
+    await createDocument("payments", {
+      tutorId: payment.tutorId,
+      studentId: payment.studentId || null,
+      lessonId: payment.lessonId || null,
+      amountGbp: payment.amountGbp,
+      status: payment.status || "pending",
+      description: payment.description || "",
+      periodStart: payment.periodStart || null,
+      periodEnd: payment.periodEnd || null,
+      paidAt: null,
+      createdAt: new Date().toISOString(),
+      isDeleted: false,
+    });
+  },
+
+  markPaymentPaid: async (paymentId: string): Promise<void> => {
+    await upsertDocument("payments", paymentId, {
+      status: "paid",
+      paidAt: new Date().toISOString(),
+    });
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // PROFILE PICTURE (Appwrite Storage)
+  // ─────────────────────────────────────────────────────────────────────────────
+  uploadProfilePicture: async (file: File, userId: string): Promise<{ fileId: string; url: string }> => {
+    const result = await appwrite.storage.createFile({
+      bucketId: "profile-media",
+      fileId: ID.unique(),
+      file,
+      permissions: [
+        Permission.read(Role.any()),
+        Permission.update(Role.user(userId)),
+        Permission.delete(Role.user(userId)),
+      ],
+    });
+    const preview = appwrite.storage.getFilePreview({
+      bucketId: "profile-media",
+      fileId: result.$id,
+      width: 256,
+      height: 256,
+      quality: 85,
+    });
+    const url = typeof preview === "string" ? preview : String(preview);
+    return { fileId: result.$id, url };
+  },
+
+  getFilePreviewUrl: (bucketId: string, fileId: string, width = 256): string => {
+    try {
+      const result = appwrite.storage.getFilePreview({ bucketId, fileId, width, height: width, quality: 80 });
+      return typeof result === "string" ? result : String(result);
+    } catch { return ""; }
+  },
+
+  getFileDownloadUrl: (bucketId: string, fileId: string): string => {
+    try {
+      const result = appwrite.storage.getFileDownload({ bucketId, fileId });
+      return typeof result === "string" ? result : String(result);
+    } catch { return ""; }
+  },
+
+  uploadFile: async (file: File, bucketId: string, userId: string): Promise<{ fileId: string; fileName: string }> => {
+    const result = await appwrite.storage.createFile({
+      bucketId,
+      fileId: ID.unique(),
+      file,
+      permissions: [
+        Permission.read(Role.user(userId)),
+        Permission.update(Role.user(userId)),
+        Permission.delete(Role.user(userId)),
+      ],
+    });
+    return { fileId: result.$id, fileName: file.name };
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // SCHEDULE EXCEPTIONS (tutor unavailable dates)
+  // ─────────────────────────────────────────────────────────────────────────────
+  getScheduleExceptions: async (tutorId: string): Promise<any[]> => {
+    try {
+      const docs = await listDocuments("schedule_exceptions", [
+        Query.equal("tutorId", tutorId),
+        Query.orderAsc("date"),
+      ]);
+      return docs.map((d: any) => ({ ...d, id: d.$id }));
+    } catch { return []; }
+  },
+
+  addScheduleException: async (tutorId: string, date: string, reason?: string): Promise<void> => {
+    await createDocument("schedule_exceptions", {
+      tutorId,
+      date,
+      reason: reason || "",
+      createdAt: new Date().toISOString(),
+    });
+  },
+
+  removeScheduleException: async (id: string): Promise<void> => {
+    await deleteDocument("schedule_exceptions", id);
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // APPWRITE MESSAGING — send email via Resend topic
+  // ─────────────────────────────────────────────────────────────────────────────
+  sendTopicEmail: async (opts: {
+    topicId: string;
+    subject: string;
+    body: string;
+  }): Promise<void> => {
+    try {
+      await fetch(`${APPWRITE_ENDPOINT}/messaging/messages/email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-appwrite-project": APPWRITE_PROJECT_ID,
+        },
+        body: JSON.stringify({
+          messageId: ID.unique(),
+          subject: opts.subject,
+          content: opts.body,
+          topics: [opts.topicId],
+          draft: false,
+          scheduledAt: null,
+        }),
+      });
+    } catch (e) {
+      console.warn("Appwrite Messaging send failed:", e);
+    }
+  },
+
+  // Notify a specific user by userId — creates in-app notification AND sends email
+  notifyUser: async (opts: {
+    userId: string;
+    userRole: "student" | "tutor";
+    type: string;
+    title: string;
+    body: string;
+    link?: string;
+    sendEmail?: boolean;
+  }): Promise<void> => {
+    // Always create in-app notification
+    await DataStore.createNotification({
+      user_id: opts.userId,
+      type: opts.type,
+      title: opts.title,
+      body: opts.body,
+      link: opts.link,
+    });
+
+    // Optionally send email via topic
+    if (opts.sendEmail !== false) {
+      await DataStore.sendTopicEmail({
+        topicId: opts.userRole === "student" ? "students" : "tutors",
+        subject: opts.title,
+        body: `${opts.body}${opts.link ? `\n\nView here: ${typeof window !== "undefined" ? window.location.origin : ""}${opts.link}` : ""}`,
+      });
+    }
   },
 
 };

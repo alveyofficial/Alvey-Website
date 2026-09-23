@@ -146,9 +146,7 @@ function ProfilePage() {
     setSaving(true);
 
     try {
-      await appwrite.auth.updateName({
-        name: trimmedName,
-      });
+      await appwrite.auth.updateName(trimmedName);
 
       await DataStore.saveUserRecord({
         id: user.id,

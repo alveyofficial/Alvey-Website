@@ -237,6 +237,22 @@ export const appwrite = {
         return { error: error instanceof Error ? error : new Error(String(error)) };
       }
     },
+    async updateName(name: string) {
+      try {
+        await getClient().account.updateName(name);
+        return { error: null };
+      } catch (error) {
+        return { error: error instanceof Error ? error : new Error(String(error)) };
+      }
+    },
+    async updatePassword(newPassword: string, oldPassword: string) {
+      try {
+        await getClient().account.updatePassword(newPassword, oldPassword);
+        return { error: null };
+      } catch (error) {
+        return { error: error instanceof Error ? error : new Error(String(error)) };
+      }
+    },
     async updateVerification(userId: string, secret: string) {
       try {
         await getClient().account.updateVerification(userId, secret);
