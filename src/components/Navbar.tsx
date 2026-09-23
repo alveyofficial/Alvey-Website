@@ -10,11 +10,11 @@ function getDashboardRoute(roles: string[]): string | null {
     return "/admin";
   }
 
-  if (roles.includes("tutor")) {
-    return "/tutor-dashboard";
+  if (roles.includes("tutor") || roles.includes("tutors")) {
+    return "/tutor/";
   }
 
-  if (roles.includes("recruitment")) {
+  if (roles.includes("recruitment") || roles.includes("staff_recruitment")) {
     return "/recruitment";
   }
 
@@ -22,8 +22,9 @@ function getDashboardRoute(roles: string[]): string | null {
     return "/student/dashboard";
   }
 
-  if (roles.includes("guest")) {
-    return "/profile";
+  // Any authenticated user who isn't a guest is a student
+  if (!roles.includes("guest") && roles.length > 0) {
+    return "/student/dashboard";
   }
 
   return null;
@@ -91,7 +92,7 @@ export function Navbar() {
 
         if (sesh?.user) {
           const uid =
-            (sesh.user as any).F$id ||
+            (sesh.user as any).$id ||
             (sesh.user as any).id;
 
           const rolesFromStore = await DataStore.getUserRoles(uid);

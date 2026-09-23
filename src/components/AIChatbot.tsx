@@ -84,7 +84,7 @@ export function AIChatbot() {
 
         const roles = await DataStore.getUserRoles(uid);
         // roles is an array; pick the most specific one (tutor > student)
-        const role = roles.includes("tutor")
+        const role = (roles.includes("tutor") || roles.includes("tutors"))
           ? "tutor"
           : roles.includes("admin")
             ? "admin"

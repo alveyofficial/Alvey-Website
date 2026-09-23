@@ -487,11 +487,11 @@ function ForgotSentCard({ onBack }: { onBack: () => void }) {
 function redirectByRole(roles: string[], navigate: ReturnType<typeof useNavigate>) {
   if (roles.includes("admin") || roles.includes("website")) {
     navigate({ to: "/admin" });
-  } else if (roles.includes("tutor")) {
-    navigate({ to: "/tutor" });
-  } else if (roles.includes("recruitment")) {
+  } else if (roles.includes("tutor") || roles.includes("tutors")) {
+    navigate({ to: "/tutor/" });
+  } else if (roles.includes("recruitment") || roles.includes("staff_recruitment")) {
     navigate({ to: "/recruitment" });
-  } else if (roles.includes("student")) {
+  } else if (roles.includes("Students") || roles.length > 0) {
     navigate({ to: "/student/dashboard" });
   } else {
     navigate({ to: "/" });

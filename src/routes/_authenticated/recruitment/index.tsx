@@ -37,6 +37,7 @@ function RecruitmentDashboard() {
       const roles = await DataStore.getUserRoles(uid as string);
       const isAuthorized =
         roles.includes("recruitment") ||
+        roles.includes("staff_recruitment") ||
         roles.includes("website") ||
         roles.includes("admin");
       setAuthorized(isAuthorized);

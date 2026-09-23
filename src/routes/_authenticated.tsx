@@ -256,8 +256,8 @@ function AuthLayout() {
   }
 
   const isGuest = roles.includes("guest");
-  const isTutor = roles.includes("tutor");
-  const isRecruitment = roles.includes("recruitment");
+  const isTutor = roles.includes("tutor") || roles.includes("tutors");
+  const isRecruitment = roles.includes("recruitment") || roles.includes("staff_recruitment");
   const isManager = roles.includes("website");
   const isOwner = roles.includes("admin");
 
