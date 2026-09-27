@@ -2011,12 +2011,33 @@ export const DataStore = {
 
   moderatePlatformReview: async (
     id: string,
-    status: "pending" | "approved" | "rejected",
+    status: "pending" | "approved",
   ): Promise<void> => {
     await upsertDocument(COLLECTIONS.PLATFORM_REVIEWS, id, {
       isPublic: status === "approved",
-      isDeleted: status === "rejected",
+      isDeleted: false,
     });
+  },
+
+  deletePlatformReview: async (id: string): Promise<void> => {
+    await upsertDocument(COLLECTIONS.PLATFORM_REVIEWS, id, {
+      isDeleted: true,
+    });
+  },
+
+  restorePlatformReview: async (id: string): Promise<void> => {
+    await upsertDocument(COLLECTIONS.PLATFORM_REVIEWS, id, {
+      isDeleted: false,
+      isPublic: false,
+    });
+  },
+
+  permanentlyDeletePlatformReview: async (id: string): Promise<void> => {
+    await deleteDocument(COLLECTIONS.PLATFORM_REVIEWS, id);
+  },
+
+  permanentlyDeleteReview: async (id: string): Promise<void> => {
+    await deleteDocument(COLLECTIONS.REVIEWS, id);
   },
 
   updatePlatformReview: async (
