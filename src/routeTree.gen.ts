@@ -81,6 +81,7 @@ import { Route as AuthenticatedAdminBlogsRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin/analytics'
 import { Route as AuthenticatedAdminAiAssistantRouteImport } from './routes/_authenticated/admin/ai-assistant'
 import { Route as AuthenticatedAdminAdvertisementsRouteImport } from './routes/_authenticated/admin/advertisements'
+import { Route as ApiPublicNewsletterSubscribeRouteImport } from './routes/api/public/newsletter/subscribe'
 
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
   id: '/verify-email',
@@ -482,6 +483,12 @@ const AuthenticatedAdminAdvertisementsRoute =
     path: '/admin/advertisements',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const ApiPublicNewsletterSubscribeRoute =
+  ApiPublicNewsletterSubscribeRouteImport.update({
+    id: '/api/public/newsletter/subscribe',
+    path: '/api/public/newsletter/subscribe',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof PublicIndexRoute
@@ -554,6 +561,7 @@ export interface FileRoutesByFullPath {
   '/recruitment/': typeof AuthenticatedRecruitmentIndexRoute
   '/tutor/': typeof AuthenticatedTutorIndexRoute
   '/blogs/': typeof PublicBlogsIndexRoute
+  '/api/public/newsletter/subscribe': typeof ApiPublicNewsletterSubscribeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof PublicIndexRoute
@@ -625,6 +633,7 @@ export interface FileRoutesByTo {
   '/recruitment': typeof AuthenticatedRecruitmentIndexRoute
   '/tutor': typeof AuthenticatedTutorIndexRoute
   '/blogs': typeof PublicBlogsIndexRoute
+  '/api/public/newsletter/subscribe': typeof ApiPublicNewsletterSubscribeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -700,6 +709,7 @@ export interface FileRoutesById {
   '/_authenticated/recruitment/': typeof AuthenticatedRecruitmentIndexRoute
   '/_authenticated/tutor/': typeof AuthenticatedTutorIndexRoute
   '/_public/blogs/': typeof PublicBlogsIndexRoute
+  '/api/public/newsletter/subscribe': typeof ApiPublicNewsletterSubscribeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -774,6 +784,7 @@ export interface FileRouteTypes {
     | '/recruitment/'
     | '/tutor/'
     | '/blogs/'
+    | '/api/public/newsletter/subscribe'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -845,6 +856,7 @@ export interface FileRouteTypes {
     | '/recruitment'
     | '/tutor'
     | '/blogs'
+    | '/api/public/newsletter/subscribe'
   id:
     | '__root__'
     | '/_authenticated'
@@ -919,6 +931,7 @@ export interface FileRouteTypes {
     | '/_authenticated/recruitment/'
     | '/_authenticated/tutor/'
     | '/_public/blogs/'
+    | '/api/public/newsletter/subscribe'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -932,6 +945,7 @@ export interface RootRouteChildren {
   ApiAdminResolveStudentRoute: typeof ApiAdminResolveStudentRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicStatsRoute: typeof ApiPublicStatsRoute
+  ApiPublicNewsletterSubscribeRoute: typeof ApiPublicNewsletterSubscribeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1440,6 +1454,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAdvertisementsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/api/public/newsletter/subscribe': {
+      id: '/api/public/newsletter/subscribe'
+      path: '/api/public/newsletter/subscribe'
+      fullPath: '/api/public/newsletter/subscribe'
+      preLoaderRoute: typeof ApiPublicNewsletterSubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -1616,6 +1637,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAdminResolveStudentRoute: ApiAdminResolveStudentRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicStatsRoute: ApiPublicStatsRoute,
+  ApiPublicNewsletterSubscribeRoute: ApiPublicNewsletterSubscribeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

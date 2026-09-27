@@ -338,6 +338,7 @@ const COLLECTIONS = {
   AUDIT_LOGS: "audit_logs",
   PLATFORM_SETTINGS: "platform_settings",
   NOTIFICATION_PREFERENCES: "notification_preferences",
+  NEWSLETTER_SUBSCRIBERS: "newsletter_subscribers",
   DISCORD_LINKS: "discord_links",
   SCHEDULES: "schedules",
   ASSIGNMENTS: "student_tutor_assignments",
@@ -572,7 +573,7 @@ async function resolveTutorIdCandidates(tutorId: string): Promise<string[]> {
     const directDoc = await getDocument(COLLECTIONS.TUTOR_PROFILES, tutorId);
     const linkedAuthUserId = safeString(directDoc?.authUserId);
     if (linkedAuthUserId) ids.add(linkedAuthUserId);
-  } catch {}
+  } catch { }
 
   const identity = await getCurrentAuthIdentity();
   if (!identity || identity.id !== tutorId) return [...ids];
@@ -584,9 +585,9 @@ async function resolveTutorIdCandidates(tutorId: string): Promise<string[]> {
     ]),
     identity.email
       ? listDocuments(COLLECTIONS.TUTOR_PROFILES, [
-          Query.equal("contactEmail", identity.email),
-          Query.limit(20),
-        ])
+        Query.equal("contactEmail", identity.email),
+        Query.limit(20),
+      ])
       : Promise.resolve([] as any[]),
   ]);
 
@@ -607,7 +608,7 @@ async function resolveStudentIdCandidates(studentId: string): Promise<string[]> 
     const directDoc = await getDocument(COLLECTIONS.USERS, studentId);
     const linkedAuthUserId = safeString(directDoc?.authUserId);
     if (linkedAuthUserId) ids.add(linkedAuthUserId);
-  } catch {}
+  } catch { }
 
   const identity = await getCurrentAuthIdentity();
   if (!identity || identity.id !== studentId) return [...ids];
@@ -700,7 +701,7 @@ function asObject<T extends Record<string, any>>(value: unknown, fallback: T): T
     try {
       const parsed = JSON.parse(value);
       if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) return parsed as T;
-    } catch {}
+    } catch { }
   }
   return fallback;
 }
@@ -709,7 +710,7 @@ function parseJson(value: unknown) {
   if (typeof value === "string" && value.trim()) {
     try {
       return JSON.parse(value);
-    } catch {}
+    } catch { }
   }
   return value;
 }
@@ -745,7 +746,7 @@ export const DataStore = {
       try {
         const doc = await getDocument(COLLECTIONS.USERS, candidateId);
         if (doc) return doc;
-      } catch {}
+      } catch { }
     }
 
     return null;
@@ -1102,7 +1103,7 @@ export const DataStore = {
       if (response.ok) {
         return await response.json();
       }
-    } catch {}
+    } catch { }
 
     const tutors = await this.getAllTutors();
     const docs = await listDocuments(COLLECTIONS.USERS, [Query.equal("active", true)]);
@@ -1138,12 +1139,12 @@ export const DataStore = {
       ).sort((a, b) => a.localeCompare(b));
 
       if (tutorSubjects.length > 0) return tutorSubjects;
-    } catch {}
+    } catch { }
 
     try {
       const docs = await listDocuments(COLLECTIONS.SUBJECTS, [Query.equal("active", true)]);
       if (docs.length > 0) return docs.map((d) => safeString(d.name)).filter(Boolean);
-    } catch {}
+    } catch { }
     return defaultSubjects;
   },
 
@@ -1474,7 +1475,7 @@ export const DataStore = {
         Query.orderDesc("$createdAt"),
       ]);
       if (docs.length > 0) return docs;
-    } catch {}
+    } catch { }
     return getLocal<any[]>(KEYS.APPLICATIONS, []);
   },
 
@@ -1571,9 +1572,9 @@ export const DataStore = {
 
           hourly_rate: Number(
             application.oneOnOneRateUsd ??
-              application.hourlyRate ??
-              application.expected_rate ??
-              40,
+            application.hourlyRate ??
+            application.expected_rate ??
+            40,
           ),
 
           rating_avg: 5,
@@ -1663,7 +1664,7 @@ export const DataStore = {
         Query.orderDesc("$createdAt"),
       ]);
       if (docs.length > 0) return docs;
-    } catch {}
+    } catch { }
     return getLocal<any[]>(KEYS.RECRUITMENT, []);
   },
 
@@ -1716,7 +1717,7 @@ export const DataStore = {
         discordId: null,
         active: true,
       });
-    } catch {}
+    } catch { }
 
     const mockRoles = getLocal<Record<string, string[]>>("user_roles_map", {});
     if (!mockRoles[userId]) mockRoles[userId] = ["student"];
@@ -1730,7 +1731,7 @@ export const DataStore = {
       if (doc?.role === role) {
         await upsertDocument(COLLECTIONS.USERS, userId, { ...doc, role: "student" });
       }
-    } catch {}
+    } catch { }
 
     const mockRoles = getLocal<Record<string, string[]>>("user_roles_map", {});
     if (mockRoles[userId]) {
@@ -1976,7 +1977,7 @@ export const DataStore = {
   },
 
   getAllPlatformReviews: async (): Promise<
-    (PlatformReview & { status: "pending" | "approved" | "rejected" })[]
+    (PlatformReview & { status: "pending" | "approved" | "deleted" })[]
   > => {
     try {
       const docs = await listDocuments(COLLECTIONS.PLATFORM_REVIEWS, [
@@ -1996,7 +1997,11 @@ export const DataStore = {
         isDeleted: Boolean(doc.isDeleted),
         helpfulCount: safeNumber(doc.helpfulCount, 0),
         createdAt: doc.$createdAt || new Date().toISOString(),
-        status: doc.isDeleted ? "rejected" : doc.isPublic ? "approved" : "pending",
+        status: doc.isDeleted
+          ? "deleted"
+          : doc.isPublic
+            ? "approved"
+            : "pending",
       }));
     } catch (error) {
       console.error("Failed to load all platform reviews:", error);
@@ -2153,7 +2158,7 @@ export const DataStore = {
       }
       const docs = await listDocuments(COLLECTIONS.REVIEWS, queries);
       if (docs.length > 0) return docs.map(mapReviewDoc);
-    } catch {}
+    } catch { }
 
     const localRevs = getLocal<Review[]>(KEYS.REVIEWS, [
       {
@@ -2254,7 +2259,7 @@ export const DataStore = {
         Query.limit(100),
       ]);
       if (docs.length > 0) return docs;
-    } catch {}
+    } catch { }
     return getLocal<any[]>("tl_audit_logs", []);
   },
 
@@ -2266,7 +2271,7 @@ export const DataStore = {
         Query.orderAsc("displayOrder"),
       ]);
       if (docs.length > 0) return docs;
-    } catch {}
+    } catch { }
     return [];
   },
 
@@ -2278,7 +2283,7 @@ export const DataStore = {
         Query.orderDesc("updatedAt"),
       ]);
       if (docs.length > 0) return docs.map(mapPageDoc);
-    } catch {}
+    } catch { }
     return getLocal<any[]>("tl_pages", []);
   },
 
@@ -2291,7 +2296,7 @@ export const DataStore = {
         Query.limit(1),
       ]);
       if (docs[0]) return mapPageDoc(docs[0]);
-    } catch {}
+    } catch { }
     return null;
   },
 
@@ -2325,7 +2330,7 @@ export const DataStore = {
     try {
       const doc = await getDocument(COLLECTIONS.HOMEPAGE, "homepage");
       if (doc) return doc;
-    } catch {}
+    } catch { }
     return null;
   },
 
@@ -2353,7 +2358,7 @@ export const DataStore = {
     try {
       const doc = await getDocument(COLLECTIONS.PLATFORM_SETTINGS, key);
       if (doc) return asObject(doc.value, doc.value);
-    } catch {}
+    } catch { }
     return null;
   },
 
@@ -2379,7 +2384,7 @@ export const DataStore = {
       try {
         const doc = await getDocument(COLLECTIONS.NOTIFICATION_PREFERENCES, candidateId);
         if (doc) return doc;
-      } catch {}
+      } catch { }
     }
 
     return null;
@@ -2419,7 +2424,7 @@ export const DataStore = {
         Query.limit(50),
       ]);
       if (docs.length > 0) return docs.map(mapNotificationDoc);
-    } catch {}
+    } catch { }
     return getLocal<any[]>(KEYS.NOTIFICATIONS, []);
   },
 
@@ -2476,7 +2481,7 @@ export const DataStore = {
       for (const doc of docs) {
         await upsertDocument(COLLECTIONS.NOTIFICATIONS, doc.$id || doc.id, { isRead: true });
       }
-    } catch {}
+    } catch { }
   },
 
   // --- LESSONS ---
@@ -2493,7 +2498,7 @@ export const DataStore = {
       queries.push(Query.equal(isTutor ? "tutorId" : "studentId", scopedUserIds));
       const docs = await listDocuments(COLLECTIONS.LESSONS, queries);
       if (docs.length > 0) return docs.map(mapLessonDoc);
-    } catch {}
+    } catch { }
     return getLocal<any[]>(KEYS.LESSONS, []);
   },
 
@@ -2522,7 +2527,7 @@ export const DataStore = {
           };
         });
       }
-    } catch {}
+    } catch { }
     return [];
   },
 
@@ -2609,11 +2614,15 @@ export const DataStore = {
       if (docs.length > 0) {
         return docs.map((doc) => ({
           ...mapReviewDoc(doc),
-          status: doc.isDeleted ? "rejected" : doc.isPublic ? "approved" : "pending",
+          status: doc.isDeleted
+            ? "deleted"
+            : doc.isPublic
+              ? "approved"
+              : "pending",
         }));
       }
     } catch (error) {
-      console.error("failed to load  reviews:", error);
+      console.error("failed to load reviews:", error);
     }
 
     return getLocal<Review[]>(KEYS.REVIEWS, []);
@@ -2621,7 +2630,7 @@ export const DataStore = {
 
   moderateReview: async (
     id: string,
-    status: "pending" | "approved" | "rejected",
+    status: "pending" | "approved",
   ): Promise<void> => {
     const list = getLocal<Review[]>(KEYS.REVIEWS, []);
     const idx = list.findIndex((r) => r.id === id);
@@ -2637,7 +2646,42 @@ export const DataStore = {
 
     await upsertDocument(COLLECTIONS.REVIEWS, id, {
       isPublic: status === "approved",
-      isDeleted: status === "rejected",
+      isDeleted: false,
+    });
+
+    if (reviewDoc?.tutorId) {
+      await DataStore.syncTutorRating(reviewDoc.tutorId);
+    }
+  },
+
+  deleteReview: async (id: string): Promise<void> => {
+    const docs = await listDocuments(COLLECTIONS.REVIEWS, [
+      Query.equal("$id", id),
+      Query.limit(1),
+    ]);
+
+    const reviewDoc = docs[0];
+
+    await upsertDocument(COLLECTIONS.REVIEWS, id, {
+      isDeleted: true,
+    });
+
+    if (reviewDoc?.tutorId) {
+      await DataStore.syncTutorRating(reviewDoc.tutorId);
+    }
+  },
+
+  restoreReview: async (id: string): Promise<void> => {
+    const docs = await listDocuments(COLLECTIONS.REVIEWS, [
+      Query.equal("$id", id),
+      Query.limit(1),
+    ]);
+
+    const reviewDoc = docs[0];
+
+    await upsertDocument(COLLECTIONS.REVIEWS, id, {
+      isDeleted: false,
+      isPublic: false,
     });
 
     if (reviewDoc?.tutorId) {
@@ -2769,7 +2813,7 @@ export const DataStore = {
           };
         });
       }
-    } catch {}
+    } catch { }
     return DataStore.getStudentAssignments(studentId);
   },
 
@@ -2855,7 +2899,7 @@ export const DataStore = {
         Query.limit(200),
       ]);
       if (docs.length > 0) return docs;
-    } catch {}
+    } catch { }
     return getLocal<any[]>(KEYS.APPLICATIONS, []);
   },
 
@@ -2874,7 +2918,7 @@ export const DataStore = {
         role_applied_for: doc.Role_you_want_to_apply_for,
         created_at: doc.createdAt ?? doc.$createdAt,
       }));
-    } catch {}
+    } catch { }
     return getLocal<any[]>(KEYS.RECRUITMENT, []);
   },
   // --- AVAILABILITY ---
@@ -2916,7 +2960,7 @@ export const DataStore = {
           });
         }
       }
-    } catch {}
+    } catch { }
   },
 
   // --- ADVERTISEMENTS ---
@@ -3106,12 +3150,6 @@ export const DataStore = {
     }
   },
 
-  updateLessonStatus: async (lessonId: string, status: string): Promise<void> => {
-    await upsertDocument(COLLECTIONS.LESSONS, lessonId, { status });
-  },
-
-  // ─────────────────────────────────────────────────────────────────────────────
-  // HOMEWORK
   // ─────────────────────────────────────────────────────────────────────────────
   getHomeworkForTutor: async (tutorId: string): Promise<any[]> => {
     try {

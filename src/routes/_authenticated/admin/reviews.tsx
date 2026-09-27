@@ -21,7 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { DataStore } from "@/lib/data-store";
+import { DataStore, type PlatformReview } from "@/lib/data-store";
 import { appwrite } from "@/integrations/appwrite/client";
 
 export const Route = createFileRoute("/_authenticated/admin/reviews")({
@@ -29,17 +29,20 @@ export const Route = createFileRoute("/_authenticated/admin/reviews")({
 });
 
 type ReviewSection = "tutor" | "platform";
-type ReviewFilter = "all" | "pending" | "approved" | "rejected";
-
+type ReviewFilter = "all" | "pending" | "approved" | "deleted";
+type PlatformReviewWithStatus = PlatformReview & {
+  status: "pending" | "approved" | "deleted";
+};
 function AdminReviews() {
   const [section, setSection] = useState<ReviewSection>("platform");
   const [filter, setFilter] = useState<ReviewFilter>("all");
+
 
   const [tutorReviews, setTutorReviews] = useState<Record<string, unknown>[]>(
     [],
   );
   const [platformReviews, setPlatformReviews] = useState<
-    Record<string, unknown>[]
+    PlatformReviewWithStatus[]
   >([]);
 
   const [loading, setLoading] = useState(true);
@@ -70,7 +73,7 @@ function AdminReviews() {
 
   const handleTutorModerate = async (
     id: string,
-    status: "approved" | "rejected",
+    status: "pending" | "approved",
   ) => {
     try {
       await DataStore.moderateReview(id, status);
@@ -84,7 +87,7 @@ function AdminReviews() {
 
   const handlePlatformModerate = async (
     id: string,
-    status: "pending" | "approved" | "rejected",
+    status: "pending" | "approved",
   ) => {
     try {
       await DataStore.moderatePlatformReview(id, status);
@@ -160,7 +163,7 @@ function AdminReviews() {
       )}
 
       <div className="flex gap-2 mb-4">
-        {["all", "pending", "approved", "rejected"].map((value) => {
+        {["all", "pending", "approved", "deleted"].map((value) => {
           const f = value as ReviewFilter;
 
           return (
@@ -213,6 +216,7 @@ function AdminReviews() {
               key={String(review.id)}
               review={review}
               onModerate={handleTutorModerate}
+              onUpdated={loadReviews}
             />
           ))}
         </div>
@@ -329,9 +333,8 @@ function AddPlatformReviewForm({
                   aria-label={`Set rating to ${star}`}
                 >
                   <Star
-                    className={`h-6 w-6 ${
-                      star <= rating ? "fill-current" : ""
-                    }`}
+                    className={`h-6 w-6 ${star <= rating ? "fill-current" : ""
+                      }`}
                   />
                 </button>
               ))}
@@ -384,10 +387,10 @@ function PlatformReviewCard({
   onModerate,
   onUpdated,
 }: {
-  review: Record<string, unknown>;
+  review: PlatformReviewWithStatus;
   onModerate: (
     id: string,
-    status: "pending" | "approved" | "rejected",
+    status: "pending" | "approved",
   ) => Promise<void>;
   onUpdated: () => Promise<void>;
 }) {
@@ -472,9 +475,8 @@ function PlatformReviewCard({
                         aria-label={`Set rating to ${star}`}
                       >
                         <Star
-                          className={`h-5 w-5 ${
-                            star <= rating ? "fill-current" : ""
-                          }`}
+                          className={`h-5 w-5 ${star <= rating ? "fill-current" : ""
+                            }`}
                         />
                       </button>
                     ))}
@@ -533,11 +535,10 @@ function PlatformReviewCard({
                   {[1, 2, 3, 4, 5].map((star) => (
                     <Star
                       key={star}
-                      className={`h-3.5 w-3.5 ${
-                        star <= Number(review.rating ?? 0)
-                          ? "fill-current"
-                          : "text-muted-foreground"
-                      }`}
+                      className={`h-3.5 w-3.5 ${star <= Number(review.rating ?? 0)
+                        ? "fill-current"
+                        : "text-muted-foreground"
+                        }`}
                     />
                   ))}
 
@@ -565,75 +566,102 @@ function PlatformReviewCard({
         {!editing && (
           <div className="flex gap-2 mt-4 pt-3 border-t">
             {status === "pending" && (
-              <>
-                <Button
-                  size="sm"
-                  className="bg-emerald-600 hover:bg-emerald-700 gap-1.5"
-                  onClick={() => onModerate(id, "approved")}
-                >
-                  <Check className="h-4 w-4" />
-                  Approve
-                </Button>
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-red-600 gap-1.5"
-                  onClick={() => onModerate(id, "rejected")}
-                >
-                  <X className="h-4 w-4" />
-                  Reject
-                </Button>
-              </>
+              <Button
+                size="sm"
+                className="bg-emerald-600 hover:bg-emerald-700 gap-1.5"
+                onClick={() => onModerate(id, "approved")}
+              >
+                <Check className="h-4 w-4" />
+                Approve
+              </Button>
             )}
 
             {status === "approved" && (
               <Button
                 variant="outline"
                 size="sm"
-                className="text-red-600 gap-1.5"
-                onClick={() => onModerate(id, "rejected")}
+                className="gap-1.5"
+                onClick={() => onModerate(id, "pending")}
               >
                 <X className="h-4 w-4" />
                 Unpublish
               </Button>
             )}
 
-            {status === "rejected" && (
+            {status === "deleted" && (
               <Button
                 size="sm"
                 className="bg-emerald-600 hover:bg-emerald-700 gap-1.5"
-                onClick={() => onModerate(id, "approved")}
+                onClick={async () => {
+                  await DataStore.restorePlatformReview(id);
+                  await onUpdated();
+                }}
               >
                 <RotateCcw className="h-4 w-4" />
                 Restore
               </Button>
             )}
 
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5 ml-auto"
-              onClick={() => setEditing(true)}
-            >
-              <Pencil className="h-4 w-4" />
-              Edit
-            </Button>
+            {status !== "deleted" && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1.5 ml-auto text-red-600"
+                onClick={async () => {
+                  await DataStore.deletePlatformReview(id);
+                  await onUpdated();
+                  toast.success("Platform review moved to Deleted");
+                }}
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete
+              </Button>
+            )}
+
+            {status === "deleted" && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1.5 ml-auto text-red-600"
+                onClick={async () => {
+                  if (
+                    !window.confirm(
+                      "Permanently delete this review? This cannot be undone.",
+                    )
+                  ) {
+                    return;
+                  }
+
+                  await DataStore.permanentlyDeletePlatformReview(id);
+                  await onUpdated();
+                  toast.success("Platform review permanently deleted");
+                }}
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete Permanently
+              </Button>
+            )}
 
             <Button
               variant="ghost"
               size="sm"
-              className="gap-1.5 text-muted-foreground"
-              onClick={() => onModerate(id, "rejected")}
+              className="gap-1.5"
             >
-              <Trash2 className="h-4 w-4" />
-              Delete
-            </Button>
-
-            <Button variant="ghost" size="sm" className="gap-1.5">
               <Flag className="h-4 w-4" />
               Flag
             </Button>
+
+            {status !== "deleted" && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                onClick={() => setEditing(true)}
+              >
+                <Pencil className="h-4 w-4" />
+                Edit
+              </Button>
+            )}
           </div>
         )}
       </CardContent>
@@ -644,14 +672,17 @@ function PlatformReviewCard({
 function TutorReviewCard({
   review,
   onModerate,
+  onUpdated,
 }: {
   review: Record<string, unknown>;
   onModerate: (
     id: string,
-    status: "approved" | "rejected",
+    status: "pending" | "approved",
   ) => Promise<void>;
+  onUpdated: () => Promise<void>;
 }) {
   const status = String(review.status);
+  const id = String(review.id);
 
   return (
     <Card>
@@ -674,11 +705,10 @@ function TutorReviewCard({
               {[...Array(5)].map((_, i) => (
                 <Star
                   key={i}
-                  className={`h-3.5 w-3.5 ${
-                    i < Number(review.rating ?? 0)
+                  className={`h-3.5 w-3.5 ${i < Number(review.rating ?? 0)
                       ? "fill-amber-500"
                       : "text-muted-foreground"
-                  }`}
+                    }`}
                 />
               ))}
 
@@ -709,56 +739,94 @@ function TutorReviewCard({
         ) : null}
 
         <div className="flex gap-2 mt-3 pt-3 border-t">
+          {/* Pending */}
           {status === "pending" && (
-            <>
-              <Button
-                size="sm"
-                className="bg-emerald-600 hover:bg-emerald-700 gap-1.5"
-                onClick={() => onModerate(String(review.id), "approved")}
-              >
-                <Check className="h-4 w-4" />
-                Approve
-              </Button>
-
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-red-600 gap-1.5"
-                onClick={() => onModerate(String(review.id), "rejected")}
-              >
-                <X className="h-4 w-4" />
-                Reject
-              </Button>
-            </>
+            <Button
+              size="sm"
+              className="bg-emerald-600 hover:bg-emerald-700 gap-1.5"
+              onClick={() => onModerate(id, "approved")}
+            >
+              <Check className="h-4 w-4" />
+              Approve
+            </Button>
           )}
 
+          {/* Approved */}
           {status === "approved" && (
             <Button
               variant="outline"
               size="sm"
-              className="text-red-600 gap-1.5"
-              onClick={() => onModerate(String(review.id), "rejected")}
+              className="gap-1.5"
+              onClick={() => onModerate(id, "pending")}
             >
               <X className="h-4 w-4" />
               Unpublish
             </Button>
           )}
 
-          {status === "rejected" && (
+          {/* Deleted */}
+          {status === "deleted" && (
             <Button
               size="sm"
               className="bg-emerald-600 hover:bg-emerald-700 gap-1.5"
-              onClick={() => onModerate(String(review.id), "approved")}
+              onClick={async () => {
+                await DataStore.restoreReview(id);
+                await onUpdated();
+                toast.success("Tutor review restored to pending");
+              }}
             >
-              <Check className="h-4 w-4" />
+              <RotateCcw className="h-4 w-4" />
               Restore
             </Button>
           )}
 
+          {/* Soft Delete */}
+          {status !== "deleted" && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 ml-auto text-red-600"
+              onClick={async () => {
+                await DataStore.deleteReview(id);
+                await onUpdated();
+                toast.success("Tutor review moved to Deleted");
+              }}
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete
+            </Button>
+          )}
+
+          {/* Permanent Delete */}
+          {status === "deleted" && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 ml-auto text-red-600"
+              onClick={async () => {
+                if (
+                  !window.confirm(
+                    "Permanently delete this review? This cannot be undone.",
+                  )
+                ) {
+                  return;
+                }
+
+                await DataStore.permanentlyDeleteReview(id);
+                await onUpdated();
+                toast.success("Tutor review permanently deleted");
+              }}
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete Permanently
+            </Button>
+          )}
+
+          {/* Flag */}
           <Button
             variant="ghost"
             size="sm"
-            className="gap-1.5 ml-auto"
+            className="gap-1.5"
           >
             <Flag className="h-4 w-4" />
             Flag

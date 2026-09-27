@@ -41,6 +41,11 @@ function BlogsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [newsletterStatus, setNewsletterStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
+  const [newsletterMessage, setNewsletterMessage] = useState("");
 
   useEffect(() => {
     DataStore.getBlogPosts()
@@ -147,11 +152,10 @@ function BlogsPage() {
               <button
                 key={item}
                 onClick={() => setCategory(item)}
-                className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                  category === item
-                    ? "bg-[#164E5E] text-white"
-                    : "bg-muted text-muted-foreground hover:text-foreground"
-                }`}
+                className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors ${category === item
+                  ? "bg-[#164E5E] text-white"
+                  : "bg-muted text-muted-foreground hover:text-foreground"
+                  }`}
               >
                 {item}
               </button>
@@ -259,8 +263,45 @@ function BlogsPage() {
           </p>
 
           <form
-            onSubmit={(event) => {
+            onSubmit={async (event) => {
               event.preventDefault();
+
+              if (newsletterStatus === "loading") return;
+
+              setNewsletterStatus("loading");
+              setNewsletterMessage("");
+
+              try {
+                const response = await fetch("/api/public/newsletter/subscribe", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    email: newsletterEmail,
+                  }),
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                  throw new Error(
+                    result?.error || "Unable to subscribe right now."
+                  );
+                }
+
+                setNewsletterStatus("success");
+                setNewsletterMessage(result?.message || "You're subscribed!");
+                setNewsletterEmail("");
+              } catch (error) {
+                console.error("Newsletter subscription failed:", error);
+                setNewsletterStatus("error");
+                setNewsletterMessage(
+                  error instanceof Error
+                    ? error.message
+                    : "Unable to subscribe right now. Please try again."
+                );
+              }
             }}
             className="mx-auto mt-8 flex max-w-2xl flex-col gap-3 sm:flex-row"
           >
@@ -270,18 +311,34 @@ function BlogsPage() {
               <Input
                 type="email"
                 required
+                value={newsletterEmail}
+                onChange={(event) => setNewsletterEmail(event.target.value)}
                 placeholder="Enter your email address"
-                className="h-14 rounded-xl border-0 bg-white pl-12 text-foreground placeholder:text-muted-foreground"
+                disabled={newsletterStatus === "loading"}
+                className="h-14 rounded-xl border-0 bg-white pl-12 text-black placeholder:text-gray-500"
               />
             </div>
 
             <button
               type="submit"
-              className="h-14 rounded-xl bg-[#6FD4D8] px-7 font-bold text-[#0D3945] transition-colors hover:bg-[#A8EEF0]"
+              disabled={newsletterStatus === "loading"}
+              className="h-14 rounded-xl bg-[#6FD4D8] px-7 font-bold text-[#0D3945] transition-colors hover:bg-[#A8EEF0] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Subscribe
+              {newsletterStatus === "loading" ? "Subscribing..." : "Subscribe"}
             </button>
           </form>
+
+          {newsletterMessage && (
+            <p
+              className={`mt-3 text-sm ${newsletterStatus === "error"
+                  ? "text-red-200"
+                  : "text-[#A8EEF0]"
+                }`}
+              role="status"
+            >
+              {newsletterMessage}
+            </p>
+          )}
 
           <p className="mt-4 text-xs text-white/50">
             No spam. Just useful updates from Alvey.
