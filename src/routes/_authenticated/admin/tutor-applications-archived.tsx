@@ -83,8 +83,12 @@ function ArchivedTutorApplications() {
       is_verified: true,
       availability: "Contact for availability",
     });
-    if (userId) await DataStore.assignUserRole(userId, "tutor");
-    if (email) await DataStore.addToTeam("tutors", email, userId);
+    if (!userId) {
+      throw new Error("Cannot approve tutor: application has no Appwrite user ID.");
+    }
+
+    await DataStore.assignUserRole(userId, "tutor");
+    await DataStore.addToTeam("tutors", email, userId);
 
     toast.success(`${name} approved — tutor profile created and added to Tutors team`);
     loadApplications();

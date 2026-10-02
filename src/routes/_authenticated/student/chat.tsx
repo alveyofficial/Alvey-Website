@@ -9,12 +9,16 @@ import { DataStore } from "@/lib/data-store";
 import { appwrite } from "@/integrations/appwrite/client";
 
 export const Route = createFileRoute("/_authenticated/student/chat")({
+  validateSearch: (search) => ({
+    tutorId: typeof search.tutorId === "string" ? search.tutorId : undefined,
+  }),
   component: StudentChat,
 });
 
 const BUCKET = "homework-chat-files";
 
 function StudentChat() {
+  const { tutorId } = Route.useSearch();
   const [studentId, setStudentId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [conversations, setConversations] = useState<any[]>([]);
@@ -83,6 +87,22 @@ function StudentChat() {
     }
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
   }, [subscribeToConversation]);
+  useEffect(() => {
+    if (!tutorId || !studentId || loading) return;
+
+    (async () => {
+      const conv = await DataStore.getOrCreateConversation(studentId, tutorId);
+
+      // Reload the enriched conversation so tutorName/tutorAvatar exist
+      const convs = await DataStore.getConversationsForStudent(studentId);
+      setConversations(convs);
+
+      const enrichedConv =
+        convs.find((c) => c.id === conv.id) ?? conv;
+
+      await openConversation(enrichedConv);
+    })();
+  }, [tutorId, studentId, loading, openConversation]);
 
   const send = async () => {
     if (!studentId || !activeConv || (!text.trim() && !attachFile)) return;
@@ -190,6 +210,9 @@ function StudentChat() {
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              <div className="mx-4 mt-3 rounded-lg border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                <strong>Chat supervision:</strong> For security and better service, Alvey administrators may review messages in this conversation.
+              </div>
               {msgLoading ? (
                 <LoadingSpinner />
               ) : messages.length === 0 ? (

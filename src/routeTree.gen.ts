@@ -35,6 +35,7 @@ import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authentic
 import { Route as ApiPublicStatsRouteImport } from './routes/api/public/stats'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiAdminResolveStudentRouteImport } from './routes/api/admin/resolve-student'
+import { Route as ApiAdminAddTutorToTeamRouteImport } from './routes/api/admin/add-tutor-to-team'
 import { Route as PublicTutorsTutorSlugRouteImport } from './routes/_public.tutors.$tutorSlug'
 import { Route as PublicBlogsSlugRouteImport } from './routes/_public.blogs.$slug'
 import { Route as AuthenticatedTutorStudentsRouteImport } from './routes/_authenticated/tutor/students'
@@ -77,6 +78,7 @@ import { Route as AuthenticatedAdminRecruitmentApplicationsRouteImport } from '.
 import { Route as AuthenticatedAdminPagesRouteImport } from './routes/_authenticated/admin/pages'
 import { Route as AuthenticatedAdminNotificationsRouteImport } from './routes/_authenticated/admin/notifications'
 import { Route as AuthenticatedAdminHomepageRouteImport } from './routes/_authenticated/admin/homepage'
+import { Route as AuthenticatedAdminChatsRouteImport } from './routes/_authenticated/admin/chats'
 import { Route as AuthenticatedAdminBlogsRouteImport } from './routes/_authenticated/admin/blogs'
 import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin/analytics'
 import { Route as AuthenticatedAdminAiAssistantRouteImport } from './routes/_authenticated/admin/ai-assistant'
@@ -210,6 +212,11 @@ const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
 const ApiAdminResolveStudentRoute = ApiAdminResolveStudentRouteImport.update({
   id: '/api/admin/resolve-student',
   path: '/api/admin/resolve-student',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminAddTutorToTeamRoute = ApiAdminAddTutorToTeamRouteImport.update({
+  id: '/api/admin/add-tutor-to-team',
+  path: '/api/admin/add-tutor-to-team',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PublicTutorsTutorSlugRoute = PublicTutorsTutorSlugRouteImport.update({
@@ -460,6 +467,11 @@ const AuthenticatedAdminHomepageRoute =
     path: '/admin/homepage',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminChatsRoute = AuthenticatedAdminChatsRouteImport.update({
+  id: '/admin/chats',
+  path: '/admin/chats',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedAdminBlogsRoute = AuthenticatedAdminBlogsRouteImport.update({
   id: '/admin/blogs',
   path: '/admin/blogs',
@@ -512,6 +524,7 @@ export interface FileRoutesByFullPath {
   '/admin/ai-assistant': typeof AuthenticatedAdminAiAssistantRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/blogs': typeof AuthenticatedAdminBlogsRoute
+  '/admin/chats': typeof AuthenticatedAdminChatsRoute
   '/admin/homepage': typeof AuthenticatedAdminHomepageRoute
   '/admin/notifications': typeof AuthenticatedAdminNotificationsRoute
   '/admin/pages': typeof AuthenticatedAdminPagesRoute
@@ -554,6 +567,7 @@ export interface FileRoutesByFullPath {
   '/tutor/students': typeof AuthenticatedTutorStudentsRoute
   '/blogs/$slug': typeof PublicBlogsSlugRoute
   '/tutors/$tutorSlug': typeof PublicTutorsTutorSlugRoute
+  '/api/admin/add-tutor-to-team': typeof ApiAdminAddTutorToTeamRoute
   '/api/admin/resolve-student': typeof ApiAdminResolveStudentRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/stats': typeof ApiPublicStatsRoute
@@ -584,6 +598,7 @@ export interface FileRoutesByTo {
   '/admin/ai-assistant': typeof AuthenticatedAdminAiAssistantRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/blogs': typeof AuthenticatedAdminBlogsRoute
+  '/admin/chats': typeof AuthenticatedAdminChatsRoute
   '/admin/homepage': typeof AuthenticatedAdminHomepageRoute
   '/admin/notifications': typeof AuthenticatedAdminNotificationsRoute
   '/admin/pages': typeof AuthenticatedAdminPagesRoute
@@ -626,6 +641,7 @@ export interface FileRoutesByTo {
   '/tutor/students': typeof AuthenticatedTutorStudentsRoute
   '/blogs/$slug': typeof PublicBlogsSlugRoute
   '/tutors/$tutorSlug': typeof PublicTutorsTutorSlugRoute
+  '/api/admin/add-tutor-to-team': typeof ApiAdminAddTutorToTeamRoute
   '/api/admin/resolve-student': typeof ApiAdminResolveStudentRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/stats': typeof ApiPublicStatsRoute
@@ -660,6 +676,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/ai-assistant': typeof AuthenticatedAdminAiAssistantRoute
   '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/_authenticated/admin/blogs': typeof AuthenticatedAdminBlogsRoute
+  '/_authenticated/admin/chats': typeof AuthenticatedAdminChatsRoute
   '/_authenticated/admin/homepage': typeof AuthenticatedAdminHomepageRoute
   '/_authenticated/admin/notifications': typeof AuthenticatedAdminNotificationsRoute
   '/_authenticated/admin/pages': typeof AuthenticatedAdminPagesRoute
@@ -702,6 +719,7 @@ export interface FileRoutesById {
   '/_authenticated/tutor/students': typeof AuthenticatedTutorStudentsRoute
   '/_public/blogs/$slug': typeof PublicBlogsSlugRoute
   '/_public/tutors/$tutorSlug': typeof PublicTutorsTutorSlugRoute
+  '/api/admin/add-tutor-to-team': typeof ApiAdminAddTutorToTeamRoute
   '/api/admin/resolve-student': typeof ApiAdminResolveStudentRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/stats': typeof ApiPublicStatsRoute
@@ -735,6 +753,7 @@ export interface FileRouteTypes {
     | '/admin/ai-assistant'
     | '/admin/analytics'
     | '/admin/blogs'
+    | '/admin/chats'
     | '/admin/homepage'
     | '/admin/notifications'
     | '/admin/pages'
@@ -777,6 +796,7 @@ export interface FileRouteTypes {
     | '/tutor/students'
     | '/blogs/$slug'
     | '/tutors/$tutorSlug'
+    | '/api/admin/add-tutor-to-team'
     | '/api/admin/resolve-student'
     | '/api/public/health'
     | '/api/public/stats'
@@ -807,6 +827,7 @@ export interface FileRouteTypes {
     | '/admin/ai-assistant'
     | '/admin/analytics'
     | '/admin/blogs'
+    | '/admin/chats'
     | '/admin/homepage'
     | '/admin/notifications'
     | '/admin/pages'
@@ -849,6 +870,7 @@ export interface FileRouteTypes {
     | '/tutor/students'
     | '/blogs/$slug'
     | '/tutors/$tutorSlug'
+    | '/api/admin/add-tutor-to-team'
     | '/api/admin/resolve-student'
     | '/api/public/health'
     | '/api/public/stats'
@@ -882,6 +904,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/ai-assistant'
     | '/_authenticated/admin/analytics'
     | '/_authenticated/admin/blogs'
+    | '/_authenticated/admin/chats'
     | '/_authenticated/admin/homepage'
     | '/_authenticated/admin/notifications'
     | '/_authenticated/admin/pages'
@@ -924,6 +947,7 @@ export interface FileRouteTypes {
     | '/_authenticated/tutor/students'
     | '/_public/blogs/$slug'
     | '/_public/tutors/$tutorSlug'
+    | '/api/admin/add-tutor-to-team'
     | '/api/admin/resolve-student'
     | '/api/public/health'
     | '/api/public/stats'
@@ -942,6 +966,7 @@ export interface RootRouteChildren {
   VerifyEmailRoute: typeof VerifyEmailRoute
   ApiChatbotRoute: typeof ApiChatbotRoute
   ApiSitemapRoute: typeof ApiSitemapRoute
+  ApiAdminAddTutorToTeamRoute: typeof ApiAdminAddTutorToTeamRoute
   ApiAdminResolveStudentRoute: typeof ApiAdminResolveStudentRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicStatsRoute: typeof ApiPublicStatsRoute
@@ -1130,6 +1155,13 @@ declare module '@tanstack/react-router' {
       path: '/api/admin/resolve-student'
       fullPath: '/api/admin/resolve-student'
       preLoaderRoute: typeof ApiAdminResolveStudentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/add-tutor-to-team': {
+      id: '/api/admin/add-tutor-to-team'
+      path: '/api/admin/add-tutor-to-team'
+      fullPath: '/api/admin/add-tutor-to-team'
+      preLoaderRoute: typeof ApiAdminAddTutorToTeamRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_public/tutors/$tutorSlug': {
@@ -1426,6 +1458,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminHomepageRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin/chats': {
+      id: '/_authenticated/admin/chats'
+      path: '/admin/chats'
+      fullPath: '/admin/chats'
+      preLoaderRoute: typeof AuthenticatedAdminChatsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/admin/blogs': {
       id: '/_authenticated/admin/blogs'
       path: '/admin/blogs'
@@ -1472,6 +1511,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAdminAiAssistantRoute: typeof AuthenticatedAdminAiAssistantRoute
   AuthenticatedAdminAnalyticsRoute: typeof AuthenticatedAdminAnalyticsRoute
   AuthenticatedAdminBlogsRoute: typeof AuthenticatedAdminBlogsRoute
+  AuthenticatedAdminChatsRoute: typeof AuthenticatedAdminChatsRoute
   AuthenticatedAdminHomepageRoute: typeof AuthenticatedAdminHomepageRoute
   AuthenticatedAdminNotificationsRoute: typeof AuthenticatedAdminNotificationsRoute
   AuthenticatedAdminPagesRoute: typeof AuthenticatedAdminPagesRoute
@@ -1525,6 +1565,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminAiAssistantRoute: AuthenticatedAdminAiAssistantRoute,
   AuthenticatedAdminAnalyticsRoute: AuthenticatedAdminAnalyticsRoute,
   AuthenticatedAdminBlogsRoute: AuthenticatedAdminBlogsRoute,
+  AuthenticatedAdminChatsRoute: AuthenticatedAdminChatsRoute,
   AuthenticatedAdminHomepageRoute: AuthenticatedAdminHomepageRoute,
   AuthenticatedAdminNotificationsRoute: AuthenticatedAdminNotificationsRoute,
   AuthenticatedAdminPagesRoute: AuthenticatedAdminPagesRoute,
@@ -1634,6 +1675,7 @@ const rootRouteChildren: RootRouteChildren = {
   VerifyEmailRoute: VerifyEmailRoute,
   ApiChatbotRoute: ApiChatbotRoute,
   ApiSitemapRoute: ApiSitemapRoute,
+  ApiAdminAddTutorToTeamRoute: ApiAdminAddTutorToTeamRoute,
   ApiAdminResolveStudentRoute: ApiAdminResolveStudentRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicStatsRoute: ApiPublicStatsRoute,

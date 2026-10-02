@@ -560,7 +560,7 @@ function TutorProfilePage() {
                   className="rounded-xl h-11"
                 >
                   <Link
-                    to="/contact"
+                    to="/student/chat"
                     search={{ tutorId: tutor.id }}
                   >
                     <MessageSquare className="h-4 w-4 mr-2" />

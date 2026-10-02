@@ -113,7 +113,8 @@ function ReviewModal({
           : ["English"];
 
       const tutorId = userId || `tutor_${id}`;
-
+      console.log("APPROVAL USER ID:", userId);
+      console.log("TUTOR ID:", tutorId);
       await DataStore.saveTutor({
         id: tutorId,
         authUserId: userId ?? null,
@@ -564,6 +565,8 @@ function AdminTutorApplications() {
     const tutorId = userId || `tutor_${id}`;
 
     await DataStore.updateTutorApplicationStatus(id, "approved");
+    console.log("APPROVAL USER ID:", userId);
+    console.log("TUTOR ID:", tutorId);
     await DataStore.saveTutor({
       id: tutorId,
       authUserId: userId ?? null,
@@ -669,8 +672,12 @@ function AdminTutorApplications() {
 
       is_active: true,
     });
-    if (userId) await DataStore.assignUserRole(userId, "tutor");
-    if (email) await DataStore.addToTeam("tutors", email, userId);
+    if (!userId) {
+      throw new Error("Cannot approve tutor: application has no Appwrite user ID.");
+    }
+
+    await DataStore.assignUserRole(userId, "tutor");
+    await DataStore.addToTeam("tutors", email, userId);
 
     toast.success(`${name} approved — tutor profile created`);
     loadApplications();

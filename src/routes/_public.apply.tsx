@@ -77,10 +77,11 @@ function Apply() {
     setLoading(true);
     try {
       const languages = languagesSpoken.split(",").map(l => l.trim()).filter(Boolean);
-
+      const currentUser = await appwrite.account.get();
       const payload = {
         email,
         fullName,
+        applicantUserId: currentUser.$id,
         dateOfBirth,
         phoneNumber,
         discordUsername,

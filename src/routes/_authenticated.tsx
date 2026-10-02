@@ -158,6 +158,7 @@ const adminNav: NavItem[] = [
   { name: "Pages", href: "/admin/pages", icon: BookOpen },
   { name: "Homepage", href: "/admin/homepage", icon: FileEdit },
   { name: "Blogs", href: "/admin/blogs", icon: Newspaper },
+  { name: "Chat Supervision", href: "/admin/chats", icon: MessageSquare },
   { name: "AI Assistant", href: "/admin/ai-assistant", icon: MessageSquare },
   { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
   { name: "Settings", href: "/admin/settings", icon: Settings },

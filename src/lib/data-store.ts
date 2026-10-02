@@ -774,6 +774,23 @@ export const DataStore = {
     return tutors.find((t) => aliases.includes(t.id)) || null;
   },
 
+  getTutorByUserId: async (userId: string): Promise<Tutor | null> => {
+    try {
+      const docs = await listDocuments(COLLECTIONS.TUTOR_PROFILES, [
+        Query.equal("authUserId", userId),
+        Query.equal("active", true),
+        Query.limit(1),
+      ]);
+
+      if (!docs.length) return null;
+
+      return mapTutorDoc(docs[0]);
+    } catch (error) {
+      console.error("FAILED TO LOAD TUTOR BY USER ID:", error);
+      return null;
+    }
+  },
+
   /**
    * Look up a tutor by their URL slug.
    * Falls back to matching by id so old bookmarks still resolve.
@@ -791,6 +808,7 @@ export const DataStore = {
       discordUsername: tutor.discordUsername ?? null,
       dateOfBirth: tutor.dateOfBirth ?? null,
       countryOfResidence: tutor.countryOfResidence ?? null,
+      authUserId: tutor.authUserId ?? null,
 
       // Profile
       headline: tutor.headline,
@@ -2748,47 +2766,44 @@ export const DataStore = {
 
   addToTeam: async (
     teamId: string,
-    email: string,
+    _email: string,
     userId?: string,
     roles: string[] = ["tutor"],
   ): Promise<string> => {
+    if (!userId) {
+      throw new Error("Cannot add user to team: missing Appwrite user ID.");
+    }
+
     try {
-      console.log("=== APPWRITE TEAM DEBUG ===");
-      console.log("Team ID:", teamId);
-      console.log("Email:", email);
-      console.log("User ID:", userId);
-      console.log("Roles:", roles);
+      const jwtResponse = await appwrite.account.createJWT();
 
-      const team = await appwrite.teams.get({
-        teamId,
+      const response = await fetch("/api/admin/add-tutor-to-team", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwtResponse.jwt}`,
+        },
+        body: JSON.stringify({
+          userId,
+          teamId,
+          roles,
+        }),
       });
 
-      console.log("TEAM FOUND:", team);
+      const result = await response.json();
 
-      const membership = await appwrite.teams.createMembership({
-        teamId,
-        roles,
-        email: userId ? undefined : email,
-        userId: userId || undefined,
-        url: window.location.origin,
-      });
-
-      console.log("MEMBERSHIP CREATED:", membership);
-      console.log("RESOLVED AUTH USER ID:", membership.userId);
-
-      if (!membership.userId) {
-        throw new Error("Appwrite membership did not return a user ID.");
+      if (!response.ok) {
+        throw new Error(
+          result?.error || "Failed to add user to team.",
+        );
       }
 
-      return membership.userId;
-    } catch (e: any) {
-      if (e?.code === 409) {
-        console.log("User is already a member of the team.");
-        throw new Error("User is already a member of the team.");
-      }
+      console.log("Tutor added directly to team:", result);
 
-      console.error("addToTeam failed:", e);
-      throw e;
+      return result.userId;
+    } catch (error) {
+      console.error("Failed to add user to team:", error);
+      throw error;
     }
   },
 
@@ -3372,6 +3387,73 @@ export const DataStore = {
     }
   },
 
+  getAllChatConversations: async (): Promise<any[]> => {
+    try {
+      const docs = await listDocuments("chat_conversations", [
+        Query.equal("isDeleted", false),
+        Query.orderDesc("lastMessageAt"),
+      ]);
+
+      const tutors = await DataStore.getTutors();
+
+      return await Promise.all(
+        docs.map(async (d: any) => {
+          let studentName = "Student";
+
+          try {
+            const student = await getDocument(COLLECTIONS.USERS, d.studentId);
+            studentName =
+              student?.displayName ||
+              student?.name ||
+              student?.email ||
+              "Student";
+          } catch {
+            /* ignore */
+          }
+
+          const tutor = tutors.find(
+            (t: any) =>
+              t.id === d.tutorId ||
+              t.authUserId === d.tutorId ||
+              t.userId === d.tutorId,
+          );
+
+          return {
+            ...d,
+            id: d.$id,
+            studentName,
+            tutorName: tutor?.name || "Tutor",
+            studentAvatar: avatarFor(studentName),
+            tutorAvatar: tutor?.avatar_url || avatarFor("Tutor"),
+          };
+        }),
+      );
+    } catch {
+      return [];
+    }
+  },
+
+  getAdminChatMessages: async (
+    conversationId: string,
+    limit = 100,
+  ): Promise<any[]> => {
+    try {
+      const docs = await listDocuments("chat_messages", [
+        Query.equal("conversationId", conversationId),
+        Query.equal("isDeleted", false),
+        Query.orderAsc("createdAt"),
+        Query.limit(limit),
+      ]);
+
+      return docs.map((d: any) => ({
+        ...d,
+        id: d.$id,
+      }));
+    } catch {
+      return [];
+    }
+  },
+
   getMessages: async (conversationId: string, limit = 50): Promise<any[]> => {
     try {
       const docs = await listDocuments("chat_messages", [
@@ -3431,7 +3513,13 @@ export const DataStore = {
       type: "chat",
       title: "New Message",
       body: preview,
-      link: msg.senderRole === "tutor" ? "/student/chat" : "/tutor/chat",
+      link:
+        typeof window !== "undefined"
+          ? `${window.location.origin}${msg.senderRole === "tutor" ? "/student/chat" : "/tutor/chat"
+          }`
+          : msg.senderRole === "tutor"
+            ? "/student/chat"
+            : "/tutor/chat",
     });
 
     return { ...doc, id: doc.$id };

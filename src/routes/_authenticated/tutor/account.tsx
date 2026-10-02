@@ -51,7 +51,7 @@ function TutorAccount() {
       const [authUser, userRecord, tutorProfile] = await Promise.all([
         Promise.resolve(userData.user),
         DataStore.getUserRecord(uid),
-        DataStore.getTutorById(uid),
+        DataStore.getTutorByUserId(uid)
       ]);
 
       setProfile({
