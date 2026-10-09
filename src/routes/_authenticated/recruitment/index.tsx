@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { PageHeader, StatCard, StatusBadge, EmptyState } from "@/components/portal-shared";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { appwrite } from "@/integrations/appwrite/client";
+import { firebase, getCurrentUser } from "@/integrations/firebase/client";
 import { DataStore } from "@/lib/data-store";
 import { getRecruitmentMetrics, type RecruitmentMetrics } from "@/lib/analytics";
 
@@ -28,7 +28,7 @@ function RecruitmentDashboard() {
 
   useEffect(() => {
     (async () => {
-      const { data } = await appwrite.auth.getUser();
+      const { data } = await firebase.auth.getUser();
       const uid = data.user?.id;
       if (!uid) {
         setAuthorized(false);

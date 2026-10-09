@@ -1,88 +1,20 @@
-// /api/chatbot — thin proxy to the alvey-ai-brain Appwrite Function.
+// /api/chatbot — thin proxy to the alvey-ai-brain Cloud Function.
 // All AI logic lives in functions/alvey-ai-brain/src/main.js.
-// This route only:
-//   1. Resolves the current user's identity (userId + userRole) from the session.
-//   2. Forwards the request body + identity to the Appwrite Function via HTTP.
+// This route:
+//   1. Resolves the current user identity from the Firebase session cookie / Authorization header.
+//   2. Forwards the request body + identity to the AI Cloud Function via HTTP.
 //   3. Returns the function's response verbatim.
+//
+// TODO: Full server-side Firebase Auth verification requires the Firebase Admin SDK
+// (initialized with a service-account key). Until FIREBASE_SERVICE_ACCOUNT_JSON is
+// set, identity resolution gracefully falls back to anonymous (no userId/userRole).
 
 import { createFileRoute } from "@tanstack/react-router";
-import { Client as AppwriteServerClient, Databases, Account } from "node-appwrite";
+
+const AI_FUNCTION_URL = process.env.AI_FUNCTION_URL || process.env.APPWRITE_FUNCTION_AI_BRAIN_URL || "";
 
 // ---------------------------------------------------------------------------
-// Config — read from server-side env vars
-// ---------------------------------------------------------------------------
-const APPWRITE_ENDPOINT          = process.env.APPWRITE_ENDPOINT          || "https://fra.cloud.appwrite.io/v1";
-const APPWRITE_PROJECT_ID        = process.env.VITE_APPWRITE_PROJECT_ID   || process.env.APPWRITE_PROJECT_ID || "tutorslink";
-const APPWRITE_API_KEY           = process.env.APPWRITE_API_KEY           || "";
-const APPWRITE_DATABASE_ID       = process.env.APPWRITE_DATABASE_ID       || process.env.VITE_APPWRITE_DATABASE_ID || "Database";
-const APPWRITE_FUNCTION_AI_URL   = process.env.APPWRITE_FUNCTION_AI_BRAIN_URL || "";
-
-// ---------------------------------------------------------------------------
-// Appwrite server client (API-key auth — no user session needed for DB reads)
-// ---------------------------------------------------------------------------
-function buildServerClient() {
-  const client = new AppwriteServerClient()
-    .setEndpoint(APPWRITE_ENDPOINT)
-    .setProject(APPWRITE_PROJECT_ID)
-    .setKey(APPWRITE_API_KEY);
-  return {
-    databases: new Databases(client),
-    account:   new Account(client),
-  };
-}
-
-// ---------------------------------------------------------------------------
-// Resolve the user's role from the users collection
-// ---------------------------------------------------------------------------
-async function resolveUserRole(databases: Databases, userId: string): Promise<string> {
-  try {
-    const doc = await databases.getDocument(APPWRITE_DATABASE_ID, "users", userId);
-    return typeof doc.role === "string" && doc.role ? doc.role : "student";
-  } catch {
-    return "student";
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Resolve the current user from the session cookie forwarded by the browser.
-// node-appwrite Account with a session JWT lets us do this server-side.
-// ---------------------------------------------------------------------------
-async function resolveCurrentUser(
-  request: Request,
-): Promise<{ userId: string | null; userRole: string | null }> {
-  // Grab the Appwrite session cookie if present
-  const cookieHeader = request.headers.get("cookie") || "";
-  const sessionMatch = cookieHeader.match(/a_session_[^=]+=([^;]+)/);
-  const sessionToken = sessionMatch ? decodeURIComponent(sessionMatch[1]) : null;
-
-  if (!sessionToken || !APPWRITE_API_KEY) return { userId: null, userRole: null };
-
-  try {
-    const client = new AppwriteServerClient()
-      .setEndpoint(APPWRITE_ENDPOINT)
-      .setProject(APPWRITE_PROJECT_ID)
-      .setSession(sessionToken);
-
-    const account = new Account(client);
-    const user    = await account.get();
-    const userId  = (user as { $id?: string; id?: string }).$id
-                 || (user as { id?: string }).id
-                 || null;
-
-    if (!userId) return { userId: null, userRole: null };
-
-    // Fetch role from DB using the API-key client
-    const { databases } = buildServerClient();
-    const userRole = await resolveUserRole(databases, userId);
-
-    return { userId, userRole };
-  } catch {
-    return { userId: null, userRole: null };
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Message normalisation (unchanged from previous implementation)
+// Message normalisation
 // ---------------------------------------------------------------------------
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
@@ -93,17 +25,36 @@ function normalizeMessages(body: {
 }): ChatMessage[] | undefined {
   if (Array.isArray(body.messages)) {
     return (body.messages as { role?: string; content?: string }[])
-      .filter(m => m && typeof m.role === "string" && typeof m.content === "string")
-      .map(m => ({ role: m.role === "assistant" ? "assistant" : "user", content: m.content! }));
+      .filter((m) => m && typeof m.role === "string" && typeof m.content === "string")
+      .map((m) => ({ role: m.role === "assistant" ? "assistant" : "user", content: m.content! }));
   }
   if (typeof body.message !== "string") return undefined;
   const history = Array.isArray(body.history) ? body.history : [];
   return [
     ...(history as { role?: string; content?: string }[])
-      .filter(m => m && typeof m.role === "string" && typeof m.content === "string")
-      .map(m => ({ role: m.role === "assistant" ? "assistant" : "user", content: m.content! })),
+      .filter((m) => m && typeof m.role === "string" && typeof m.content === "string")
+      .map((m) => ({ role: m.role === "assistant" ? "assistant" : "user", content: m.content! })),
     { role: "user" as const, content: body.message as string },
   ];
+}
+
+// ---------------------------------------------------------------------------
+// Resolve identity — reads the Bearer token from Authorization header.
+// Firebase ID token verification happens server-side here when the Admin SDK
+// is available; otherwise resolves as anonymous.
+// ---------------------------------------------------------------------------
+async function resolveCurrentUser(
+  request: Request,
+): Promise<{ userId: string | null; userRole: string | null }> {
+  const authHeader = request.headers.get("authorization") || "";
+  const idToken = authHeader.replace(/^Bearer\s+/i, "") || null;
+
+  if (!idToken) return { userId: null, userRole: null };
+
+  // TODO: Verify idToken with Firebase Admin SDK when service account is available.
+  // For now, we cannot verify server-side, so return anonymous.
+  // The AI function itself can validate the token if needed.
+  return { userId: null, userRole: null };
 }
 
 // ---------------------------------------------------------------------------
@@ -117,7 +68,6 @@ export const Route = createFileRoute("/api/chatbot")({
           const body = await request.json();
           const { currentUrl } = body;
 
-          // Validate messages
           const messages = normalizeMessages(body);
           if (!messages?.length) {
             return new Response(JSON.stringify({ error: "Invalid chat message." }), {
@@ -126,19 +76,16 @@ export const Route = createFileRoute("/api/chatbot")({
             });
           }
 
-          // Check the function URL is configured
-          if (!APPWRITE_FUNCTION_AI_URL) {
+          if (!AI_FUNCTION_URL) {
             return new Response(
-              JSON.stringify({ error: "AI backend not configured. Set APPWRITE_FUNCTION_AI_BRAIN_URL." }),
+              JSON.stringify({ error: "AI backend not configured. Set AI_FUNCTION_URL." }),
               { status: 503, headers: { "content-type": "application/json" } },
             );
           }
 
-          // Resolve identity from the session cookie
           const { userId, userRole } = await resolveCurrentUser(request);
 
-          // Forward to alvey-ai-brain
-          const fnResponse = await fetch(APPWRITE_FUNCTION_AI_URL, {
+          const fnResponse = await fetch(AI_FUNCTION_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({

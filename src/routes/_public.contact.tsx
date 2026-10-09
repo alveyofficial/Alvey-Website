@@ -3,9 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { seoMeta, seoLinks } from "@/lib/seo";
-import { Functions } from "appwrite";
+
 import { useState } from "react";
-import { appwrite } from "@/integrations/appwrite/client";
+import { firebase, getCurrentUser } from "@/integrations/firebase/client";
 
 export const Route = createFileRoute("/_public/contact")({
   head: () => ({
@@ -40,21 +40,17 @@ function Contact() {
     setStatus("");
 
     try {
-      await appwrite.functions.createExecution(
-        "website-notifications",
-        JSON.stringify({
-          type: "contact_message",
-          name,
-          email,
-          message,
-        }),
-        false,
-        "/",
-        "POST",
-        {
-          "Content-Type": "application/json",
-        },
-      );
+      // TODO: trigger website-notifications Cloud Function when deployed
+      try {
+        const notifyUrl = (import.meta as any).env?.VITE_NOTIFICATIONS_FUNCTION_URL;
+        if (notifyUrl) {
+          await fetch(notifyUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ type: "contact_message", name, email, message }),
+          });
+        }
+      } catch { /* non-fatal */ }
 
       setName("");
       setEmail("");

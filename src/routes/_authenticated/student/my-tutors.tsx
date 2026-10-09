@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { DataStore } from "@/lib/data-store";
-import { appwrite } from "@/integrations/appwrite/client";
+import { firebase, getCurrentUser } from "@/integrations/firebase/client";
 
 export const Route = createFileRoute("/_authenticated/student/my-tutors")({
   component: StudentMyTutors,
@@ -22,7 +22,7 @@ function StudentMyTutors() {
 
   useEffect(() => {
     (async () => {
-      const { data: userData } = await appwrite.auth.getUser();
+      const { data: userData } = await firebase.auth.getUser();
       const uid = userData.user?.id;
       if (uid) {
         setStudentId(uid);

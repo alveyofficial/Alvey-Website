@@ -22,7 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { DataStore } from "@/lib/data-store";
-import { appwrite } from "@/integrations/appwrite/client";
+import { firebase, getCurrentUser } from "@/integrations/firebase/client";
 
 export const Route = createFileRoute("/_authenticated/admin/reviews")({
   component: AdminReviews,
@@ -249,7 +249,7 @@ function AddPlatformReviewForm({
     setSaving(true);
 
     try {
-      const { data: userData } = await appwrite.auth.getUser();
+      const { data: userData } = await firebase.auth.getUser();
 
       if (!userData.user?.id) {
         throw new Error("Unable to identify the current admin");

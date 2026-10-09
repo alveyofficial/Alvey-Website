@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { DataStore } from "@/lib/data-store";
-import { appwrite, ID } from "@/integrations/appwrite/client";
+import { firebase, getCurrentUser } from "@/integrations/firebase/client";
 
 export const Route = createFileRoute("/_authenticated/tutor/recordings")({
   component: TutorRecordings,
@@ -61,7 +61,7 @@ function TutorRecordings() {
 
   useEffect(() => {
     (async () => {
-      const { data: userData } = await appwrite.auth.getUser();
+      const { data: userData } = await firebase.auth.getUser();
       const uid = userData.user?.id;
       if (!uid) { setLoading(false); return; }
       setTutorId(uid);
@@ -91,12 +91,11 @@ function TutorRecordings() {
       let fileId: string | undefined;
       let fileName: string | undefined;
       if (videoFile) {
-        const result = await appwrite.storage.createFile({
-          bucketId: BUCKET,
-          fileId: ID.unique(),
-          file: videoFile,
-        });
-        fileId = result.$id;
+        const { ref: _sRef, uploadBytes: _sUpload, getDownloadURL: _sDL } = await import("firebase/storage");
+        const { storage: _stor } = await import("@/integrations/firebase/client");
+        const fileRef = _sRef(_stor, `${BUCKET}/${tutorId}/${crypto.randomUUID()}-${videoFile.name}`);
+        await _sUpload(fileRef, videoFile);
+        fileId = fileRef.fullPath;
         fileName = videoFile.name;
       }
       await DataStore.createRecording({
@@ -108,7 +107,7 @@ function TutorRecordings() {
         fileId,
         fileName,
         externalUrl: form.externalUrl.trim() || undefined,
-        storageProvider: videoFile ? "appwrite" : "external",
+        storageProvider: videoFile ? "firebase" : "external",
         recordedAt: form.recordedAt || new Date().toISOString(),
       });
       toast.success("Recording saved.");

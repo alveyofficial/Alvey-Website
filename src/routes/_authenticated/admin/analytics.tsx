@@ -28,7 +28,7 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line } from "recharts";
-import { appwrite } from "@/integrations/appwrite/client";
+import { firebase, getCurrentUser } from "@/integrations/firebase/client";
 import { DataStore } from "@/lib/data-store";
 import {
   getAdminDashboardMetrics,
@@ -71,7 +71,7 @@ function AdminAnalytics() {
   // §20.14 — analytics access is role-based: only Website Managers and Owners.
   useEffect(() => {
     (async () => {
-      const { data } = await appwrite.auth.getUser();
+      const { data } = await firebase.auth.getUser();
       const uid = data.user?.id;
       if (!uid) {
         setAuthorized(false);

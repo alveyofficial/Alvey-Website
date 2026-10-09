@@ -95,19 +95,18 @@
 
       try {
         if (role === "student") {
-          // Resolve the EXISTING Appwrite Auth user through their email.
-          const { data: jwtData, error: jwtError } =
-            await appwrite.auth.createJWT();
-
-          if (jwtError || !jwtData.jwt) {
-            throw jwtError || new Error("Failed to authenticate admin.");
-          }
+          // Get Firebase ID token for the currently signed-in admin user
+          const { getAuth } = await import("firebase/auth");
+          const _fbAuth = getAuth();
+          const _fbUser = _fbAuth.currentUser;
+          if (!_fbUser) throw new Error("Not authenticated.");
+          const idToken = await _fbUser.getIdToken();
 
           const response = await fetch("/api/admin/resolve-student", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${jwtData.jwt}`,
+              Authorization: `Bearer ${idToken}`,
             },
             body: JSON.stringify({
               email: email.trim(),

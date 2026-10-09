@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { DataStore } from "@/lib/data-store";
-import { appwrite } from "@/integrations/appwrite/client";
+import { firebase, getCurrentUser } from "@/integrations/firebase/client";
 
 export const Route = createFileRoute("/_authenticated/tutor/settings")({
   component: TutorSettings,
@@ -30,7 +30,7 @@ function TutorSettings() {
 
   useEffect(() => {
     (async () => {
-      const { data: userData } = await appwrite.auth.getUser();
+      const { data: userData } = await firebase.auth.getUser();
       const uid = userData.user?.id || null;
       setUserId(uid);
       if (uid) {
@@ -67,7 +67,7 @@ function TutorSettings() {
     if (passwords.new.length < 8) { toast.error("Password must be at least 8 characters."); return; }
     setSavingPassword(true);
     try {
-      const result = await appwrite.auth.updatePassword(passwords.new, passwords.current);
+      const result = await firebase.auth.updatePassword(passwords.new, passwords.current);
       if (result.error) throw result.error;
       setPasswords({ current: "", new: "", confirm: "" });
       toast.success("Password updated.");

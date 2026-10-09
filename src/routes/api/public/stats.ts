@@ -1,34 +1,20 @@
+/**
+ * GET /api/public/stats
+ *
+ * Returns live platform stats (tutor count, subject count, average rating).
+ * Uses the Firebase client-side SDK since this is a public, read-only endpoint.
+ * Full user count requires Firebase Admin SDK — falls back to 0 until configured.
+ */
+
 import { createFileRoute } from "@tanstack/react-router";
-import { Client as AppwriteServerClient, Databases, Users, Query } from "node-appwrite";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { db } from "@/integrations/firebase/client";
 
-const APPWRITE_ENDPOINT = process.env.APPWRITE_ENDPOINT || "https://fra.cloud.appwrite.io/v1";
-const APPWRITE_PROJECT_ID =
-  process.env.VITE_APPWRITE_PROJECT_ID || process.env.APPWRITE_PROJECT_ID || "tutorslink";
-const APPWRITE_API_KEY = process.env.APPWRITE_API_KEY || "";
-const APPWRITE_DATABASE_ID =
-  process.env.APPWRITE_DATABASE_ID || process.env.VITE_APPWRITE_DATABASE_ID || "Database";
-const COLLECTIONS = {
-  TUTOR_PROFILES: "tutor_profiles",
-} as const;
-
-function buildServerClient() {
-  const client = new AppwriteServerClient()
-    .setEndpoint(APPWRITE_ENDPOINT)
-    .setProject(APPWRITE_PROJECT_ID)
-    .setKey(APPWRITE_API_KEY);
-
-  return {
-    databases: new Databases(client),
-    users: new Users(client),
-  };
-}
-
-async function listActiveTutors(databases: Databases) {
+async function listActiveTutors() {
   try {
-    const result = await databases.listDocuments(APPWRITE_DATABASE_ID, COLLECTIONS.TUTOR_PROFILES, [
-      Query.equal("active", true),
-    ]);
-    return result.documents as Record<string, unknown>[];
+    const q = query(collection(db, "tutor_profiles"), where("active", "==", true));
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => d.data()) as Record<string, unknown>[];
   } catch {
     return [];
   }
@@ -39,11 +25,7 @@ export const Route = createFileRoute("/api/public/stats")({
     handlers: {
       GET: async () => {
         try {
-          const { databases, users } = buildServerClient();
-          const [tutors, usersResult] = await Promise.all([
-            listActiveTutors(databases),
-            users.list([]),
-          ]);
+          const tutors = await listActiveTutors();
 
           const subjectSet = new Set<string>();
           let ratingSum = 0;
@@ -66,7 +48,8 @@ export const Route = createFileRoute("/api/public/stats")({
 
           const payload = {
             tutors: tutors.length,
-            members: usersResult.total,
+            // TODO: populate with Firebase Admin SDK user count
+            members: 0,
             subjects: subjectSet.size,
             rating: ratingCount > 0 ? Number((ratingSum / ratingCount).toFixed(1)) : 0,
           };
@@ -81,18 +64,10 @@ export const Route = createFileRoute("/api/public/stats")({
         } catch (error) {
           console.error("Public stats route error:", error);
           return new Response(
-            JSON.stringify({
-              tutors: 0,
-              members: 0,
-              subjects: 0,
-              rating: 0,
-            }),
+            JSON.stringify({ tutors: 0, members: 0, subjects: 0, rating: 0 }),
             {
               status: 200,
-              headers: {
-                "content-type": "application/json",
-                "cache-control": "no-store",
-              },
+              headers: { "content-type": "application/json", "cache-control": "no-store" },
             },
           );
         }

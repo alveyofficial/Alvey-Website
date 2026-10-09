@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { DataStore } from "@/lib/data-store";
-import { appwrite } from "@/integrations/appwrite/client";
+import { firebase, getCurrentUser } from "@/integrations/firebase/client";
 
 export const Route = createFileRoute("/_authenticated/tutor/chat")({
   component: TutorChat,
@@ -31,7 +31,7 @@ function TutorChat() {
 
   useEffect(() => {
     (async () => {
-      const { data: userData } = await appwrite.auth.getUser();
+      const { data: userData } = await firebase.auth.getUser();
       const uid = userData.user?.id;
       if (!uid) { setLoading(false); return; }
       setTutorId(uid);
@@ -50,7 +50,7 @@ function TutorChat() {
     unsubRef.current?.();
     try {
       const channel = `databases.Database.collections.chat_messages.documents`;
-      const unsub = appwrite.client.subscribe(channel, (response: any) => {
+      const unsub = firebase.client.subscribe(channel, (response: any) => {
         const events: string[] = response.events || [];
         const isCreate = events.some((e) => e.includes(".create"));
         if (!isCreate) return;
@@ -82,7 +82,7 @@ function TutorChat() {
     setMsgLoading(false);
     subscribeToConversation(conv.id);
     // Mark read
-    const uid = (await appwrite.auth.getUser()).data.user?.id;
+    const uid = (await firebase.auth.getUser()).data.user?.id;
     if (uid) {
       await DataStore.markMessagesRead(conv.id, "tutor");
       setConversations((prev) =>

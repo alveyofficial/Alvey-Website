@@ -5,7 +5,7 @@ import { PageHeader, EmptyState, LoadingSpinner } from "@/components/portal-shar
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DataStore } from "@/lib/data-store";
-import { appwrite } from "@/integrations/appwrite/client";
+import { firebase, getCurrentUser } from "@/integrations/firebase/client";
 
 export const Route = createFileRoute("/_authenticated/student/notifications")({
   component: StudentNotifications,
@@ -26,7 +26,7 @@ function StudentNotifications() {
 
   useEffect(() => {
     (async () => {
-      const { data: userData } = await appwrite.auth.getUser();
+      const { data: userData } = await firebase.auth.getUser();
       const uid = userData.user?.id || null;
       setUserId(uid);
       if (uid) {

@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { appwrite } from "@/integrations/appwrite/client";
+import { firebase } from "@/integrations/firebase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +16,8 @@ export const Route = createFileRoute("/reset-password")({
     ],
   }),
   validateSearch: (search: Record<string, unknown>) => ({
+    oobCode: typeof search.oobCode === "string" ? search.oobCode : "",
+    // Legacy Appwrite params kept for backwards compatibility with old links
     userId: typeof search.userId === "string" ? search.userId : "",
     secret: typeof search.secret === "string" ? search.secret : "",
   }),
@@ -50,7 +52,7 @@ function useTheme() {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 function ResetPasswordPage() {
-  const { userId, secret } = Route.useSearch();
+  const { oobCode } = Route.useSearch();
   const navigate = useNavigate();
   const { isDark, toggleTheme } = useTheme();
 
@@ -62,7 +64,7 @@ function ResetPasswordPage() {
   const [done, setDone] = useState(false);
 
   // If the link is missing the required params, show an error state immediately.
-  const invalidLink = !userId || !secret;
+  const invalidLink = !oobCode;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,11 +81,11 @@ function ResetPasswordPage() {
 
     setLoading(true);
     try {
-      const { error } = await appwrite.auth.updateRecovery(userId, secret, password);
+      const { error } = await firebase.auth.updateRecovery("", oobCode, password);
       if (error) throw error;
       setDone(true);
     } catch (err: any) {
-      // Appwrite returns a specific error when the token has expired or already been used
+      // Firebase returns specific errors when the token has expired or already been used
       const msg: string = err?.message ?? "";
       if (msg.toLowerCase().includes("expired") || msg.toLowerCase().includes("invalid")) {
         toast.error("This reset link has expired or already been used. Please request a new one.");

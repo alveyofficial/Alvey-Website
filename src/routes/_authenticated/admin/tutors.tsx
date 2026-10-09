@@ -47,11 +47,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 import { toast } from "sonner";
 import { DataStore, Tutor } from "@/lib/data-store";
-import {
-  ID,
-  appwrite,
-  APPWRITE_DATABASE_ID,
-} from "@/integrations/appwrite/client";
+import { firebase, getCurrentUser } from "@/integrations/firebase/client";
 
 export const Route = createFileRoute("/_authenticated/admin/tutors")({
   component: AdminTutors,
@@ -162,7 +158,7 @@ function CreateTutorModal({
         .map((l) => l.trim())
         .filter(Boolean);
 
-      const tutorId = ID.unique();
+      const tutorId = crypto.randomUUID();
 
       const resolvedAvatar =
         avatarUrl.trim() ||
@@ -870,15 +866,9 @@ function AddSubjectModal({
     setLoading(true);
 
     try {
-      await appwrite.databases.createDocument({
-        databaseId: APPWRITE_DATABASE_ID,
-        collectionId: "subjects",
-        documentId: ID.unique(),
-        data: {
-          name: name.trim(),
-          active: true,
-        },
-      });
+      const { collection: fsCol, doc: fsDoc, setDoc: fsSetDoc } = await import("firebase/firestore");
+      const { db } = await import("@/integrations/firebase/client");
+      await fsSetDoc(fsDoc(db, "subjects", crypto.randomUUID()), { name: name.trim(), active: true, _createdAt: new Date().toISOString() });
 
       toast.success("Subject added.");
       setName("");
@@ -1882,16 +1872,13 @@ function SubjectsTab() {
     setLoading(true);
 
     try {
-      const result =
-        await appwrite.databases.listDocuments({
-          databaseId: APPWRITE_DATABASE_ID,
-          collectionId: "subjects",
-        });
-
+      const { collection: fsCol2, getDocs: fsGetDocs2, query: fsQuery2, doc: fsDoc2 } = await import("firebase/firestore");
+      const { db: db2 } = await import("@/integrations/firebase/client");
+      const snap = await fsGetDocs2(fsQuery2(fsCol2(db2, "subjects")));
       setSubjects(
-        result.documents.map((doc: any) => ({
-          id: doc.$id,
-          name: doc.name || "",
+        snap.docs.map((d: any) => ({
+          id: d.id,
+          name: d.data().name || "",
         }))
       );
     } catch {
@@ -1908,11 +1895,9 @@ function SubjectsTab() {
 
   const handleDelete = async (id: string) => {
     try {
-      await appwrite.databases.deleteDocument({
-        databaseId: APPWRITE_DATABASE_ID,
-        collectionId: "subjects",
-        documentId: id,
-      });
+      const { doc: fsDoc3, deleteDoc: fsDeleteDoc3 } = await import("firebase/firestore");
+      const { db: db3 } = await import("@/integrations/firebase/client");
+      await fsDeleteDoc3(fsDoc3(db3, "subjects", id));
 
       toast.success("Subject deleted.");
       loadSubjects();

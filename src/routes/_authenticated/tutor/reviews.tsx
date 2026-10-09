@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { DataStore } from "@/lib/data-store";
-import { appwrite } from "@/integrations/appwrite/client";
+import { firebase, getCurrentUser } from "@/integrations/firebase/client";
 
 export const Route = createFileRoute("/_authenticated/tutor/reviews")({
   component: TutorReviews,
@@ -31,7 +31,7 @@ function TutorReviews() {
 
   useEffect(() => {
     (async () => {
-      const { data: userData } = await appwrite.auth.getUser();
+      const { data: userData } = await firebase.auth.getUser();
       const uid = userData.user?.id;
 
       if (uid) {
@@ -49,7 +49,7 @@ function TutorReviews() {
     }
 
     try {
-      const { data: userData } = await appwrite.auth.getUser();
+      const { data: userData } = await firebase.auth.getUser();
       const user = userData.user;
 
       if (!user?.id) {
@@ -85,7 +85,7 @@ function TutorReviews() {
     setRespondingTo(null);
     setResponseText("");
 
-    const { data: userData } = await appwrite.auth.getUser();
+    const { data: userData } = await firebase.auth.getUser();
 
     if (userData.user?.id) {
       const data = await DataStore.getReviewsForTutor(userData.user.id);

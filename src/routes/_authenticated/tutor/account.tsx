@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { DataStore } from "@/lib/data-store";
-import { appwrite } from "@/integrations/appwrite/client";
+import { firebase, getCurrentUser } from "@/integrations/firebase/client";
 
 export const Route = createFileRoute("/_authenticated/tutor/account")({
   component: TutorAccount,
@@ -43,7 +43,7 @@ function TutorAccount() {
 
   useEffect(() => {
     (async () => {
-      const { data: userData } = await appwrite.auth.getUser();
+      const { data: userData } = await firebase.auth.getUser();
       const uid = userData.user?.id;
       if (!uid) { setLoading(false); return; }
       setUserId(uid);
@@ -93,7 +93,7 @@ function TutorAccount() {
     setSaving(true);
     try {
       // Update display name in auth
-      await appwrite.auth.updateName(profile.fullName);
+      await firebase.auth.updateName(profile.fullName);
       // Update user record
       await DataStore.saveUserRecord({
         id: userId,

@@ -29,7 +29,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { appwrite } from "@/integrations/appwrite/client";
+import { firebase, getCurrentUser } from "@/integrations/firebase/client";
 import { DataStore, type BlogPost } from "@/lib/data-store";
 
 export const Route = createFileRoute("/_authenticated/admin/blogs")({
@@ -152,7 +152,7 @@ function AdminBlogs() {
     setSaving(true);
 
     try {
-      const { data } = await appwrite.auth.getUser();
+      const { data } = await firebase.auth.getUser();
 
       const authorId = data.user?.id;
 

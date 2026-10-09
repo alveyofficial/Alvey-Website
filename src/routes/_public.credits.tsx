@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
-import { appwrite } from "@/integrations/appwrite/client";
+import { firebase, getCurrentUser } from "@/integrations/firebase/client";
 import { DataStore, type Credit } from "@/lib/data-store";
 import { Button } from "@/components/ui/button";
 import {
@@ -68,7 +68,7 @@ function CreditsPage() {
             try {
                 await loadCredits();
 
-                const { data } = await appwrite.auth.getUser();
+                const { data } = await firebase.auth.getUser();
                 const uid = data.user?.id;
 
                 if (uid) {

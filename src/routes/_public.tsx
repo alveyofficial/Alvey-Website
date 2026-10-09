@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { appwrite } from "@/integrations/appwrite/client";
+import { firebase, getCurrentUser } from "@/integrations/firebase/client";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/Navbar";
 import { AIChatbot } from "@/components/AIChatbot";
@@ -58,15 +58,15 @@ function PublicLayout() {
   const [user, setUser] = useState<Record<string, unknown> | null>(null);
 
   useEffect(() => {
-    appwrite.auth.getUser().then(({ data }) => setUser(data.user));
-    const { data: sub } = appwrite.auth.onAuthStateChange((_e, session) => {
+    firebase.auth.getUser().then(({ data }) => setUser(data.user));
+    const { data: sub } = firebase.auth.onAuthStateChange((_e, session) => {
       setUser(session?.user ?? null);
     });
     return () => sub.subscription.unsubscribe();
   }, []);
 
   const handleSignOut = async () => {
-    await appwrite.auth.signOut();
+    await firebase.auth.signOut();
     navigate({ to: "/", replace: true });
   };
 

@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { getCurrentUser, appwrite } from "@/integrations/appwrite/client";
+import { getCurrentUser, firebase } from "@/integrations/firebase/client";
 import { DataStore } from "@/lib/data-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -99,7 +99,7 @@ function AuthPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const { error } = await appwrite.auth.signInWithPassword({ email, password });
+      const { error } = await firebase.auth.signInWithPassword({ email, password });
       if (error) throw error;
 
       const user = await getCurrentUser();
@@ -125,7 +125,7 @@ function AuthPage() {
   try {
     const name = displayName.trim() || email.split("@")[0];
 
-    const { error } = await appwrite.auth.signUp({
+    const { error } = await firebase.auth.signUp({
       email,
       password,
       options: {
@@ -150,17 +150,17 @@ function AuthPage() {
 
   const handleGoogle = () => {
     const origin = window.location.origin;
-    appwrite.auth.signInWithOAuth("google", { redirect_uri: `${origin}/auth` });
+    firebase.auth.signInWithOAuth("google", { redirect_uri: `${origin}/auth` });
   };
 
   const handleLinkedIn = () => {
     const origin = window.location.origin;
-    appwrite.auth.signInWithOAuth("linkedin", { redirect_uri: `${origin}/auth` });
+    firebase.auth.signInWithOAuth("linkedin", { redirect_uri: `${origin}/auth` });
   };
 
   const handleDiscord = () => {
     const origin = window.location.origin;
-    appwrite.auth.signInWithOAuth("discord", { redirect_uri: `${origin}/auth` });
+    firebase.auth.signInWithOAuth("discord", { redirect_uri: `${origin}/auth` });
   };
 
   // ── Render ──────────────────────────────────────────────────────────────────
@@ -395,7 +395,7 @@ function ForgotPasswordForm({
     setLoading(true);
     try {
       const redirectUrl = `${window.location.origin}/reset-password`;
-      const { error } = await appwrite.auth.createRecovery(email, redirectUrl);
+      const { error } = await firebase.auth.createRecovery(email, redirectUrl);
       if (error) throw error;
       onSent();
     } catch (err: any) {

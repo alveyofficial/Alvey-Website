@@ -16,7 +16,7 @@ function CandidateDetails() {
       <EmptyState
         icon={User}
         title="Connect the candidate data source"
-        description="Call DataStore.getRecruitmentApplicationsFromDB() to load real candidates. Wire the Approve / Under Review / Reject buttons to an updateRecruitmentApplicationStatus() method that writes the new status back to Appwrite. Store internal notes and documents in dedicated Appwrite collections linked by application ID."
+        description="Call DataStore.getRecruitmentApplicationsFromDB() to load real candidates. Wire the Approve / Under Review / Reject buttons to an updateRecruitmentApplicationStatus() method that writes the new status back to Firestore. Store internal notes and documents in dedicated Firestore collections linked by application ID."
       />
     </div>
   );

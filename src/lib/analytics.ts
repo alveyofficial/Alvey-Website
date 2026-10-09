@@ -8,11 +8,11 @@
  * - It reuses DataStore's public read methods wherever the data is already
  *   available there (students, tutors, applications, lessons, reviews,
  *   advertisements, platform settings).
- * - It falls back to direct, read-only Appwrite queries only for metrics
+ * - It falls back to direct, read-only Firestore queries only for metrics
  *   that need a field DataStore does not currently expose — specifically
  *   document creation timestamps, needed for the registration/enrollment
  *   trend charts (§20.4/§20.5).
- * - Every Appwrite call is wrapped in try/catch and degrades to an empty
+ * - Every Firestore call is wrapped in try/catch and degrades to an empty
  *   result rather than throwing, matching the resilience pattern already
  *   used throughout `data-store.ts` (so the dashboard keeps working against
  *   local mock data or when a collection is temporarily unavailable).
@@ -22,16 +22,20 @@
  *   requires a future external integration per the SRS itself. Both are
  *   called out as open items in docs/ASSUMPTIONS_CONSTRAINTS.md.
  */
-import { Query } from "appwrite";
-import { appwrite, APPWRITE_DATABASE_ID } from "@/integrations/appwrite/client";
+import { collection, getDocs, query, where, limit } from "firebase/firestore";
+import { db } from "@/integrations/firebase/client";
 import { DataStore } from "@/lib/data-store";
 
 // Mirrors the (private) collection ids used internally by data-store.ts.
-// Duplicated locally, read-only, so this module never needs to modify the
-// existing data layer.
 const RAW_COLLECTIONS = {
   USERS: "users",
   TUTOR_PROFILES: "tutor_profiles",
+};
+
+// Query shim — produces strings that safeList understands.
+const Query = {
+  equal: (field: string, value: unknown) => `equal("${field}",${JSON.stringify(value)})`,
+  limit: (n: number) => `limit(${n})`,
 };
 
 export interface DateRange {
@@ -71,14 +75,25 @@ function lastMonths(count: number): string[] {
   return labels;
 }
 
-function safeList(
+async function safeList(
   collectionId: string,
   queries: string[] = [],
 ): Promise<Record<string, unknown>[]> {
-  return appwrite.databases
-    .listDocuments(APPWRITE_DATABASE_ID, collectionId, queries)
-    .then((result) => result.documents as Record<string, unknown>[])
-    .catch(() => []);
+  try {
+    const constraints: ReturnType<typeof where | typeof limit>[] = [];
+    for (const q of queries) {
+      const eq = q.match(/^equal\("([^"]+)",(.+)\)$/);
+      if (eq) { try { constraints.push(where(eq[1], "==", JSON.parse(eq[2]))); } catch {} continue; }
+      const lim = q.match(/^limit\((\d+)\)$/);
+      if (lim) { constraints.push(limit(Number(lim[1]))); continue; }
+    }
+    const colRef = collection(db, collectionId);
+    const q = constraints.length ? query(colRef, ...constraints) : query(colRef);
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => ({ $id: d.id, _createdAt: d.data()._createdAt ?? null, ...d.data() })) as Record<string, unknown>[];
+  } catch {
+    return [];
+  }
 }
 
 const isPendingStatus = (status: unknown): boolean => {

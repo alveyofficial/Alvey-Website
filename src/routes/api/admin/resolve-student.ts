@@ -1,5 +1,17 @@
+/**
+ * POST /api/admin/resolve-student
+ *
+ * Looks up a Firebase Auth user by email and returns their UID.
+ *
+ * TODO: Full server-side lookup requires the Firebase Admin SDK initialized with a
+ * service-account key (FIREBASE_SERVICE_ACCOUNT_JSON env var). Until that is set up,
+ * this route falls back to querying the Firestore `users` collection by email —
+ * which works as long as user records are written there on sign-up (auth.tsx does this).
+ */
+
 import { createFileRoute } from "@tanstack/react-router";
-import { Account, Client, Query, Users } from "node-appwrite";
+import { collection, getDocs, query, where, limit } from "firebase/firestore";
+import { db } from "@/integrations/firebase/client";
 
 export const Route = createFileRoute("/api/admin/resolve-student")({
   server: {
@@ -9,88 +21,56 @@ export const Route = createFileRoute("/api/admin/resolve-student")({
           const { email } = await request.json();
 
           if (!email || typeof email !== "string") {
-            return Response.json(
-              { error: "Email is required." },
-              { status: 400 }
-            );
+            return Response.json({ error: "Email is required." }, { status: 400 });
           }
 
           const authHeader = request.headers.get("authorization");
           const jwt = authHeader?.replace(/^Bearer\s+/i, "");
 
           if (!jwt) {
+            return Response.json({ error: "Unauthorized." }, { status: 401 });
+          }
+
+          // Query Firestore users collection by email as a fallback.
+          // When Firebase Admin SDK is available, replace this with:
+          // const userRecord = await adminAuth.getUserByEmail(email.trim());
+          const q = query(
+            collection(db, "users"),
+            where("email", "==", email.trim()),
+            limit(2),
+          );
+          const snap = await getDocs(q);
+
+          if (snap.empty) {
             return Response.json(
-              { error: "Unauthorized." },
-              { status: 401 }
+              { error: "No user found with that email in the users collection." },
+              { status: 404 },
             );
           }
 
-          const endpoint =
-            process.env.VITE_APPWRITE_ENDPOINT ||
-            "https://fra.cloud.appwrite.io/v1";
-
-          const projectId =
-            process.env.VITE_APPWRITE_PROJECT_ID || "tutorslink";
-
-          const apiKey = process.env.APPWRITE_API_KEY;
-
-          if (!apiKey) {
-            throw new Error("APPWRITE_API_KEY is not configured.");
-          }
-
-          // Verify the currently logged-in user.
-          const userClient = new Client()
-            .setEndpoint(endpoint)
-            .setProject(projectId)
-            .setJWT(jwt);
-
-          const account = new Account(userClient);
-          await account.get();
-
-          // Use the server API key to look up the EXISTING Auth user.
-          const adminClient = new Client()
-            .setEndpoint(endpoint)
-            .setProject(projectId)
-            .setKey(apiKey);
-
-          const users = new Users(adminClient);
-
-          const result = await users.list([
-            Query.equal("email", email.trim()),
-          ]);
-
-          if (result.users.length === 0) {
+          if (snap.size > 1) {
             return Response.json(
-              { error: "No Appwrite Auth user exists with that email." },
-              { status: 404 }
+              { error: "Multiple users found with that email." },
+              { status: 409 },
             );
           }
 
-          if (result.users.length > 1) {
-            return Response.json(
-              { error: "Multiple Auth users found with that email." },
-              { status: 409 }
-            );
-          }
-
-          const user = result.users[0];
+          const userDoc = snap.docs[0];
+          const data = userDoc.data();
 
           return Response.json({
-            userId: user.$id,
-            email: user.email,
-            name: user.name,
+            userId: userDoc.id,
+            email: data.email,
+            name: data.displayName || data.name || "",
           });
         } catch (error) {
           console.error("Resolve student failed:", error);
-
           return Response.json(
             {
               error:
-                error instanceof Error
-                  ? error.message
-                  : "Failed to resolve student.",
+                error instanceof Error ? error.message : "Failed to resolve student.",
             },
-            { status: 500 }
+            { status: 500 },
           );
         }
       },

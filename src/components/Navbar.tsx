@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Menu, X, GraduationCap, LayoutDashboard, LogOut, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { appwrite } from "@/integrations/appwrite/client";
+import { firebase } from "@/integrations/firebase/client";
 import { DataStore } from "@/lib/data-store";
 
 function getDashboardRoute(roles: string[]): string | null {
@@ -55,7 +55,7 @@ export function Navbar() {
     setIsDark(dark);
     document.documentElement.classList.toggle("dark", dark);
 
-    appwrite.auth.getSession().then(async ({ data }) => {
+    firebase.auth.getSession().then(async ({ data }) => {
       setSession(data.session);
 
       if (!data.session?.user) {
@@ -86,7 +86,7 @@ export function Navbar() {
         setCanAccessDashboard(false);
       }
     });
-    const { data: authSub } = appwrite.auth.onAuthStateChange(
+    const { data: authSub } = firebase.auth.onAuthStateChange(
       async (_e, sesh) => {
         setSession(sesh);
 
@@ -126,7 +126,7 @@ export function Navbar() {
   };
 
   const handleSignOut = async () => {
-    await appwrite.auth.signOut();
+    await firebase.auth.signOut();
     navigate({ to: "/", replace: true });
   };
 

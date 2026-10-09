@@ -23,7 +23,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { DataStore } from "@/lib/data-store";
-import { appwrite } from "@/integrations/appwrite/client";
+import { firebase, getCurrentUser } from "@/integrations/firebase/client";
 
 export const Route = createFileRoute("/_authenticated/admin/scheduling")({
   component: AdminScheduling,
@@ -123,7 +123,7 @@ function AdminScheduling() {
       return;
     }
 
-    const { data: userData } = await appwrite.auth.getUser();
+    const { data: userData } = await firebase.auth.getUser();
     const result = await DataStore.createLesson({
       tutor_id: form.tutor_id,
       student_id: form.student_id,

@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ID, appwrite } from "@/integrations/appwrite/client";
+import { firebase, getCurrentUser } from "@/integrations/firebase/client";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "motion/react";
@@ -112,27 +112,22 @@ function Apply() {
         isDeleted: false
       };
 
-      await appwrite.databases.createDocument({
-        databaseId: "Database",
-        collectionId: "tutor_applications",
-        documentId: ID.unique(),
-        data: payload,
-      });
+      const { doc: _doc, setDoc: _setDoc } = await import("firebase/firestore");
+      const { db: _db } = await import("@/integrations/firebase/client");
+      await _setDoc(_doc(_db, "tutor_applications", crypto.randomUUID()), { ...payload, _createdAt: new Date().toISOString() });
 
-      await appwrite.functions.createExecution(
-        "website-notifications",
-        JSON.stringify({
-          type: "tutor_application",
-          fullName,
-          email,
-          discordUsername,
-          countryOfResidence,
-          subjectName,
-          teachingLevel,
-          teachingFormat,
-          highestQualification,
-        }),
-      );
+      // TODO: trigger website-notifications Cloud Function when deployed to Firebase
+      // For now, the submission is stored in Firestore above — notification is a best-effort fire-and-forget.
+      try {
+        const notifyUrl = (import.meta as any).env?.VITE_NOTIFICATIONS_FUNCTION_URL;
+        if (notifyUrl) {
+          await fetch(notifyUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ type: "tutor_application", fullName, email, discordUsername, countryOfResidence, subjectName, teachingLevel, teachingFormat, highestQualification }),
+          });
+        }
+      } catch { /* non-fatal */ }
 
       setSuccess(true);
       window.scrollTo({ top: 0, behavior: 'smooth' });

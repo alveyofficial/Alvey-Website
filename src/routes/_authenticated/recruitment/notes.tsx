@@ -29,8 +29,8 @@ function InternalNotes() {
 
   const addNote = () => {
     if (!title.trim() || !content.trim()) return;
-    // TODO: Persist to Appwrite — create a recruitment_notes collection and call
-    // appwrite.databases.createDocument() here. Set author from the current session user.
+    // TODO: Persist to Firestore — create a recruitment_notes collection and call
+    // setDoc() here. Set author from the current session user.
     setNotes((prev) => [
       {
         id: "n" + Date.now(),

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { appwrite } from "@/integrations/appwrite/client";
+import { firebase, getCurrentUser } from "@/integrations/firebase/client";
 import { DataStore } from "@/lib/data-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -83,7 +83,7 @@ function ProfilePage() {
     setLoading(true);
 
     try {
-      const { data: authData } = await appwrite.auth.getUser();
+      const { data: authData } = await firebase.auth.getUser();
       const authUser = authData.user;
 
       if (!authUser) {
@@ -146,7 +146,7 @@ function ProfilePage() {
     setSaving(true);
 
     try {
-      await appwrite.auth.updateName(trimmedName);
+      await firebase.auth.updateName(trimmedName);
 
       await DataStore.saveUserRecord({
         id: user.id,

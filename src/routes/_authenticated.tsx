@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { appwrite } from "@/integrations/appwrite/client";
+import { firebase, getCurrentUser } from "@/integrations/firebase/client";
 import { DataStore } from "@/lib/data-store";
 import { PortalLayout, type NavItem } from "@/components/portal-layout";
 
@@ -42,7 +42,7 @@ export const Route = createFileRoute("/_authenticated")({
   ssr: false,
 
   beforeLoad: async () => {
-    const { data } = await appwrite.auth.getSession();
+    const { data } = await firebase.auth.getSession();
 
     if (!data.session) {
       throw redirect({ to: "/auth" });
@@ -181,7 +181,7 @@ function AuthLayout() {
 
     (async () => {
       try {
-        const { data: userData } = await appwrite.auth.getUser();
+        const { data: userData } = await firebase.auth.getUser();
 
         const uid = userData.user?.id;
 
@@ -210,7 +210,7 @@ function AuthLayout() {
       }
     })();
 
-    const { data: sub } = appwrite.auth.onAuthStateChange(
+    const { data: sub } = firebase.auth.onAuthStateChange(
       (_event, session) => {
         if (!session) {
           navigate({
@@ -233,7 +233,7 @@ function AuthLayout() {
 
   const signOut = async () => {
     try {
-      await appwrite.auth.signOut();
+      await firebase.auth.signOut();
 
       navigate({
         to: "/auth",

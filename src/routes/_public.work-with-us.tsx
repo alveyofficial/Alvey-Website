@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { ID, appwrite } from "@/integrations/appwrite/client";
+import { firebase, getCurrentUser } from "@/integrations/firebase/client";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "motion/react";
@@ -68,44 +68,40 @@ function WorkWithUs() {
           ? otherEducation
           : currentEducationLevel;
       const now = new Date().toISOString();
-      await appwrite.databases.createDocument({
-        databaseId: "Database",
-        collectionId: "volunteer_applications",
-        documentId: ID.unique(),
-        data: {
-          Full_name: fullName,
-          Discord_username: discordUsername,
-          Instagram_handle: instagramHandle,
-          Email_address: emailAddress,
-          Country_of_residence: countryOfResidence,
-          Languages_fluent_in: languages,
-          Current_education_level: education,
-          Role_you_want_to_apply_for: role,
-          Reason_to_apply: reasonToApply,
-          projectLinks: projectLinks.trim() || undefined,
-          Experience: experience,
-          hoursPerWeek,
-          Why_good_fit: whyGoodFit,
-          status: "pending",
-          isDeleted: false,
-          createdAt: now,
-          updatedAt: now,
-        },
+      const { doc: _wDoc, setDoc: _wSetDoc } = await import("firebase/firestore");
+      const { db: _wDb } = await import("@/integrations/firebase/client");
+      await _wSetDoc(_wDoc(_wDb, "volunteer_applications", crypto.randomUUID()), {
+        Full_name: fullName,
+        Discord_username: discordUsername,
+        Instagram_handle: instagramHandle,
+        Email_address: emailAddress,
+        Country_of_residence: countryOfResidence,
+        Languages_fluent_in: languages,
+        Current_education_level: education,
+        Role_you_want_to_apply_for: role,
+        Reason_to_apply: reasonToApply,
+        projectLinks: projectLinks.trim() || undefined,
+        Experience: experience,
+        hoursPerWeek,
+        Why_good_fit: whyGoodFit,
+        status: "pending",
+        isDeleted: false,
+        createdAt: now,
+        updatedAt: now,
+        _createdAt: now,
       });
 
-      await appwrite.functions.createExecution(
-        "website-notifications",
-        JSON.stringify({
-          type: "recruitment_application",
-          fullName,
-          emailAddress,
-          discordUsername,
-          countryOfResidence,
-          currentEducationLevel: education,
-          role,
-          hoursPerWeek,
-        }),
-      );
+      // TODO: trigger website-notifications Cloud Function when deployed
+      try {
+        const notifyUrl = (import.meta as any).env?.VITE_NOTIFICATIONS_FUNCTION_URL;
+        if (notifyUrl) {
+          await fetch(notifyUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ type: "recruitment_application", fullName, emailAddress, discordUsername, countryOfResidence, currentEducationLevel: education, role, hoursPerWeek }),
+          });
+        }
+      } catch { /* non-fatal */ }
       setSuccess(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err: any) {

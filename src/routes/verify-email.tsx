@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { appwrite } from "@/integrations/appwrite/client";
+import { firebase } from "@/integrations/firebase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -35,18 +35,18 @@ function VerifyEmailPage() {
       try {
         const params = new URLSearchParams(window.location.search);
 
-        const userId = params.get("userId");
-        const secret = params.get("secret");
+        // Firebase sends ?mode=verifyEmail&oobCode=<code>
+        const oobCode = params.get("oobCode");
 
-        if (!userId || !secret) {
+        if (!oobCode) {
           throw new Error(
             "This verification link is missing the required information."
           );
         }
 
-        const { error } = await appwrite.auth.updateVerification(
-          userId,
-          secret
+        const { error } = await firebase.auth.updateVerification(
+          "", // userId not used by Firebase — oobCode is sufficient
+          oobCode
         );
 
         if (error) throw error;

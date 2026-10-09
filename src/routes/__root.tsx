@@ -202,20 +202,7 @@ gtag('config', 'G-5X53Z1LDW1');`,
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
-  // Verify Appwrite connectivity on startup via a health check request.
-  useEffect(() => {
-    fetch("https://fra.cloud.appwrite.io/v1/health")
-      .then((res) => {
-        if (res.ok) {
-          console.log("[Appwrite] Connection OK");
-        } else {
-          console.warn("[Appwrite] Health check returned", res.status);
-        }
-      })
-      .catch((err: unknown) => {
-        console.warn("[Appwrite] Health check failed:", err);
-      });
-  }, []);
+  // Firebase connectivity is verified implicitly by the SDK on first auth/firestore call.
 
   return (
     <QueryClientProvider client={queryClient}>

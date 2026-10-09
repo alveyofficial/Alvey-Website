@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { appwrite } from "@/integrations/appwrite/client";
+import { firebase } from "@/integrations/firebase/client";
 import { DataStore } from "@/lib/data-store";
 
 interface Message {
@@ -75,7 +75,7 @@ export function AIChatbot() {
   useEffect(() => {
     (async () => {
       try {
-        const { data } = await appwrite.auth.getUser();
+        const { data } = await firebase.auth.getUser();
         const uid = (data.user as { id?: string; $id?: string } | null)?.id
                  || (data.user as { $id?: string } | null)?.$id
                  || null;

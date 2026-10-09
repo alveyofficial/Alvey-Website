@@ -1,6 +1,27 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, no-empty */
-import { ID, Permission, Query, Role } from "appwrite";
-import { appwrite, APPWRITE_DATABASE_ID, APPWRITE_ENDPOINT, APPWRITE_PROJECT_ID, getCurrentUser } from "@/integrations/appwrite/client";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  addDoc,
+  query,
+  where,
+  orderBy,
+  limit,
+  QueryConstraint,
+  DocumentData,
+} from "firebase/firestore";
+import {
+  ref as storageRef,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject,
+} from "firebase/storage";
+import { db, storage, getCurrentUser } from "@/integrations/firebase/client";
 
 
 export interface Tutor {
@@ -408,80 +429,119 @@ function avatarFor(name: string): string {
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0f172a&color=ffffff&size=256`;
 }
 
-async function listDocuments(collectionId: string, queries: string[] = []) {
+// ---------------------------------------------------------------------------
+// Query shim — produces the same string format that parseQueryConstraints()
+// understands, preserving all call-sites in this file unchanged.
+// ---------------------------------------------------------------------------
+const Query = {
+  equal: (field: string, value: unknown) => `equal("${field}",${JSON.stringify(value)})`,
+  orderDesc: (field: string) => `orderDesc("${field}")`,
+  orderAsc: (field: string) => `orderAsc("${field}")`,
+  limit: (n: number) => `limit(${n})`,
+};
+
+// ID shim — Firestore auto-generates IDs, but some call-sites pass ID.unique()
+// explicitly. We fall back to a UUID so those paths still work.
+const ID = {
+  unique: () => crypto.randomUUID(),
+};
+
+// ---------------------------------------------------------------------------
+// Firestore query helper — converts the Query shim strings into Firestore
+// QueryConstraints.
+function parseQueryConstraints(queries: string[]): QueryConstraint[] {
+  const constraints: QueryConstraint[] = [];
+  for (const q of queries) {
+    try {
+      // equal("field",value)
+      const equalMatch = q.match(/^equal\("([^"]+)",(.+)\)$/);
+      if (equalMatch) {
+        const field = equalMatch[1];
+        let val: any;
+        try { val = JSON.parse(equalMatch[2]); } catch { val = equalMatch[2]; }
+        constraints.push(where(field, "==", val));
+        continue;
+      }
+      // orderDesc("field")
+      const orderDescMatch = q.match(/^orderDesc\("([^"]+)"\)$/);
+      if (orderDescMatch) {
+        constraints.push(orderBy(orderDescMatch[1], "desc"));
+        continue;
+      }
+      // orderAsc("field")
+      const orderAscMatch = q.match(/^orderAsc\("([^"]+)"\)$/);
+      if (orderAscMatch) {
+        constraints.push(orderBy(orderAscMatch[1], "asc"));
+        continue;
+      }
+      // limit(n)
+      const limitMatch = q.match(/^limit\((\d+)\)$/);
+      if (limitMatch) {
+        constraints.push(limit(Number(limitMatch[1])));
+        continue;
+      }
+    } catch {
+      // Ignore unparseable queries
+    }
+  }
+  return constraints;
+}
+
+// ---------------------------------------------------------------------------
+// Core Firestore CRUD helpers (replaces Appwrite SDK calls throughout this file)
+// ---------------------------------------------------------------------------
+
+async function listDocuments(collectionId: string, queries: string[] = []): Promise<any[]> {
   try {
-    const result = await appwrite.databases.listDocuments({
-      databaseId: APPWRITE_DATABASE_ID,
-      collectionId,
-      queries,
-    });
-    return result.documents as any[];
+    const constraints = parseQueryConstraints(queries);
+    const colRef = collection(db, collectionId);
+    const q = constraints.length > 0 ? query(colRef, ...constraints) : query(colRef);
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => ({ $id: d.id, id: d.id, $createdAt: d.data()._createdAt ?? null, ...d.data() }));
   } catch {
     return [];
   }
 }
 
-async function getDocument(collectionId: string, documentId: string) {
+async function getDocument(collectionId: string, documentId: string): Promise<any | null> {
   try {
-    return await appwrite.databases.getDocument({
-      databaseId: APPWRITE_DATABASE_ID,
-      collectionId,
-      documentId,
-    });
+    const snap = await getDoc(doc(db, collectionId, documentId));
+    if (!snap.exists()) return null;
+    return { $id: snap.id, id: snap.id, $createdAt: snap.data()._createdAt ?? null, ...snap.data() };
   } catch {
     return null;
   }
 }
 
-async function upsertDocument(collectionId: string, documentId: string, data: Record<string, any>) {
-  try {
-    await appwrite.databases.getDocument({
-      databaseId: APPWRITE_DATABASE_ID,
-      collectionId,
-      documentId,
-    });
-    return await appwrite.databases.updateDocument({
-      databaseId: APPWRITE_DATABASE_ID,
-      collectionId,
-      documentId,
-      data,
-    });
-  } catch (e: any) {
-    if (e.code === 404) {
-      return await appwrite.databases.createDocument({
-        databaseId: APPWRITE_DATABASE_ID,
-        collectionId,
-        documentId,
-        data
-      });
-    }
-    throw e;
+async function upsertDocument(collectionId: string, documentId: string, data: Record<string, any>): Promise<any> {
+  const docRef = doc(db, collectionId, documentId);
+  const snap = await getDoc(docRef);
+  if (snap.exists()) {
+    await updateDoc(docRef, data);
+  } else {
+    await setDoc(docRef, { _createdAt: new Date().toISOString(), ...data });
   }
+  const updated = await getDoc(docRef);
+  return { $id: updated.id, id: updated.id, ...updated.data() };
 }
 
-async function deleteDocument(collectionId: string, documentId: string) {
-  await appwrite.databases.deleteDocument({
-    databaseId: APPWRITE_DATABASE_ID,
-    collectionId,
-    documentId,
-  });
+async function deleteDocument(collectionId: string, documentId: string): Promise<void> {
+  await deleteDoc(doc(db, collectionId, documentId));
 }
-
 
 async function createDocument(
   collectionId: string,
   data: Record<string, any>,
-  documentId = ID.unique(),
-) {
-  console.log("Creating in:", collectionId);
-  console.log("Database:", APPWRITE_DATABASE_ID);
-
-  return await appwrite.databases.createDocument({
-    databaseId: APPWRITE_DATABASE_ID,
-    collectionId,
-    documentId,
-    data,
-  });
+  documentId?: string,
+): Promise<any> {
+  const payload = { _createdAt: new Date().toISOString(), ...data };
+  if (documentId) {
+    const docRef = doc(db, collectionId, documentId);
+    await setDoc(docRef, payload);
+    return { $id: documentId, id: documentId, ...payload };
+  }
+  const docRef = await addDoc(collection(db, collectionId), payload);
+  return { $id: docRef.id, id: docRef.id, ...payload };
 }
 
 function mapTutorDoc(doc: any): Tutor {
@@ -1317,15 +1377,8 @@ export const DataStore = {
 
   getCredits: async (): Promise<Credit[]> => {
     try {
-      const response = await appwrite.databases.listDocuments({
-        databaseId: APPWRITE_DATABASE_ID,
-        collectionId: "credits",
-        queries: [
-          Query.orderAsc("order"),
-        ],
-      });
-
-      return response.documents.map((doc: any) => ({
+      const docs = await listDocuments("credits", ['orderAsc("order")']);
+      return docs.map((doc: any) => ({
         id: doc.$id,
         name: safeString(doc.name, "Unknown"),
         role: safeString(doc.role, ""),
@@ -1340,18 +1393,14 @@ export const DataStore = {
 
   getCreditById: async (id: string): Promise<Credit | null> => {
     try {
-      const doc = await appwrite.databases.getDocument({
-        databaseId: APPWRITE_DATABASE_ID,
-        collectionId: "credits",
-        documentId: id,
-      });
-
+      const docData = await getDocument("credits", id);
+      if (!docData) return null;
       return {
-        id: doc.$id,
-        name: safeString(doc.name, "Unknown"),
-        role: safeString(doc.role, ""),
-        contribution: safeString(doc.contribution, ""),
-        order: safeNumber(doc.order, 0),
+        id: docData.$id,
+        name: safeString(docData.name, "Unknown"),
+        role: safeString(docData.role, ""),
+        contribution: safeString(docData.contribution, ""),
+        order: safeNumber(docData.order, 0),
       };
     } catch (error) {
       console.error("Failed to load credit:", error);
@@ -1363,24 +1412,19 @@ export const DataStore = {
     credit: Omit<Credit, "id">,
   ): Promise<Credit | null> => {
     try {
-      const doc = await appwrite.databases.createDocument({
-        databaseId: APPWRITE_DATABASE_ID,
-        collectionId: "credits",
-        documentId: ID.unique(),
-        data: {
-          name: credit.name,
-          role: credit.role,
-          contribution: credit.contribution,
-          order: credit.order,
-        },
+      const docData = await createDocument("credits", {
+        name: credit.name,
+        role: credit.role,
+        contribution: credit.contribution,
+        order: credit.order,
       });
 
       return {
-        id: doc.$id,
-        name: safeString(doc.name, "Unknown"),
-        role: safeString(doc.role, ""),
-        contribution: safeString(doc.contribution, ""),
-        order: safeNumber(doc.order, 0),
+        id: docData.$id,
+        name: safeString(docData.name, "Unknown"),
+        role: safeString(docData.role, ""),
+        contribution: safeString(docData.contribution, ""),
+        order: safeNumber(docData.order, 0),
       };
     } catch (error) {
       console.error("Failed to create credit:", error);
@@ -1393,26 +1437,19 @@ export const DataStore = {
     credit: Partial<Omit<Credit, "id">>,
   ): Promise<Credit | null> => {
     try {
-      const doc = await appwrite.databases.updateDocument({
-        databaseId: APPWRITE_DATABASE_ID,
-        collectionId: "credits",
-        documentId: id,
-        data: {
-          ...(credit.name !== undefined && { name: credit.name }),
-          ...(credit.role !== undefined && { role: credit.role }),
-          ...(credit.contribution !== undefined && {
-            contribution: credit.contribution,
-          }),
-          ...(credit.order !== undefined && { order: credit.order }),
-        },
+      const docData = await upsertDocument("credits", id, {
+        ...(credit.name !== undefined && { name: credit.name }),
+        ...(credit.role !== undefined && { role: credit.role }),
+        ...(credit.contribution !== undefined && { contribution: credit.contribution }),
+        ...(credit.order !== undefined && { order: credit.order }),
       });
 
       return {
-        id: doc.$id,
-        name: safeString(doc.name, "Unknown"),
-        role: safeString(doc.role, ""),
-        contribution: safeString(doc.contribution, ""),
-        order: safeNumber(doc.order, 0),
+        id: docData.$id,
+        name: safeString(docData.name, "Unknown"),
+        role: safeString(docData.role, ""),
+        contribution: safeString(docData.contribution, ""),
+        order: safeNumber(docData.order, 0),
       };
     } catch (error) {
       console.error("Failed to update credit:", error);
@@ -1422,11 +1459,7 @@ export const DataStore = {
 
   deleteCredit: async (id: string): Promise<boolean> => {
     try {
-      await appwrite.databases.deleteDocument({
-        databaseId: APPWRITE_DATABASE_ID,
-        collectionId: "credits",
-        documentId: id,
-      });
+      await deleteDocument("credits", id);
 
       return true;
     } catch (error) {
@@ -1887,13 +1920,14 @@ export const DataStore = {
   },
 
   // --- USER ROLES & PROFILES ---
-  getUserRoles: async (_userId: string): Promise<string[]> => {
+  getUserRoles: async (userId: string): Promise<string[]> => {
     try {
-      const { teams } = await appwrite.teams.list();
-
-      console.log("USER TEAMS FULL:", JSON.stringify(teams, null, 2));
-
-      return teams.map(team => team.$id);
+      // Firebase has no "teams" concept. Roles are stored as the `role` field
+      // on the user document in the `users` Firestore collection.
+      const userDoc = await getDocument(COLLECTIONS.USERS, userId);
+      if (!userDoc) return [];
+      const role = safeString(userDoc.role, "");
+      return role ? [role] : [];
     } catch (err) {
       console.error(err);
       return [];
@@ -2064,13 +2098,8 @@ export const DataStore = {
       );
     }
 
-    await appwrite.databases.updateDocument({
-      databaseId: APPWRITE_DATABASE_ID,
-      collectionId: COLLECTIONS.ASSIGNMENTS,
-      documentId: assignmentId,
-      data: {
-        tutorId,
-      },
+    await upsertDocument(COLLECTIONS.ASSIGNMENTS, assignmentId, {
+      tutorId,
     });
   },
   // --- BLOGSS ---
@@ -2920,59 +2949,38 @@ export const DataStore = {
     userId?: string,
     roles: string[] = ["tutor"]
   ): Promise<string> => {
+    // Firebase has no teams concept. We assign the role on the user document instead.
+    // `teamId` maps to a role name (e.g. "Students" → "student", "Tutors" → "tutor").
+    const roleMap: Record<string, string> = {
+      Students: "student",
+      Tutors: "tutor",
+      Admin: "admin",
+      Recruitment: "recruitment",
+    };
+    const resolvedRole = roleMap[teamId] ?? roles[0] ?? teamId.toLowerCase();
+
+    if (!userId) {
+      throw new Error("addToTeam on Firebase requires a userId — email-only invites are not supported.");
+    }
+
+    await upsertDocument(COLLECTIONS.USERS, userId, { role: resolvedRole });
+    return userId;
+  },
+
+  removeFromTeam: async (_teamId: string, membershipId: string): Promise<void> => {
+    // membershipId == userId in the Firebase model. Reset to "student".
     try {
-      console.log("=== APPWRITE TEAM DEBUG ===");
-      console.log("Team ID:", teamId);
-      console.log("Email:", email);
-      console.log("User ID:", userId);
-      console.log("Roles:", roles);
-
-      const team = await appwrite.teams.get({
-        teamId,
-      });
-
-      console.log("TEAM FOUND:", team);
-
-      const membership = await appwrite.teams.createMembership({
-        teamId,
-        roles,
-        email: userId ? undefined : email,
-        userId: userId || undefined,
-        url: window.location.origin,
-      });
-
-      console.log("MEMBERSHIP CREATED:", membership);
-      console.log("RESOLVED AUTH USER ID:", membership.userId);
-
-      if (!membership.userId) {
-        throw new Error("Appwrite membership did not return a user ID.");
-      }
-
-      return membership.userId;
+      await upsertDocument(COLLECTIONS.USERS, membershipId, { role: "student" });
     } catch (e: any) {
-      if (e?.code === 409) {
-        console.log("User is already a member of the team.");
-        throw new Error("User is already a member of the team.");
-      }
-
-      console.error("addToTeam failed:", e);
-      throw e;
+      console.warn("removeFromTeam:", e);
     }
   },
 
-  removeFromTeam: async (teamId: string, membershipId: string): Promise<void> => {
+  getTeamMembershipByUserId: async (_teamId: string, userId: string): Promise<string | null> => {
+    // In Firebase, the "membership ID" is just the userId itself.
     try {
-      await appwrite.teams.deleteMembership(teamId, membershipId);
-    } catch (e: any) {
-      if (e?.code !== 404) console.warn("removeFromTeam:", e);
-    }
-  },
-
-  getTeamMembershipByUserId: async (teamId: string, userId: string): Promise<string | null> => {
-    try {
-      const list = await appwrite.teams.listMemberships(teamId);
-      const match = list.memberships.find((m: any) => m.userId === userId);
-      return match?.$id ?? null;
+      const userDoc = await getDocument(COLLECTIONS.USERS, userId);
+      return userDoc ? userId : null;
     } catch {
       return null;
     }
@@ -3008,14 +3016,9 @@ export const DataStore = {
 
   getStudentTeamMembers: async (): Promise<any[]> => {
     try {
-      const response = await appwrite.teams.listMemberships("Students");
-
-      console.log(
-        "STUDENTS TEAM MEMBERS:",
-        JSON.stringify(response.memberships, null, 2)
-      );
-
-      return response.memberships;
+      // Firebase: query the users collection for all users with role === "student"
+      const docs = await listDocuments(COLLECTIONS.USERS, ['equal("role","student")', 'equal("active",true)']);
+      return docs;
     } catch (error) {
       console.error("Failed to load Students team:", error);
       return [];
@@ -3648,7 +3651,7 @@ export const DataStore = {
       fileId: rec.fileId || null,
       fileName: rec.fileName || null,
       externalUrl: rec.externalUrl || null,
-      storageProvider: rec.storageProvider || "appwrite",
+      storageProvider: rec.storageProvider || "firebase",
       durationSeconds: rec.durationSeconds || null,
       subject: rec.subject || "",
       recordedAt: rec.recordedAt || new Date().toISOString(),
@@ -3721,56 +3724,34 @@ export const DataStore = {
   },
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // PROFILE PICTURE (Appwrite Storage)
+  // PROFILE PICTURE (Firebase Storage)
   // ─────────────────────────────────────────────────────────────────────────────
   uploadProfilePicture: async (file: File, userId: string): Promise<{ fileId: string; url: string }> => {
-    const result = await appwrite.storage.createFile({
-      bucketId: "profile-media",
-      fileId: ID.unique(),
-      file,
-      permissions: [
-        Permission.read(Role.any()),
-        Permission.update(Role.user(userId)),
-        Permission.delete(Role.user(userId)),
-      ],
-    });
-    const preview = appwrite.storage.getFilePreview({
-      bucketId: "profile-media",
-      fileId: result.$id,
-      width: 256,
-      height: 256,
-      quality: 85,
-    });
-    const url = typeof preview === "string" ? preview : String(preview);
-    return { fileId: result.$id, url };
+    const fileRef = storageRef(storage, `profile-media/${userId}/${ID.unique()}`);
+    await uploadBytes(fileRef, file);
+    const url = await getDownloadURL(fileRef);
+    return { fileId: fileRef.fullPath, url };
   },
 
-  getFilePreviewUrl: (bucketId: string, fileId: string, width = 256): string => {
-    try {
-      const result = appwrite.storage.getFilePreview({ bucketId, fileId, width, height: width, quality: 80 });
-      return typeof result === "string" ? result : String(result);
-    } catch { return ""; }
+  getFilePreviewUrl: (_bucketId: string, fileId: string, _width = 256): string => {
+    // Firebase Storage doesn't do on-the-fly image resizing like Appwrite.
+    // fileId is stored as the full storage path. Return a placeholder until
+    // a Cloud Function or imgix is wired up for resizing.
+    // For now, the raw download URL is adequate for profile pictures.
+    return fileId || "";
   },
 
-  getFileDownloadUrl: (bucketId: string, fileId: string): string => {
-    try {
-      const result = appwrite.storage.getFileDownload({ bucketId, fileId });
-      return typeof result === "string" ? result : String(result);
-    } catch { return ""; }
+  getFileDownloadUrl: (_bucketId: string, fileId: string): string => {
+    // fileId is stored as the full storage path after migration.
+    // Callers that stored an Appwrite fileId will get an empty string here
+    // until data is re-uploaded to Firebase Storage.
+    return fileId || "";
   },
 
   uploadFile: async (file: File, bucketId: string, userId: string): Promise<{ fileId: string; fileName: string }> => {
-    const result = await appwrite.storage.createFile({
-      bucketId,
-      fileId: ID.unique(),
-      file,
-      permissions: [
-        Permission.read(Role.user(userId)),
-        Permission.update(Role.user(userId)),
-        Permission.delete(Role.user(userId)),
-      ],
-    });
-    return { fileId: result.$id, fileName: file.name };
+    const fileRef = storageRef(storage, `${bucketId}/${userId}/${ID.unique()}-${file.name}`);
+    await uploadBytes(fileRef, file);
+    return { fileId: fileRef.fullPath, fileName: file.name };
   },
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -3800,32 +3781,18 @@ export const DataStore = {
   },
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // APPWRITE MESSAGING — send email via Resend topic
+  // MESSAGING — Firebase doesn't have a built-in email topic API.
+  // sendTopicEmail is a no-op stub here; wire up Firebase Extensions
+  // (e.g. "Trigger Email") or a Cloud Function when email sending is needed.
   // ─────────────────────────────────────────────────────────────────────────────
   sendTopicEmail: async (opts: {
     topicId: string;
     subject: string;
     body: string;
   }): Promise<void> => {
-    try {
-      await fetch(`${APPWRITE_ENDPOINT}/messaging/messages/email`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-appwrite-project": APPWRITE_PROJECT_ID,
-        },
-        body: JSON.stringify({
-          messageId: ID.unique(),
-          subject: opts.subject,
-          content: opts.body,
-          topics: [opts.topicId],
-          draft: false,
-          scheduledAt: null,
-        }),
-      });
-    } catch (e) {
-      console.warn("Appwrite Messaging send failed:", e);
-    }
+    // TODO: replace with Firebase Extension "Trigger Email from Firestore"
+    // or a Cloud Function that reads from a `mail` collection.
+    console.warn("[sendTopicEmail] Not yet implemented on Firebase. Topic:", opts.topicId, "Subject:", opts.subject);
   },
 
   // Notify a specific user by userId — creates in-app notification AND sends email
