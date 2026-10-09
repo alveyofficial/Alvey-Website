@@ -1,0 +1,15 @@
+{
+  "functions": [
+    {
+      "source": "functions/website-notifications",
+      "codebase": "website-notifications",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        ".prettierrc.json"
+      ]
+    }
+  ]
+}
