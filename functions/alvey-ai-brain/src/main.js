@@ -1,31 +1,35 @@
-// alvey-ai-brain — Appwrite Function
+// alvey-ai-brain — Firebase Cloud Function
 // Unified AI backend for the Alvey website chatbot and WhatsApp bot.
-// Reads data from Appwrite DB and calls OpenAI to generate responses.
+// Reads data from Firestore and calls OpenAI to generate responses.
 
-import { Client, Databases, Query } from 'node-appwrite';
+const { onRequest }         = require('firebase-functions/v2/https');
+const logger                = require('firebase-functions/logger');
+const { initializeApp, getApps } = require('firebase-admin/app');
+const { getFirestore }      = require('firebase-admin/firestore');
+
+if (!getApps().length) {
+  initializeApp();
+}
+const adminDb = getFirestore();
 
 // ---------------------------------------------------------------------------
 // Environment helpers
 // ---------------------------------------------------------------------------
-const ENDPOINT        = process.env.APPWRITE_ENDPOINT    || 'https://fra.cloud.appwrite.io/v1';
-const PROJECT_ID      = process.env.APPWRITE_PROJECT_ID  || 'tutorslink';
-const API_KEY         = process.env.APPWRITE_API_KEY      || '';
-const DATABASE_ID     = process.env.APPWRITE_DATABASE_ID  || 'Database';
-const OPENAI_API_KEY  = process.env.OPENAI_API_KEY        || '';
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
 
 // ---------------------------------------------------------------------------
-// Appwrite collection IDs  (mirrors data-store.ts COLLECTIONS)
+// Firestore collection IDs  (mirrors data-store.ts COLLECTIONS)
 // ---------------------------------------------------------------------------
 const COLLECTIONS = {
-  USERS:              'users',
-  TUTOR_PROFILES:     'tutor_profiles',
-  SUBJECTS:           'subjects',
-  HOMEPAGE:           'homepage_content',
-  PLATFORM_SETTINGS:  'platform_settings',
-  LESSONS:            'lessons',
-  ASSIGNMENTS:        'student_tutor_assignments',
-  NOTIFICATIONS:      'notifications',
-  WHATSAPP_SESSIONS:  'whatsapp_sessions',
+  USERS:             'users',
+  TUTOR_PROFILES:    'tutor_profiles',
+  SUBJECTS:          'subjects',
+  HOMEPAGE:          'homepage_content',
+  PLATFORM_SETTINGS: 'platform_settings',
+  LESSONS:           'lessons',
+  ASSIGNMENTS:       'student_tutor_assignments',
+  NOTIFICATIONS:     'notifications',
+  WHATSAPP_SESSIONS: 'whatsapp_sessions',
 };
 
 // ---------------------------------------------------------------------------
@@ -55,15 +59,14 @@ const DEFAULT_SUBJECTS = [
 ];
 
 // ---------------------------------------------------------------------------
-// Helper: initialise a server-side Appwrite client
+// CORS allowed origins
 // ---------------------------------------------------------------------------
-function buildClient() {
-  const client = new Client()
-    .setEndpoint(ENDPOINT)
-    .setProject(PROJECT_ID)
-    .setKey(API_KEY);
-  return new Databases(client);
-}
+const ALLOWED_ORIGINS = [
+  'https://alvey.study',
+  'https://www.alvey.study',
+  'http://localhost:3000',
+  'http://localhost:5173',
+];
 
 // ---------------------------------------------------------------------------
 // Safe accessor helpers
@@ -89,21 +92,30 @@ function avatarFor(name) {
 }
 
 // ---------------------------------------------------------------------------
-// DB helpers
+// Firestore DB helpers
 // ---------------------------------------------------------------------------
-async function listDocs(db, collectionId, queries = []) {
+async function listDocs(collectionId, queries = {}) {
   try {
-    const res = await db.listDocuments(DATABASE_ID, collectionId, queries);
-    return res.documents || [];
+    let ref = adminDb.collection(collectionId);
+    if (queries.equalField) {
+      ref = ref.where(queries.equalField, '==', queries.equalValue);
+    }
+    if (queries.limit) {
+      ref = ref.limit(queries.limit);
+    }
+    const snap = await ref.get();
+    return snap.docs.map(d => ({ $id: d.id, id: d.id, ...d.data() }));
   } catch (err) {
-    console.warn(`listDocs(${collectionId}) failed:`, err.message);
+    logger.warn(`listDocs(${collectionId}) failed:`, err.message);
     return [];
   }
 }
 
-async function getDoc(db, collectionId, documentId) {
+async function getDocById(collectionId, documentId) {
   try {
-    return await db.getDocument(DATABASE_ID, collectionId, documentId);
+    const snap = await adminDb.collection(collectionId).doc(documentId).get();
+    if (!snap.exists) return null;
+    return { $id: snap.id, id: snap.id, ...snap.data() };
   } catch {
     return null;
   }
@@ -135,14 +147,14 @@ function mapTutorDoc(doc) {
 }
 
 // ---------------------------------------------------------------------------
-// Fetch public platform data from Appwrite DB
+// Fetch public platform data from Firestore
 // ---------------------------------------------------------------------------
-async function fetchPublicData(db) {
+async function fetchPublicData() {
   const [tutorDocs, subjectDocs, homepageDoc, aiConfigDoc] = await Promise.all([
-    listDocs(db, COLLECTIONS.TUTOR_PROFILES, [Query.equal('active', true), Query.limit(100)]),
-    listDocs(db, COLLECTIONS.SUBJECTS,       [Query.equal('active', true), Query.limit(200)]),
-    getDoc(db, COLLECTIONS.HOMEPAGE, 'homepage'),
-    getDoc(db, COLLECTIONS.PLATFORM_SETTINGS, 'ai_config'),
+    listDocs(COLLECTIONS.TUTOR_PROFILES, { equalField: 'active', equalValue: true, limit: 100 }),
+    listDocs(COLLECTIONS.SUBJECTS,       { equalField: 'active', equalValue: true, limit: 200 }),
+    getDocById(COLLECTIONS.HOMEPAGE, 'homepage'),
+    getDocById(COLLECTIONS.PLATFORM_SETTINGS, 'ai_config'),
   ]);
 
   // --- tutors ---
@@ -194,37 +206,56 @@ async function fetchPublicData(db) {
 // ---------------------------------------------------------------------------
 // Fetch personal context for authenticated users
 // ---------------------------------------------------------------------------
-async function fetchPersonalData(db, userId, userRole) {
+async function fetchPersonalData(userId, userRole) {
   const isTutor   = userRole === 'tutor';
   const roleField = isTutor ? 'tutorId' : 'studentId';
 
-  const now     = new Date().toISOString();
-
   const [lessonDocs, assignmentDocs, notifDocs] = await Promise.all([
-    // upcoming lessons only (startsAt >= now)
-    listDocs(db, COLLECTIONS.LESSONS, [
-      Query.equal(roleField, userId),
-      Query.equal('isDeleted', false),
-      Query.greaterThanEqual('startsAt', now),
-      Query.orderAsc('startsAt'),
-      Query.limit(10),
-    ]),
+    // upcoming lessons — use where + limit (orderBy skipped to avoid composite index requirement)
+    (async () => {
+      try {
+        const snap = await adminDb.collection(COLLECTIONS.LESSONS)
+          .where(roleField, '==', userId)
+          .where('isDeleted', '==', false)
+          .limit(10)
+          .get();
+        return snap.docs.map(d => ({ $id: d.id, id: d.id, ...d.data() }));
+      } catch (err) {
+        logger.warn('fetchPersonalData lessons failed:', err.message);
+        return [];
+      }
+    })(),
     // active assignments (students only)
     isTutor
       ? Promise.resolve([])
-      : listDocs(db, COLLECTIONS.ASSIGNMENTS, [
-          Query.equal('studentId', userId),
-          Query.equal('isActive', true),
-          Query.limit(20),
-        ]),
+      : (async () => {
+          try {
+            const snap = await adminDb.collection(COLLECTIONS.ASSIGNMENTS)
+              .where('studentId', '==', userId)
+              .where('isActive', '==', true)
+              .limit(20)
+              .get();
+            return snap.docs.map(d => ({ $id: d.id, id: d.id, ...d.data() }));
+          } catch (err) {
+            logger.warn('fetchPersonalData assignments failed:', err.message);
+            return [];
+          }
+        })(),
     // unread, non-deleted notifications
-    listDocs(db, COLLECTIONS.NOTIFICATIONS, [
-      Query.equal('userId', userId),
-      Query.equal('isRead', false),
-      Query.equal('isDeleted', false),
-      Query.orderDesc('createdAt'),
-      Query.limit(20),
-    ]),
+    (async () => {
+      try {
+        const snap = await adminDb.collection(COLLECTIONS.NOTIFICATIONS)
+          .where('userId', '==', userId)
+          .where('isRead', '==', false)
+          .where('isDeleted', '==', false)
+          .limit(20)
+          .get();
+        return snap.docs.map(d => ({ $id: d.id, id: d.id, ...d.data() }));
+      } catch (err) {
+        logger.warn('fetchPersonalData notifications failed:', err.message);
+        return [];
+      }
+    })(),
   ]);
 
   const upcomingLessons = lessonDocs.map(d => ({
@@ -360,138 +391,147 @@ Conduct the conversation naturally, professionally, and keep responses relativel
 }
 
 // ---------------------------------------------------------------------------
-// Main Appwrite Function handler
+// Main Firebase Cloud Function handler
 // ---------------------------------------------------------------------------
-export default async ({ req, res, log, error }) => {
-  // Health-check / GET ping
-  if (req.method === 'GET') {
-    return res.json({ ok: true, text: 'pong' });
-  }
+exports.alveyAiBrain = onRequest(
+  { region: 'us-central1', invoker: 'public' },
+  async (req, res) => {
+    // CORS headers
+    const origin = req.headers.origin || '';
+    const corsOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+    res.set('Access-Control-Allow-Origin', corsOrigin);
+    res.set('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Content-Type');
+    if (req.method === 'OPTIONS') {
+      res.status(204).send('');
+      return;
+    }
 
-  // Only accept POST for AI inference
-  if (req.method !== 'POST') {
-    return res.json({ error: 'Method not allowed' }, 405);
-  }
+    // Health-check / GET ping
+    if (req.method === 'GET') {
+      return res.status(200).json({ ok: true, text: 'pong' });
+    }
 
-  try {
-    // -----------------------------------------------------------------------
-    // 1. Parse request body
-    // -----------------------------------------------------------------------
-    let body = {};
+    // Only accept POST for AI inference
+    if (req.method !== 'POST') {
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
+
     try {
-      body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
-    } catch {
-      return res.json({ error: 'Invalid JSON body' }, 400);
-    }
+      // -----------------------------------------------------------------------
+      // 1. Parse request body
+      // -----------------------------------------------------------------------
+      let body = {};
+      try {
+        body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+      } catch {
+        return res.status(400).json({ error: 'Invalid JSON body' });
+      }
 
-    const { messages, currentUrl, userId, userRole } = body;
+      const { messages, currentUrl, userId, userRole } = body;
 
-    // Validate messages array
-    if (!Array.isArray(messages) || messages.length === 0) {
-      return res.json({ error: 'messages array is required' }, 400);
-    }
+      // Validate messages array
+      if (!Array.isArray(messages) || messages.length === 0) {
+        return res.status(400).json({ error: 'messages array is required' });
+      }
 
-    const normalizedMessages = messages
-      .filter(m => m && typeof m.role === 'string' && typeof m.content === 'string')
-      .map(m => ({
-        role:    m.role === 'assistant' ? 'assistant' : 'user',
-        content: m.content,
-      }));
+      const normalizedMessages = messages
+        .filter(m => m && typeof m.role === 'string' && typeof m.content === 'string')
+        .map(m => ({
+          role:    m.role === 'assistant' ? 'assistant' : 'user',
+          content: m.content,
+        }));
 
-    if (normalizedMessages.length === 0) {
-      return res.json({ error: 'No valid messages provided' }, 400);
-    }
+      if (normalizedMessages.length === 0) {
+        return res.status(400).json({ error: 'No valid messages provided' });
+      }
 
-    // -----------------------------------------------------------------------
-    // 2. Initialise Appwrite DB client
-    // -----------------------------------------------------------------------
-    const db = buildClient();
+      // -----------------------------------------------------------------------
+      // 2. Fetch public platform data
+      // -----------------------------------------------------------------------
+      logger.info('Fetching public platform data...');
+      const { tutors, subjects, cms, aiConfig } = await fetchPublicData();
 
-    // -----------------------------------------------------------------------
-    // 3. Fetch public platform data
-    // -----------------------------------------------------------------------
-    log('Fetching public platform data...');
-    const { tutors, subjects, cms, aiConfig } = await fetchPublicData(db);
+      // -----------------------------------------------------------------------
+      // 3. Check ai_config toggles
+      //    - enabled:              master switch — disables all surfaces
+      //    - whatsapp_bot_enabled: WhatsApp-specific switch (checked here so a
+      //                            direct call from the webhook also respects it)
+      // -----------------------------------------------------------------------
+      const channel = safeStr(body.channel); // optional: 'whatsapp' | 'web'
 
-    // -----------------------------------------------------------------------
-    // 4. Check ai_config toggles
-    //    - enabled:              master switch — disables all surfaces
-    //    - whatsapp_bot_enabled: WhatsApp-specific switch (checked here so a
-    //                            direct call from the webhook also respects it)
-    // -----------------------------------------------------------------------
-    const channel = safeStr(body.channel); // optional: 'whatsapp' | 'web'
+      if (aiConfig?.enabled === false) {
+        const fallback = aiConfig?.disabled_message
+          || 'The AI Assistant is currently disabled. Please contact us at support@alvey.study';
+        return res.status(200).json({ text: fallback });
+      }
 
-    if (aiConfig?.enabled === false) {
-      const fallback = aiConfig?.disabled_message
-        || 'The AI Assistant is currently disabled. Please contact us at support@alvey.study';
-      return res.json({ text: fallback });
-    }
+      if (channel === 'whatsapp' && aiConfig?.whatsapp_bot_enabled === false) {
+        return res.status(200).json({
+          text: 'Our assistant is temporarily unavailable. Contact us at support@alvey.study',
+        });
+      }
 
-    if (channel === 'whatsapp' && aiConfig?.whatsapp_bot_enabled === false) {
-      return res.json({
-        text: 'Our assistant is temporarily unavailable. Contact us at support@alvey.study',
+      // -----------------------------------------------------------------------
+      // 4. Fetch personal data if userId is present
+      // -----------------------------------------------------------------------
+      let personalData = null;
+      if (userId && typeof userId === 'string') {
+        logger.info(`Fetching personal data for userId: ${userId}, role: ${userRole}`);
+        personalData = await fetchPersonalData(userId, userRole);
+      }
+
+      // -----------------------------------------------------------------------
+      // 5. Build system prompt
+      // -----------------------------------------------------------------------
+      const systemPrompt = buildSystemPrompt({
+        cms, tutors, subjects, aiConfig,
+        currentUrl: safeStr(currentUrl, '/'),
+        personalData,
+        userRole,
       });
+
+      // -----------------------------------------------------------------------
+      // 6. Call OpenAI
+      // -----------------------------------------------------------------------
+      if (!OPENAI_API_KEY) {
+        logger.error('OPENAI_API_KEY is not set');
+        return res.status(503).json({ error: 'AI assistant not configured.' });
+      }
+
+      const openAiPayload = {
+        model:       'gpt-4o-mini',
+        messages:    [{ role: 'system', content: systemPrompt }, ...normalizedMessages],
+        max_tokens:  500,
+        temperature: 0.7,
+      };
+
+      logger.info('Calling OpenAI...');
+      const openAiRes = await fetch('https://api.openai.com/v1/chat/completions', {
+        method:  'POST',
+        headers: {
+          'Content-Type':  'application/json',
+          'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify(openAiPayload),
+      });
+
+      if (!openAiRes.ok) {
+        const errData = await openAiRes.json().catch(() => ({}));
+        logger.error('OpenAI error:', JSON.stringify(errData));
+        return res.status(500).json({ error: errData?.error?.message || 'OpenAI request failed' });
+      }
+
+      const openAiData = await openAiRes.json();
+      const reply = openAiData.choices?.[0]?.message?.content
+        || "I'm here to help you connect with the perfect tutor! How can I assist you today?";
+
+      logger.info('AI response generated successfully.');
+      return res.status(200).json({ text: reply });
+
+    } catch (err) {
+      logger.error('Unhandled error in alvey-ai-brain:', err.message || err);
+      return res.status(500).json({ error: 'Unable to process request.', details: err.message });
     }
-
-    // -----------------------------------------------------------------------
-    // 5. Fetch personal data if userId is present
-    // -----------------------------------------------------------------------
-    let personalData = null;
-    if (userId && typeof userId === 'string') {
-      log(`Fetching personal data for userId: ${userId}, role: ${userRole}`);
-      personalData = await fetchPersonalData(db, userId, userRole);
-    }
-
-    // -----------------------------------------------------------------------
-    // 6. Build system prompt
-    // -----------------------------------------------------------------------
-    const systemPrompt = buildSystemPrompt({
-      cms, tutors, subjects, aiConfig,
-      currentUrl: safeStr(currentUrl, '/'),
-      personalData,
-      userRole,
-    });
-
-    // -----------------------------------------------------------------------
-    // 7. Call OpenAI
-    // -----------------------------------------------------------------------
-    if (!OPENAI_API_KEY) {
-      error('OPENAI_API_KEY is not set');
-      return res.json({ error: 'AI assistant not configured.' }, 503);
-    }
-
-    const openAiPayload = {
-      model:       'gpt-4o-mini',
-      messages:    [{ role: 'system', content: systemPrompt }, ...normalizedMessages],
-      max_tokens:  500,
-      temperature: 0.7,
-    };
-
-    log('Calling OpenAI...');
-    const openAiRes = await fetch('https://api.openai.com/v1/chat/completions', {
-      method:  'POST',
-      headers: {
-        'Content-Type':  'application/json',
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify(openAiPayload),
-    });
-
-    if (!openAiRes.ok) {
-      const errData = await openAiRes.json().catch(() => ({}));
-      error('OpenAI error:', JSON.stringify(errData));
-      return res.json({ error: errData?.error?.message || 'OpenAI request failed' }, 500);
-    }
-
-    const openAiData = await openAiRes.json();
-    const reply = openAiData.choices?.[0]?.message?.content
-      || "I'm here to help you connect with the perfect tutor! How can I assist you today?";
-
-    log('AI response generated successfully.');
-    return res.json({ text: reply });
-
-  } catch (err) {
-    error('Unhandled error in alvey-ai-brain:', err.message || err);
-    return res.json({ error: 'Unable to process request.', details: err.message }, 500);
-  }
-};
+  },
+);

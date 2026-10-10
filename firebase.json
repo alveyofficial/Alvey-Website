@@ -10,6 +10,17 @@
         "firebase-debug.*.log",
         ".prettierrc.json"
       ]
+    },
+    {
+      "source": "functions/alvey-ai-brain",
+      "codebase": "alvey-ai-brain",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        ".prettierrc.json"
+      ]
     }
   ]
 }
