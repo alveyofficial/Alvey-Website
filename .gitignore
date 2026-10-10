@@ -42,3 +42,8 @@ tsc-*.txt
 *.log
 build-out.log
 run-tsc.ps1
+
+# Kiro/Claude agent skill reference files (auto-downloaded, not project code)
+.agents/skills/
+.claude/skills/
+.agents/tasks/
