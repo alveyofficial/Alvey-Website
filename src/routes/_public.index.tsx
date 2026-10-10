@@ -423,6 +423,7 @@ duration-300
               }
             ].map((step) => (
               <Card
+                key={step.num}
                 className="rounded-3xl border-0 bg-white dark:bg-slate-900 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-3">
 
                 <CardContent className="p-10">

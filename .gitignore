@@ -34,6 +34,9 @@ dist-ssr
 *.sw?
 .env
 
+# Firebase App Hosting local emulator overrides (may contain secrets)
+apphosting.emulator.yaml
+
 # Archived Appwrite-era files (reference only)
 legacy/
 

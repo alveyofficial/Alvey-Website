@@ -1,4 +1,22 @@
 {
+  "apphosting": {
+    "backendId": "alvey",
+    "rootDir": "/",
+    "ignore": [
+      "node_modules",
+      ".git",
+      "firebase-debug.log",
+      "firebase-debug.*.log",
+      "functions",
+      "legacy"
+    ]
+  },
+  "emulators": {
+    "apphosting": {
+      "host": "localhost",
+      "port": 5004
+    }
+  },
   "functions": [
     {
       "source": "functions/website-notifications",

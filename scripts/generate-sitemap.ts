@@ -72,10 +72,11 @@ interface TutorDoc {
 
 async function fetchTutorSlugs(): Promise<string[]> {
   if (!API_KEY) {
-    throw new Error(
+    console.warn(
       "[sitemap] APPWRITE_API_KEY is not set. " +
-      "Add it as a build environment variable in Appwrite Sites.",
+      "Skipping dynamic tutor slugs — sitemap will contain static routes only.",
     );
+    return [];
   }
 
   const url = new URL(
@@ -106,10 +107,11 @@ async function fetchTutorSlugs(): Promise<string[]> {
   const data = (await res.json()) as { documents: TutorDoc[] };
 
   if (data.documents.length === 0) {
-    throw new Error(
+    console.warn(
       "[sitemap] Appwrite returned 0 active tutors. " +
       "Check that the tutor_profiles collection has documents with active=true.",
     );
+    return [];
   }
 
   const slugs = data.documents.map((doc) => {
