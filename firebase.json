@@ -32,6 +32,7 @@
     {
       "source": "functions/alvey-ai-brain",
       "codebase": "alvey-ai-brain",
+      "runtime": "nodejs22",
       "ignore": [
         "node_modules",
         ".git",

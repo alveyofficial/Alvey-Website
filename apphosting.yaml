@@ -1,7 +1,7 @@
 # Firebase App Hosting configuration
 # https://firebase.google.com/docs/app-hosting/configure
 #
-# Environment variables (VITE_FIREBASE_*, OPENAI_API_KEY, DISCORD_WEBHOOK_URL)
+# Environment variables (VITE_FIREBASE_*, GEMINI_API_KEY, DISCORD_WEBHOOK_URL)
 # are managed via the Firebase Console under App Hosting → Backend → Environment
 # variables, so they don't need to be declared here.
 

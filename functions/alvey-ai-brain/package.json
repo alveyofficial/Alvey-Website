@@ -4,13 +4,14 @@
   "description": "Alvey AI brain — unified AI backend for website chatbot and WhatsApp bot",
   "main": "src/main.js",
   "engines": {
-    "node": "20"
+    "node": "22"
   },
   "scripts": {
     "deploy": "firebase deploy --only functions:alveyAiBrain"
   },
   "dependencies": {
-    "firebase-functions": "^6.0.0",
-    "firebase-admin": "^13.0.0"
+    "@google/generative-ai": "^0.21.0",
+    "firebase-admin": "^13.0.0",
+    "firebase-functions": "^6.3.2"
   }
 }

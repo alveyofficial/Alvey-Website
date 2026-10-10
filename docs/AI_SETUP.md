@@ -1,7 +1,7 @@
 # Alvey AI — Setup & Deployment Guide
 
-This covers everything you need to deploy the two Appwrite Functions and wire them to
-your website and WhatsApp.
+This covers everything you need to deploy the `alvey-ai-brain` Cloud Function and wire it to
+the website chatbot and WhatsApp bot.
 
 ---
 
@@ -10,180 +10,129 @@ your website and WhatsApp.
 ```
 Website chatbot (AIChatbot.tsx)
   └─► POST /api/chatbot          ← TanStack server route (thin proxy)
-        └─► alvey-ai-brain       ← Appwrite Function you deploy
-              ├─► Appwrite DB    ← reads tutors, CMS, lessons, etc.
-              └─► OpenAI API     ← generates the reply
+        └─► alvey-ai-brain       ← Firebase Cloud Function
+              ├─► Firestore      ← reads tutors, CMS, lessons, etc.
+              └─► Gemini API     ← generates the reply
 
 WhatsApp message
   └─► Meta servers
-        └─► alvey-whatsapp-webhook  ← Appwrite Function you deploy
-              ├─► Appwrite DB        ← reads/writes whatsapp_sessions
+        └─► alvey-whatsapp-webhook  ← Firebase Cloud Function
+              ├─► Firestore          ← reads/writes whatsapp_sessions
               └─► alvey-ai-brain     ← calls the brain above
 ```
 
-One `ai_config` document in Appwrite controls both the website chatbot and the WhatsApp bot.
+One `ai_config` document in the `platform_settings` Firestore collection controls
+both the website chatbot and the WhatsApp bot.
 
 ---
 
-## Step 1 — Deploy `alvey-ai-brain`
+## Step 1 — Get a Gemini API key
 
-### 1a. Create the function in Appwrite Console
+1. Go to [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey).
+2. Click **Create API key** → choose your Firebase project (`alvey-website`).
+3. Copy the key — you'll need it in Step 3.
 
-1. Go to [cloud.appwrite.io](https://cloud.appwrite.io) and open your **tutorslink** project.
-2. Click **Functions** in the left sidebar → **Create Function**.
-3. Choose **"Create from scratch"**.
-4. Fill in:
-   - **Name:** `alvey-ai-brain`
-   - **Runtime:** `Node.js 18`
-5. Click **Create**.
+---
 
-### 1b. Upload the code
+## Step 2 — Deploy the function
 
-The function code lives in `functions/alvey-ai-brain/` in your repo.
+From the repo root run:
 
-1. On the function page click the **Deployments** tab → **Create deployment**.
-2. Choose **"Manual"** upload method.
-3. Zip up the `functions/alvey-ai-brain/` folder contents (**not** the folder itself — zip the `src/` folder and `package.json` together).
-4. Set **Entrypoint** to `src/main.js`.
-5. Set **Build command** to `npm install`.
-6. Click **Create**.
+```powershell
+firebase deploy --only functions:alveyAiBrain
+```
 
-Wait for the build to finish (it installs `node-appwrite`). You'll see a green "Active" badge.
+After deployment, Firebase prints the function URL. It looks like:
+`https://us-central1-alvey-website.cloudfunctions.net/alveyAiBrain`
 
-### 1c. Set environment variables
+Copy this URL — you'll need it in Step 3.
 
-In the function's **Settings** tab → **Environment variables**, add these one by one:
+> First deploy? Make sure you've run `npm install` inside `functions/alvey-ai-brain/` first.
+
+---
+
+## Step 3 — Set environment variables
+
+### For the Cloud Function
+
+In [Firebase Console](https://console.firebase.google.com) → **Functions** → find
+`alveyAiBrain` → **Details** → **Environment variables**, add:
 
 | Key | Value |
 |-----|-------|
-| `APPWRITE_ENDPOINT` | `https://fra.cloud.appwrite.io/v1` |
-| `APPWRITE_PROJECT_ID` | `tutorslink` |
-| `APPWRITE_API_KEY` | your API key from `.env` |
-| `APPWRITE_DATABASE_ID` | `Database` |
-| `OPENAI_API_KEY` | your OpenAI key from `.env` |
+| `GEMINI_API_KEY` | the key from Step 1 |
 
-Click **Update** after adding all of them, then **Redeploy** so the vars take effect.
+Click **Save**, then redeploy (`firebase deploy --only functions:alveyAiBrain`) for the
+variable to take effect.
 
-### 1d. Enable HTTP trigger and get the URL
+### For the web server
 
-1. Go to **Settings** tab → **Execute access** → set to **Any** (so the proxy can call it).
-2. Still in Settings, scroll to **Domains** — copy the function URL. It looks like:
-   `https://<region>.cloud.appwrite.io/v1/functions/<FUNCTION_ID>/executions`
-   
-   Actually the simpler direct HTTP URL is shown under **Domains** as something like:
-   `https://<random>.appwrite.global`
-   
-   Copy whichever one is shown — you'll need it in Step 3.
-
-### 1e. Test it
-
-Open a terminal and run:
-
-```powershell
-# Should return: {"ok":true,"text":"pong"}
-Invoke-WebRequest -Uri "https://<your-brain-url>" -Method GET | Select-Object -Expand Content
-
-# Should return an AI reply
-$body = '{"messages":[{"role":"user","content":"Hello, what is Alvey?"}]}'
-Invoke-WebRequest -Uri "https://<your-brain-url>" -Method POST -ContentType "application/json" -Body $body | Select-Object -Expand Content
-```
-
----
-
-## Step 2 — Deploy `alvey-whatsapp-webhook`
-
-### 2a. Create the function
-
-Same steps as Step 1a, but:
-- **Name:** `alvey-whatsapp-webhook`
-- **Runtime:** `Node.js 18`
-
-### 2b. Upload the code
-
-Zip up the contents of `functions/alvey-whatsapp-webhook/` and upload with:
-- **Entrypoint:** `src/main.js`
-- **Build command:** `npm install`
-
-### 2c. Set environment variables
-
-| Key | Value |
-|-----|-------|
-| `APPWRITE_ENDPOINT` | `https://fra.cloud.appwrite.io/v1` |
-| `APPWRITE_PROJECT_ID` | `tutorslink` |
-| `APPWRITE_API_KEY` | your API key from `.env` |
-| `APPWRITE_DATABASE_ID` | `Database` |
-| `WHATSAPP_VERIFY_TOKEN` | make up any secret string, e.g. `alvey-wa-secret-2024` — you'll paste this into Meta too |
-| `WHATSAPP_ACCESS_TOKEN` | your WhatsApp Cloud API access token (from Meta App Dashboard) |
-| `WHATSAPP_PHONE_NUMBER_ID` | your WhatsApp phone number ID (from Meta App Dashboard) |
-| `ALVEY_AI_BRAIN_URL` | the URL you copied in Step 1d |
-
-Set **Execute access** to **Any**.
-
-### 2d. Test webhook verification
-
-```powershell
-$url = "https://<your-webhook-url>?hub.mode=subscribe&hub.verify_token=alvey-wa-secret-2024&hub.challenge=testchallenge123"
-Invoke-WebRequest -Uri $url -Method GET | Select-Object -Expand Content
-# Expected output: testchallenge123
-```
-
----
-
-## Step 3 — Wire the web server
-
-Add this one new line to your `.env` file:
+Add this to your `.env` file (or App Hosting environment variables in the Firebase Console):
 
 ```env
-APPWRITE_FUNCTION_AI_BRAIN_URL=https://<your-brain-url-from-step-1d>
+AI_FUNCTION_URL=https://us-central1-alvey-website.cloudfunctions.net/alveyAiBrain
 ```
 
-That's it. The `/api/chatbot` proxy already reads this variable — no code changes needed.
+---
 
-Restart your dev server (`npm run dev`) and test the website chatbot. It should work exactly
-as before, but now the AI logic is running inside Appwrite.
+## Step 4 — Test it
+
+```powershell
+# Health check — should return: {"ok":true,"text":"pong"}
+Invoke-WebRequest -Uri "https://us-central1-alvey-website.cloudfunctions.net/alveyAiBrain" -Method GET | Select-Object -Expand Content
+
+# Chat test — should return an AI reply
+$body = '{"messages":[{"role":"user","content":"Hello, what is Alvey?"}]}'
+Invoke-WebRequest -Uri "https://us-central1-alvey-website.cloudfunctions.net/alveyAiBrain" -Method POST -ContentType "application/json" -Body $body | Select-Object -Expand Content
+```
 
 ---
 
-## Step 4 — Create the `whatsapp_sessions` collection
+## Local emulator setup
 
-The WhatsApp bot needs one new collection to store conversation history.
+To test locally before deploying:
 
-1. In Appwrite Console → **Databases** → open the **Database** database.
-2. Click **Create Collection**.
-   - **Collection ID:** `whatsapp_sessions`
-   - **Name:** `WhatsApp Sessions`
-3. Add these three attributes:
-
-| Attribute key | Type   | Size  | Required |
-|---------------|--------|-------|----------|
-| `phoneNumber` | String | 20    | Yes      |
-| `messages`    | String | 65535 | Yes      |
-| `updatedAt`   | String | 30    | Yes      |
-
-4. Under **Settings** → **Permissions** — remove all user-level permissions. This collection
-   is only accessed by the API key, not by end users.
+1. Create `functions/alvey-ai-brain/.env` (this file is gitignored):
+   ```env
+   GEMINI_API_KEY=your_key_here
+   ```
+2. Run the emulator from the repo root:
+   ```powershell
+   firebase emulators:start --only functions
+   ```
+3. The local URL will be printed in the terminal (usually `http://127.0.0.1:5001/...`).
 
 ---
 
-## Step 5 — Connect WhatsApp (Meta App Dashboard)
+## WhatsApp bot (optional)
 
-> Skip this step if you only want the website chatbot for now.
+See `functions/alvey-whatsapp-webhook/` — deploy the same way:
 
-1. Go to [developers.facebook.com/apps](https://developers.facebook.com/apps) and open (or create) your Meta app.
-2. In the left sidebar click **WhatsApp → Configuration**.
-3. Under **Webhook** click **Edit**.
-   - **Callback URL:** paste the `alvey-whatsapp-webhook` function URL from Step 2.
-   - **Verify token:** paste the same value you set for `WHATSAPP_VERIFY_TOKEN`.
-4. Click **Verify and save** — Meta will call your function's GET endpoint. If the test from
-   Step 2d worked, this will show a green checkmark.
-5. Subscribe to the **messages** webhook field.
+```powershell
+firebase deploy --only functions:alveyWhatsappWebhook
+```
+
+Environment variables for the webhook function:
+
+| Key | Value |
+|-----|-------|
+| `WHATSAPP_VERIFY_TOKEN` | any secret string you choose |
+| `WHATSAPP_ACCESS_TOKEN` | from Meta App Dashboard |
+| `WHATSAPP_PHONE_NUMBER_ID` | from Meta App Dashboard |
+| `ALVEY_AI_BRAIN_URL` | the brain function URL from Step 2 |
+
+Then in [Meta App Dashboard](https://developers.facebook.com/apps):
+- **WhatsApp → Configuration → Webhook**
+- Callback URL: your webhook function URL
+- Verify token: the value you set for `WHATSAPP_VERIFY_TOKEN`
+- Subscribe to the **messages** field
 
 ---
 
 ## Admin toggle — controlling both bots at once
 
-The `ai_config` document in the `platform_settings` collection controls everything.
-Your existing admin page at `/admin/ai-assistant` already manages it.
+The `ai_config` document in the `platform_settings` Firestore collection controls everything.
+The CMS page at `/cms` already manages it.
 
 The `value` field is a JSON object:
 
@@ -203,54 +152,59 @@ The `value` field is a JSON object:
 | `false`   | anything               | Disabled        | Disabled     |
 | `true`    | `false`                | Active          | Disabled     |
 
-Setting `enabled: false` kills both surfaces with the `disabled_message`.
+---
+
+## Firestore collections used
+
+| Collection | Purpose |
+|------------|---------|
+| `tutor_profiles` | Active tutors injected into the AI context |
+| `subjects` | Active subjects listed in the AI context |
+| `homepage_content` | CMS data (headline, stats, mission, FAQs) |
+| `platform_settings` | `ai_config` document — master toggle |
+| `lessons` | Personal context for authenticated users |
+| `student_tutor_assignments` | Personal context for authenticated students |
+| `notifications` | Unread notification count for authenticated users |
+| `whatsapp_sessions` | Conversation history for the WhatsApp bot |
+| `aichats` | Chat sessions managed by the Firebase AI Logic extension |
 
 ---
 
-## All environment variables at a glance
+## Environment variables at a glance
 
-### `.env` (web server)
+### `.env` (web server / App Hosting)
 
 ```env
-APPWRITE_ENDPOINT=https://fra.cloud.appwrite.io/v1
-APPWRITE_PROJECT_ID=tutorslink
-APPWRITE_API_KEY=<your api key>
-APPWRITE_DATABASE_ID=Database
-VITE_APPWRITE_ENDPOINT=https://fra.cloud.appwrite.io/v1
-VITE_APPWRITE_PROJECT_ID=tutorslink
-VITE_APPWRITE_DATABASE_ID=Database
-APPWRITE_FUNCTION_AI_BRAIN_URL=<brain function url>
-OPENAI_API_KEY=<your openai key>
+VITE_FIREBASE_API_KEY=...
+VITE_FIREBASE_AUTH_DOMAIN=alvey-website.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=alvey-website
+VITE_FIREBASE_STORAGE_BUCKET=alvey-website.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID=...
+VITE_FIREBASE_APP_ID=...
+VITE_FIREBASE_MEASUREMENT_ID=...
+AI_FUNCTION_URL=https://us-central1-alvey-website.cloudfunctions.net/alveyAiBrain
+VITE_NOTIFICATIONS_FUNCTION_URL=https://us-central1-alvey-website.cloudfunctions.net/websiteNotifications
 ```
 
-### `alvey-ai-brain` function env vars
+### `alvey-ai-brain` function env vars (set in Firebase Console)
 
 ```
-APPWRITE_ENDPOINT        = https://fra.cloud.appwrite.io/v1
-APPWRITE_PROJECT_ID      = tutorslink
-APPWRITE_API_KEY         = <your api key>
-APPWRITE_DATABASE_ID     = Database
-OPENAI_API_KEY           = <your openai key>
+GEMINI_API_KEY = your_gemini_api_key
 ```
 
-### `alvey-whatsapp-webhook` function env vars
+### `alvey-whatsapp-webhook` function env vars (set in Firebase Console)
 
 ```
-APPWRITE_ENDPOINT        = https://fra.cloud.appwrite.io/v1
-APPWRITE_PROJECT_ID      = tutorslink
-APPWRITE_API_KEY         = <your api key>
-APPWRITE_DATABASE_ID     = Database
-WHATSAPP_VERIFY_TOKEN    = <your chosen secret string>
-WHATSAPP_ACCESS_TOKEN    = <from Meta App Dashboard>
-WHATSAPP_PHONE_NUMBER_ID = <from Meta App Dashboard>
-ALVEY_AI_BRAIN_URL       = <brain function url>
+WHATSAPP_VERIFY_TOKEN    = your_chosen_secret
+WHATSAPP_ACCESS_TOKEN    = from Meta App Dashboard
+WHATSAPP_PHONE_NUMBER_ID = from Meta App Dashboard
+ALVEY_AI_BRAIN_URL       = https://us-central1-alvey-website.cloudfunctions.net/alveyAiBrain
 ```
 
 ---
 
 ## Security notes
 
-- `OPENAI_API_KEY` lives **only** on the Appwrite Function — the web server never touches it.
-- Your `APPWRITE_API_KEY` is a server secret — it's already in `.gitignore` via `.env` and should never be committed to git.
-- The AI brain never returns raw DB documents — only the AI text reply reaches the browser.
-- The system prompt explicitly tells the AI not to reveal internal details, credentials, or schemas.
+- `GEMINI_API_KEY` lives **only** on the Cloud Function — the web server and browser never touch it.
+- The AI brain never returns raw Firestore documents — only the AI text reply reaches the browser.
+- The system instruction explicitly tells Gemini not to reveal internal details, credentials, or schemas.
