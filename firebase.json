@@ -1,4 +1,7 @@
 {
+  "firestore": {
+    "rules": "firestore.rules"
+  },
   "apphosting": {
     "backendId": "alvey",
     "rootDir": "/",
@@ -21,6 +24,7 @@
     {
       "source": "functions/website-notifications",
       "codebase": "website-notifications",
+      "runtime": "nodejs22",
       "ignore": [
         "node_modules",
         ".git",

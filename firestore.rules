@@ -1,0 +1,255 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Reads the { admin: true } custom claim set via firebase-admin.
+    // No Firestore read needed — it's in the signed JWT token.
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.admin == true;
+    }
+
+    // Role-based claim helpers — set via set-admin-claim API or set-admin.mjs
+    function isTutor() {
+      return isSignedIn() && request.auth.token.role == 'tutor';
+    }
+
+    function isStaff() {
+      return isSignedIn() && request.auth.token.role == 'staff';
+    }
+
+    function isParticipant(resource) {
+      return isSignedIn() &&
+        (resource.data.studentId == request.auth.uid ||
+         resource.data.tutorId == request.auth.uid);
+    }
+
+    // -------------------------------------------------------------------------
+    // users/{userId}
+    // -------------------------------------------------------------------------
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+
+      allow create: if isOwner(userId)
+        && (!('role' in request.resource.data)
+            || request.resource.data.role == 'student');
+
+      allow update: if isAdmin()
+        || (isOwner(userId)
+            && (!('role' in request.resource.data)
+                || request.resource.data.role == resource.data.role))
+        || (isOwner(userId)
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['fcmTokens']));
+
+      allow delete: if isAdmin();
+    }
+
+    // -------------------------------------------------------------------------
+    // tutor_profiles/{tutorId}
+    // -------------------------------------------------------------------------
+    match /tutor_profiles/{tutorId} {
+      allow read: if true;
+      allow create: if isAdmin();
+      allow update: if isAdmin()
+        || (isTutor()
+            && resource.data.authUserId == request.auth.uid
+            && !('verified' in request.resource.data)
+            && !('featured' in request.resource.data)
+            && !('active' in request.resource.data));
+      allow delete: if isAdmin();
+    }
+
+    // -------------------------------------------------------------------------
+    // subjects / subject_categories / homepage_content
+    // -------------------------------------------------------------------------
+    match /subjects/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /subject_categories/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /homepage_content/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // -------------------------------------------------------------------------
+    // platform_settings — Admin SDK only (rules don't apply to it)
+    // -------------------------------------------------------------------------
+    match /platform_settings/{docId} {
+      allow read, write: if false;
+    }
+
+    // -------------------------------------------------------------------------
+    // blog_posts / pages
+    // -------------------------------------------------------------------------
+    match /blog_posts/{postId} {
+      allow read: if resource.data.status == 'published' || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /pages/{pageId} {
+      allow read: if resource.data.status == 'published' || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // -------------------------------------------------------------------------
+    // tutor_reviews / Platform_reviews
+    // -------------------------------------------------------------------------
+    match /tutor_reviews/{reviewId} {
+      allow read: if resource.data.status == 'approved' || isAdmin();
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    match /Platform_reviews/{reviewId} {
+      allow read: if (resource.data.isPublic == true
+                      && resource.data.isDeleted == false)
+                  || isAdmin();
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin()
+        || isOwner(resource.data.authorid);
+    }
+
+    // -------------------------------------------------------------------------
+    // tutor_applications / volunteer_applications
+    // Public create (no login needed for apply forms).
+    // -------------------------------------------------------------------------
+    match /tutor_applications/{appId} {
+      allow read: if isAdmin()
+        || (isSignedIn() && resource.data.applicantUserId == request.auth.uid);
+      allow create: if true;
+      allow update, delete: if isAdmin();
+    }
+
+    match /volunteer_applications/{appId} {
+      allow read: if isAdmin()
+        || (isSignedIn() && resource.data.applicantUserId == request.auth.uid);
+      allow create: if true;
+      allow update, delete: if isAdmin();
+    }
+
+    // -------------------------------------------------------------------------
+    // lessons / student_tutor_assignments / schedules
+    // -------------------------------------------------------------------------
+    match /lessons/{lessonId} {
+      allow read: if isAdmin() || isParticipant(resource);
+      allow write: if isAdmin();
+    }
+
+    match /student_tutor_assignments/{id} {
+      allow read: if isAdmin() || isParticipant(resource);
+      allow write: if isAdmin();
+    }
+
+    match /schedules/{id} {
+      allow read: if isAdmin() || isParticipant(resource);
+      allow write: if isAdmin();
+    }
+
+    // -------------------------------------------------------------------------
+    // notifications
+    // -------------------------------------------------------------------------
+    match /notifications/{notifId} {
+      allow read: if isAdmin()
+        || (isSignedIn() && resource.data.userId == request.auth.uid);
+
+      // Users can only flip isRead — nothing else
+      allow update: if isSignedIn()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['isRead']);
+
+      allow create, delete: if isAdmin();
+    }
+
+    // -------------------------------------------------------------------------
+    // chats/{chatId} + messages subcollection
+    // Participants: read + write. Admins: read only. Everyone else: nothing.
+    // -------------------------------------------------------------------------
+    match /chats/{chatId} {
+      allow read: if isAdmin() || isParticipant(resource);
+      allow create: if isSignedIn()
+        && (request.resource.data.studentId == request.auth.uid
+            || request.resource.data.tutorId == request.auth.uid);
+      allow update: if isParticipant(resource);
+      allow delete: if isAdmin();
+
+      match /messages/{messageId} {
+        allow read: if isAdmin()
+          || (isSignedIn()
+              && (get(/databases/$(database)/documents/chats/$(chatId)).data.studentId == request.auth.uid
+                  || get(/databases/$(database)/documents/chats/$(chatId)).data.tutorId == request.auth.uid));
+        allow create: if isSignedIn()
+          && (get(/databases/$(database)/documents/chats/$(chatId)).data.studentId == request.auth.uid
+              || get(/databases/$(database)/documents/chats/$(chatId)).data.tutorId == request.auth.uid);
+        // Messages are immutable once sent
+        allow update, delete: if false;
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // aichats — Firebase AI Logic extension writes via Admin SDK
+    // -------------------------------------------------------------------------
+    match /aichats/{chatId} {
+      allow read: if isAdmin()
+        || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow write: if false;
+    }
+
+    // -------------------------------------------------------------------------
+    // ads (tutor advertisements)
+    // -------------------------------------------------------------------------
+    match /ads/{adId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin()
+        || (isSignedIn() && resource.data.tutorId == request.auth.uid);
+    }
+
+    // -------------------------------------------------------------------------
+    // audit_logs
+    // -------------------------------------------------------------------------
+    match /audit_logs/{logId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // -------------------------------------------------------------------------
+    // notification_preferences
+    // -------------------------------------------------------------------------
+    match /notification_preferences/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // -------------------------------------------------------------------------
+    // discord_links
+    // -------------------------------------------------------------------------
+    match /discord_links/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    // -------------------------------------------------------------------------
+    // Catch-all: deny everything not explicitly matched above
+    // -------------------------------------------------------------------------
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+  }
+}

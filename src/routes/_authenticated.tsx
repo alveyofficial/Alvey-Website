@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { firebase, getCurrentUser } from "@/integrations/firebase/client";
 import { DataStore } from "@/lib/data-store";
 import { PortalLayout, type NavItem } from "@/components/portal-layout";
+import { PushNotificationPrompt } from "@/components/push-notification-prompt";
 
 import {
   LayoutDashboard,
@@ -291,6 +292,7 @@ function AuthLayout() {
       onSignOut={signOut}
     >
       <Outlet />
+      <PushNotificationPrompt />
     </PortalLayout>
   );
 }

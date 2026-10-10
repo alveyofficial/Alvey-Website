@@ -4,18 +4,41 @@ import { Bell, CheckCheck } from "lucide-react";
 import { PageHeader, EmptyState } from "@/components/portal-shared";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { DataStore } from "@/lib/data-store";
 import type { AppNotification } from "@/lib/data-store";
-import { firebase, getCurrentUser } from "@/integrations/firebase/client";
+import { firebase } from "@/integrations/firebase/client";
+import { getIdToken } from "@/hooks/use-admin";
 
 export const Route = createFileRoute("/_authenticated/admin/notifications")({
   component: AdminNotifications,
 });
 
+type Audience = "students" | "tutors" | "staff" | "newsletter";
+
 function AdminNotifications() {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
+
+  // Broadcast state
+  const [broadcastAudience, setBroadcastAudience] = useState<Audience | "">("");
+  const [broadcastSubject, setBroadcastSubject] = useState("");
+  const [broadcastHtml, setBroadcastHtml] = useState("");
+  const [broadcastLoading, setBroadcastLoading] = useState(false);
+  const [broadcastResult, setBroadcastResult] = useState<{
+    sent: number;
+    failed: number;
+  } | null>(null);
+  const [broadcastError, setBroadcastError] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -39,6 +62,48 @@ function AdminNotifications() {
     if (!userId) return;
     await DataStore.markAllNotificationsRead(userId);
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+  };
+
+  const handleSendBroadcast = async () => {
+    if (!broadcastAudience || !broadcastSubject || !broadcastHtml) return;
+
+    setBroadcastLoading(true);
+    setBroadcastResult(null);
+    setBroadcastError(null);
+
+    try {
+      const idToken = await getIdToken();
+      if (!idToken) {
+        setBroadcastError("Not authenticated. Please sign in again.");
+        return;
+      }
+
+      const res = await fetch("/api/admin/send-broadcast", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          audience: broadcastAudience,
+          subject: broadcastSubject,
+          html: broadcastHtml,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setBroadcastError(data.error ?? "Failed to send broadcast.");
+        return;
+      }
+
+      setBroadcastResult({ sent: data.sent ?? 0, failed: data.failed ?? 0 });
+    } catch (err) {
+      setBroadcastError(err instanceof Error ? err.message : "Unexpected error.");
+    } finally {
+      setBroadcastLoading(false);
+    }
   };
 
   if (loading) {
@@ -98,6 +163,66 @@ function AdminNotifications() {
           ))}
         </div>
       )}
+
+      {/* ── Broadcast Email ──────────────────────────────────────────────── */}
+      <div className="mt-8">
+        <h2 className="text-lg font-semibold mb-1">Send Broadcast Email</h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          Send an email to a group of users. Emails are sent via Resend from noreply@alvey.study.
+        </p>
+
+        <div className="space-y-3 max-w-xl">
+          <Select
+            value={broadcastAudience}
+            onValueChange={(v) => setBroadcastAudience(v as Audience)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select audience" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="students">Students</SelectItem>
+              <SelectItem value="tutors">Tutors</SelectItem>
+              <SelectItem value="staff">Staff</SelectItem>
+              <SelectItem value="newsletter">Newsletter subscribers</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Input
+            placeholder="Subject"
+            value={broadcastSubject}
+            onChange={(e) => setBroadcastSubject(e.target.value)}
+          />
+
+          <Textarea
+            placeholder="Email body (HTML supported)"
+            rows={6}
+            value={broadcastHtml}
+            onChange={(e) => setBroadcastHtml(e.target.value)}
+          />
+
+          <Button
+            onClick={handleSendBroadcast}
+            disabled={
+              broadcastLoading ||
+              !broadcastAudience ||
+              !broadcastSubject ||
+              !broadcastHtml
+            }
+          >
+            {broadcastLoading ? "Sending…" : "Send Broadcast"}
+          </Button>
+
+          {broadcastError && (
+            <p className="text-sm text-red-600">{broadcastError}</p>
+          )}
+
+          {broadcastResult && (
+            <p className="text-sm text-muted-foreground">
+              Sent: {broadcastResult.sent} · Failed: {broadcastResult.failed}
+            </p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

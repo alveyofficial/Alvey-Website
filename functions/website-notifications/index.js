@@ -1,3 +1,10 @@
+// SETUP: Before deploying, set the secrets:
+//   firebase functions:secrets:set DISCORD_WEBHOOK_URL
+//   firebase functions:secrets:set RESEND_API_KEY
+// Paste the values when prompted.
+// To verify: firebase functions:secrets:access DISCORD_WEBHOOK_URL
+// To verify: firebase functions:secrets:access RESEND_API_KEY
+
 /**
  * website-notifications — Firebase Cloud Function (v2 HTTPS)
  *
@@ -7,17 +14,16 @@
  *   - applies to work with Alvey (recruitment)
  *
  * Sends a formatted Discord embed to DISCORD_WEBHOOK_URL.
- *
- * Environment variables (set via Firebase Console → Functions → websiteNotifications → Edit):
- *   DISCORD_WEBHOOK_URL  — your Discord server webhook URL
+ * Sends a confirmation email to the submitter via Resend.
  */
 
 const { onRequest } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 const logger = require("firebase-functions/logger");
 
-// Declare the secret — Firebase will inject it at runtime
+// Declare secrets — Firebase will inject them at runtime
 const discordWebhookUrl = defineSecret("DISCORD_WEBHOOK_URL");
+const resendApiKey = defineSecret("RESEND_API_KEY");
 
 // Allowed origins — add your production domain here
 const ALLOWED_ORIGINS = [
@@ -38,7 +44,7 @@ exports.websiteNotifications = onRequest(
   {
     region: "us-central1",
     invoker: "public",
-    secrets: [discordWebhookUrl], // grant the function access to this secret
+    secrets: [discordWebhookUrl, resendApiKey], // grant the function access to these secrets
   },
   async (req, res) => {
     // ── CORS ────────────────────────────────────────────────────────────────
@@ -116,6 +122,7 @@ exports.websiteNotifications = onRequest(
       ],
     };
 
+    let discordOk = false;
     try {
       const discordRes = await fetch(webhookUrl, {
         method: "POST",
@@ -126,15 +133,80 @@ exports.websiteNotifications = onRequest(
       if (!discordRes.ok) {
         const text = await discordRes.text();
         logger.error("Discord webhook failed", { status: discordRes.status, body: text });
-        res.status(200).json({ success: false, reason: "discord_error" });
-        return;
+      } else {
+        discordOk = true;
+        logger.info("Discord notification sent", { type });
       }
-
-      logger.info("Discord notification sent", { type });
-      res.status(200).json({ success: true });
     } catch (err) {
       logger.error("Unexpected error sending Discord notification", { message: err.message });
-      res.status(200).json({ success: false, reason: "internal_error" });
     }
+
+    // ── Resend confirmation email ─────────────────────────────────────────────
+    const apiKey = resendApiKey.value();
+
+    if (apiKey) {
+      // Determine recipient from the submission data
+      let recipientEmail = null;
+      let recipientName = "there";
+
+      if (type === "contact_message") {
+        recipientEmail = data.email || null;
+        recipientName = data.name || data.fullName || "there";
+      } else if (type === "tutor_application") {
+        recipientEmail = data.email || data.Email_address || null;
+        recipientName = data.full_name || data.fullName || data.name || "there";
+      } else if (type === "recruitment_application") {
+        recipientEmail = data.email || data.Email_address || null;
+        recipientName = data.full_name || data.fullName || data.name || "there";
+      }
+
+      if (recipientEmail) {
+        let emailSubject = "";
+        let emailHtml = "";
+
+        if (type === "contact_message") {
+          emailSubject = "We received your message — Alvey";
+          emailHtml = `<p>Hi ${recipientName},</p><p>Thanks for reaching out! We received your message and will get back to you within 1–2 business days.</p><p>— The Alvey Team</p>`;
+        } else if (type === "tutor_application") {
+          emailSubject = "Application received — Alvey";
+          emailHtml = `<p>Hi ${recipientName},</p><p>Thank you for applying to become an Alvey tutor! We'll review your application and get back to you soon.</p><p>— The Alvey Team</p>`;
+        } else if (type === "recruitment_application") {
+          emailSubject = "Application received — Alvey";
+          emailHtml = `<p>Hi ${recipientName},</p><p>Thank you for applying to join the Alvey team! We'll review your application and get back to you soon.</p><p>— The Alvey Team</p>`;
+        }
+
+        try {
+          const emailRes = await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${apiKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              from: "noreply@alvey.study",
+              to: recipientEmail,
+              subject: emailSubject,
+              html: emailHtml,
+            }),
+          });
+
+          if (!emailRes.ok) {
+            const errText = await emailRes.text();
+            logger.error("Resend email failed", { status: emailRes.status, body: errText });
+          } else {
+            logger.info("Confirmation email sent", { type, to: recipientEmail });
+          }
+        } catch (emailErr) {
+          logger.error("Unexpected error sending confirmation email", { message: emailErr.message });
+        }
+      } else {
+        logger.warn("No recipient email found in submission data", { type });
+      }
+    } else {
+      logger.warn("RESEND_API_KEY is not set, skipping confirmation email");
+    }
+
+    // ── Respond ───────────────────────────────────────────────────────────────
+    res.status(200).json({ success: discordOk });
   }
 );

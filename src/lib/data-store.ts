@@ -965,6 +965,13 @@ export const DataStore = {
 
       discordId: existing?.discordId ?? null,
       active: existing?.active ?? true,
+
+      // Email subscription defaults — only set on first create (existing values preserved)
+      emailSubscriptions: existing?.emailSubscriptions ?? {
+        newsletter: false,
+        lessonReminders: true,
+        announcements: true,
+      },
     });
   },
   getUserRecord: async (userId: string): Promise<any | null> => {
