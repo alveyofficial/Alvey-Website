@@ -15,6 +15,10 @@ export default defineConfig({
     tailwindcss(),
     tanstackStart({
       server: { entry: "server" },
+      nitro: {
+        preset: "node-server",
+        serveStatic: true,
+      },
     }),
     react(),
   ],
