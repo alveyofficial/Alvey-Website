@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { DataStore } from "@/lib/data-store";
+import type { Advertisement } from "@/lib/data-store";
 
 export const Route = createFileRoute("/_authenticated/admin/advertisements")({
   component: AdminAdvertisements,
@@ -45,7 +46,7 @@ function AdModal({
   onClose,
   onSaved,
 }: {
-  ad: Record<string, unknown>;
+  ad: Advertisement;
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -218,9 +219,9 @@ function AdModal({
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 function AdminAdvertisements() {
-  const [ads, setAds] = useState<Record<string, unknown>[]>([]);
+  const [ads, setAds] = useState<Advertisement[]>([]);
   const [loading, setLoading] = useState(true);
-  const [viewing, setViewing] = useState<Record<string, unknown> | null>(null);
+  const [viewing, setViewing] = useState<Advertisement | null>(null);
 
   const loadAds = async () => {
     const data = await DataStore.getAdvertisements();

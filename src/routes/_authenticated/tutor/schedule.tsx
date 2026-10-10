@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DataStore } from "@/lib/data-store";
+import type { LessonRecord } from "@/lib/data-store";
 import { firebase, getCurrentUser } from "@/integrations/firebase/client";
 
 export const Route = createFileRoute("/_authenticated/tutor/schedule")({
@@ -15,7 +16,7 @@ export const Route = createFileRoute("/_authenticated/tutor/schedule")({
 type ViewMode = "day" | "week" | "month";
 
 function TutorSchedule() {
-  const [lessons, setLessons] = useState<any[]>([]);
+  const [lessons, setLessons] = useState<LessonRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("week");
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -44,7 +45,7 @@ function TutorSchedule() {
 
   const filtered = useMemo(() => {
     return lessons.filter((l) => {
-      const d = new Date(l.starts_at);
+      const d = new Date(l.starts_at ?? "");
       if (viewMode === "day") return d.toDateString() === currentDate.toDateString();
       if (viewMode === "week") {
         const ws = new Date(currentDate);
@@ -82,7 +83,7 @@ function TutorSchedule() {
   // Group by date for week/month view
   const grouped: Record<string, any[]> = {};
   filtered.forEach((l) => {
-    const key = new Date(l.starts_at).toDateString();
+    const key = new Date(l.starts_at ?? "").toDateString();
     if (!grouped[key]) grouped[key] = [];
     grouped[key].push(l);
   });

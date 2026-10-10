@@ -1,8 +1,8 @@
 /**
- * Firebase client — drop-in replacement for src/integrations/appwrite/client.ts
+ * Firebase client — primary backend integration for the Alvey website.
  *
- * Exposes the same `firebase` object shape so routes and hooks need minimal changes.
- * All config values are VITE_-prefixed so Vite inlines them at build time.
+ * Exposes a `firebase` object that routes and hooks use for auth, Firestore,
+ * and Storage. Config values are VITE_-prefixed so Vite inlines them at build time.
  * They are safe to expose client-side; Firebase restricts access via Security Rules
  * and authorized domains, not by keeping the config secret.
  */
@@ -97,7 +97,7 @@ function emitAuthChange(user: User | null) {
   window.dispatchEvent(new CustomEvent(AUTH_EVENT, { detail: user ? { user } : null }));
 }
 
-type NormalizedUser = {
+export type NormalizedUser = {
   id: string;
   email?: string | null;
   displayName?: string | null;
@@ -151,7 +151,7 @@ function getOAuthProvider(provider: string) {
 }
 
 // ---------------------------------------------------------------------------
-// Main export — same shape as the Appwrite client so call-sites change minimally
+// Main export
 // ---------------------------------------------------------------------------
 
 export const firebase = {
@@ -162,12 +162,12 @@ export const firebase = {
   functions,
 
   auth: {
-    async getUser() {
+    async getUser(): Promise<{ data: { user: NormalizedUser | null } }> {
       const user = await getCurrentUser();
       return { data: { user } };
     },
 
-    async getSession() {
+    async getSession(): Promise<{ data: { session: { user: NormalizedUser } | null } }> {
       const user = await getCurrentUser();
       return { data: { session: user ? { user } : null } };
     },

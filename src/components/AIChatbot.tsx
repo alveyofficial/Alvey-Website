@@ -65,7 +65,7 @@ export function AIChatbot() {
   const [isDragging, setIsDragging] = useState(false);
   const dragStart = useRef({ x: 0, y: 0 });
 
-  // Identity — resolved once on mount from the active Appwrite session
+  // Identity — resolved once on mount from the active Firebase session
   const [userId, setUserId]     = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
 

@@ -164,7 +164,7 @@ function TutorAccount() {
                 {uploadingPhoto ? "Uploading…" : "Upload Photo"}
               </Button>
               <p className="text-xs text-muted-foreground mt-2">
-                JPG, PNG or WebP. Max 5 MB. Stored securely in Appwrite Storage.
+                JPG, PNG or WebP. Max 5 MB. Stored securely in Firebase Storage.
               </p>
             </div>
           </div>

@@ -23,6 +23,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { DataStore } from "@/lib/data-store";
+import type { UserRecord, Tutor } from "@/lib/data-store";
 import { firebase, getCurrentUser } from "@/integrations/firebase/client";
 
 export const Route = createFileRoute("/_authenticated/admin/scheduling")({
@@ -47,8 +48,8 @@ function AdminScheduling() {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
-  const [students, setStudents] = useState<Record<string, unknown>[]>([]);
-  const [tutors, setTutors] = useState<Record<string, unknown>[]>([]);
+  const [students, setStudents] = useState<UserRecord[]>([]);
+  const [tutors, setTutors] = useState<Tutor[]>([]);
   const [subjects, setSubjects] = useState<string[]>([]);
   const [levels, setLevels] = useState<string[]>([]);
   const [conflict, setConflict] = useState<string | null>(null);

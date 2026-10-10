@@ -45,6 +45,7 @@
   } from "@/components/ui/alert-dialog";
   import { toast } from "sonner";
   import { DataStore, type Tutor } from "@/lib/data-store";
+  import type { UserRecord } from "@/lib/data-store";
 
   export const Route = createFileRoute("/_authenticated/admin/students")({
     component: AdminStudents,
@@ -470,10 +471,10 @@
   // ─── Main Page ────────────────────────────────────────────────────────────────
 
   function AdminStudents() {
-    const [students, setStudents] = useState<Record<string, unknown>[]>([]);
+    const [students, setStudents] = useState<UserRecord[]>([]);
     const [loading, setLoading] = useState(true);
     const [createOpen, setCreateOpen] = useState(false);
-    const [viewing, setViewing] = useState<Record<string, unknown> | null>(null);
+    const [viewing, setViewing] = useState<UserRecord | null>(null);
     const [search, setSearch] = useState("");
 
     const loadStudents = async () => {

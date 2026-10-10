@@ -17,7 +17,7 @@ export const Route = createFileRoute("/reset-password")({
   }),
   validateSearch: (search: Record<string, unknown>) => ({
     oobCode: typeof search.oobCode === "string" ? search.oobCode : "",
-    // Legacy Appwrite params kept for backwards compatibility with old links
+    // Legacy params from old password-reset links — kept for URL backwards compatibility
     userId: typeof search.userId === "string" ? search.userId : "",
     secret: typeof search.secret === "string" ? search.secret : "",
   }),

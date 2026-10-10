@@ -5,6 +5,7 @@ import { PageHeader, EmptyState } from "@/components/portal-shared";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DataStore } from "@/lib/data-store";
+import type { AppNotification } from "@/lib/data-store";
 import { firebase, getCurrentUser } from "@/integrations/firebase/client";
 
 export const Route = createFileRoute("/_authenticated/admin/notifications")({
@@ -12,7 +13,7 @@ export const Route = createFileRoute("/_authenticated/admin/notifications")({
 });
 
 function AdminNotifications() {
-  const [notifications, setNotifications] = useState<Record<string, unknown>[]>([]);
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
 

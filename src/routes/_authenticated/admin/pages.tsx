@@ -23,16 +23,17 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { DataStore } from "@/lib/data-store";
+import type { Page as SitePage } from "@/lib/data-store";
 
 export const Route = createFileRoute("/_authenticated/admin/pages")({
   component: AdminPages,
 });
 
 function AdminPages() {
-  const [pages, setPages] = useState<Record<string, unknown>[]>([]);
+  const [pages, setPages] = useState<SitePage[]>([]);
   const [loading, setLoading] = useState(true);
   const [showEditor, setShowEditor] = useState(false);
-  const [editing, setEditing] = useState<Record<string, unknown> | null>(null);
+  const [editing, setEditing] = useState<SitePage | null>(null);
   const [form, setForm] = useState({
     id: "",
     title: "",
@@ -54,7 +55,7 @@ function AdminPages() {
     setLoading(false);
   };
 
-  const openEditor = (page?: Record<string, unknown>) => {
+  const openEditor = (page?: SitePage) => {
     if (page) {
       setEditing(page);
       setForm({

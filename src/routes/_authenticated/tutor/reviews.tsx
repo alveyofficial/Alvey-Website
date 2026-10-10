@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { DataStore } from "@/lib/data-store";
+import type { Review } from "@/lib/data-store";
 import { firebase, getCurrentUser } from "@/integrations/firebase/client";
 
 export const Route = createFileRoute("/_authenticated/tutor/reviews")({
@@ -23,7 +24,7 @@ function TutorReviews() {
   const [platformSubmitting, setPlatformSubmitting] = useState(false);
   const [platformSubmitted, setPlatformSubmitted] = useState(false);
 
-  const [reviews, setReviews] = useState<Record<string, unknown>[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [respondingTo, setRespondingTo] = useState<string | null>(null);
@@ -179,28 +180,16 @@ function TutorReviews() {
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-950/30 flex items-center justify-center text-blue-700 dark:text-blue-400 font-bold text-sm">
-                      {String(
-                        (
-                          r.student as
-                            | Record<string, unknown>
-                            | undefined
-                        )?.display_name || "S",
-                      )
+                      {(r.student_name || "S")
                         .split(" ")
-                        .map((n) => n[0])
+                        .map((n: string) => n[0])
                         .join("")
                         .slice(0, 2)}
                     </div>
 
                     <div>
                       <p className="font-semibold text-sm">
-                        {String(
-                          (
-                            r.student as
-                              | Record<string, unknown>
-                              | undefined
-                          )?.display_name || "Anonymous Student",
-                        )}
+                        {r.student_name || "Anonymous Student"}
                       </p>
 
                       <div className="flex items-center gap-1 text-amber-500 mt-0.5">

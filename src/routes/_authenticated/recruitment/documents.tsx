@@ -15,8 +15,8 @@ function RecruitmentDocuments() {
       />
       <EmptyState
         icon={FileText}
-        title="Connect the Appwrite Storage bucket"
-        description="Create a dedicated storage bucket in Appwrite for recruitment documents. Store the file ID against each application record, then list and fetch files here using the Appwrite Storage SDK."
+        title="Connect the storage bucket"
+        description="Create a dedicated storage bucket for recruitment documents. Store the file path against each application record, then list and fetch files here."
       />
     </div>
   );

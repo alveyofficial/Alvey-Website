@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { firebase, getCurrentUser } from "@/integrations/firebase/client";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { motion } from "motion/react";
+import { motion } from "framer-motion";
 import { seoMeta, seoLinks } from "@/lib/seo";
 
 export const Route = createFileRoute("/_public/apply")({

@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { getCurrentUser, firebase } from "@/integrations/firebase/client";
+import type { NormalizedUser } from "@/integrations/firebase/client";
 import { DataStore } from "@/lib/data-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,11 +23,11 @@ export const Route = createFileRoute("/auth")({
 });
 
 async function ensureUserRecord(displayNameHint = "") {
-  const user = await getCurrentUser() as any;
+  const user: NormalizedUser | null = await getCurrentUser();
   if (!user) return;
-  const uid: string = user.$id || user.id;
+  const uid: string = user.id;
   const email: string = user.email ?? "";
-  const name: string = user.name || displayNameHint || email.split("@")[0];
+  const name: string = user.displayName || user.name || displayNameHint || email.split("@")[0];
   const existing = await DataStore.getUserRecord(uid);
 
   await DataStore.saveUserRecord({
@@ -88,7 +89,7 @@ function AuthPage() {
       const user = await getCurrentUser();
       if (user) {
         await ensureUserRecord();
-        const uid = (user as any).$id || (user as any).id;
+        const uid = user.id;
         const roles = await DataStore.getUserRoles(uid);
         redirectByRole(roles, navigate);
       }
@@ -106,7 +107,7 @@ function AuthPage() {
       if (!user) throw new Error("Failed to load user.. this isnt supposed to happen..");
       await ensureUserRecord();
 
-      const uid = (user as any).$id || (user as any).id;
+      const uid = user.id;
       const roles = await DataStore.getUserRoles(uid);
       redirectByRole(roles, navigate);
       toast.success("Yippiee Welcome backk!!");
@@ -488,7 +489,7 @@ function redirectByRole(roles: string[], navigate: ReturnType<typeof useNavigate
   if (roles.includes("admin") || roles.includes("website")) {
     navigate({ to: "/admin" });
   } else if (roles.includes("tutor") || roles.includes("tutors")) {
-    navigate({ to: "/tutor/" });
+    navigate({ to: "/tutor" });
   } else if (roles.includes("recruitment") || roles.includes("staff_recruitment")) {
     navigate({ to: "/recruitment" });
   } else if (roles.includes("Students") || roles.length > 0) {

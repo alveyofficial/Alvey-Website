@@ -135,19 +135,19 @@ export async function getAdminDashboardMetrics(range?: DateRange): Promise<Admin
       DataStore.getPlatformSetting("ai_config"),
     ]);
 
-  const lessonsInRange = lessons.filter((l: Record<string, unknown>) =>
-    inRange(l.starts_at as string, range),
+  const lessonsInRange = lessons.filter((l) =>
+    inRange(String((l as Record<string, unknown>).starts_at ?? ""), range),
   );
 
-  const activeTutors = tutors.filter((t: Record<string, unknown>) => t.is_active !== false).length;
+  const activeTutors = tutors.filter((t) => t.is_active !== false).length;
   const ratedTutors = tutors.filter(
-    (t: Record<string, unknown>) => typeof t.rating_avg === "number" && t.rating_avg > 0,
+    (t) => typeof t.rating_avg === "number" && t.rating_avg > 0,
   );
   const averageTutorRating = ratedTutors.length
     ? Number(
         (
           ratedTutors.reduce(
-            (sum: number, t: Record<string, unknown>) => sum + (t.rating_avg as number),
+            (sum: number, t) => sum + (t.rating_avg as number),
             0,
           ) / ratedTutors.length
         ).toFixed(2),
@@ -158,12 +158,12 @@ export async function getAdminDashboardMetrics(range?: DateRange): Promise<Admin
   const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const thisMonthCount = lessons.filter(
-    (l: Record<string, unknown>) => new Date(l.starts_at as string) >= thisMonthStart,
+    (l) => new Date(String((l as Record<string, unknown>).starts_at ?? "")) >= thisMonthStart,
   ).length;
   const lastMonthCount = lessons.filter(
-    (l: Record<string, unknown>) =>
-      new Date(l.starts_at as string) >= lastMonthStart &&
-      new Date(l.starts_at as string) < thisMonthStart,
+    (l) =>
+      new Date(String((l as Record<string, unknown>).starts_at ?? "")) >= lastMonthStart &&
+      new Date(String((l as Record<string, unknown>).starts_at ?? "")) < thisMonthStart,
   ).length;
   const monthOverMonthLessonGrowthPct =
     lastMonthCount > 0
@@ -181,17 +181,17 @@ export async function getAdminDashboardMetrics(range?: DateRange): Promise<Admin
       isPendingStatus(a.status),
     ).length,
     scheduledLessons: lessonsInRange.filter(
-      (l: Record<string, unknown>) => l.status === "scheduled",
+      (l) => (l as Record<string, unknown>).status === "scheduled",
     ).length,
     completedLessons: lessonsInRange.filter(
-      (l: Record<string, unknown>) => l.status === "completed",
+      (l) => (l as Record<string, unknown>).status === "completed",
     ).length,
     cancelledLessons: lessonsInRange.filter(
-      (l: Record<string, unknown>) => l.status === "cancelled",
+      (l) => (l as Record<string, unknown>).status === "cancelled",
     ).length,
     averageTutorRating,
     activeAdvertisements: ads.filter(
-      (a: Record<string, unknown>) => (a.isActive ?? a.is_active) === true,
+      (a) => ((a as Record<string, unknown>).isActive ?? (a as Record<string, unknown>).is_active) === true,
     ).length,
     totalReviews: reviews.length,
     aiAssistantEnabled: aiConfig?.enabled !== false,
@@ -216,11 +216,11 @@ export async function getEnrollmentTrend(
   ]);
 
   for (const doc of studentDocs) {
-    const label = monthLabel(doc.$createdAt as string);
+    const label = monthLabel(String(doc.$createdAt ?? ""));
     if (bucket[label]) bucket[label].students += 1;
   }
   for (const doc of tutorDocs) {
-    const label = monthLabel(doc.$createdAt as string);
+    const label = monthLabel(String(doc.$createdAt ?? ""));
     if (bucket[label]) bucket[label].tutors += 1;
   }
 
@@ -238,7 +238,7 @@ export async function getLessonTrend(months = 7): Promise<MonthPoint[]> {
 
   const lessons = await DataStore.getAllLessons();
   for (const lesson of lessons) {
-    const label = monthLabel((lesson as Record<string, unknown>).starts_at as string);
+    const label = monthLabel(String((lesson as Record<string, unknown>).starts_at ?? ""));
     if (label in bucket) bucket[label] += 1;
   }
 

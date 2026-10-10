@@ -180,7 +180,7 @@ function TutorProfilePage() {
           asChild
           className="rounded-xl bg-emerald-600 hover:bg-emerald-700"
         >
-          <Link to="/find-a-tutor">Back to Marketplace</Link>
+          <Link to="/find-a-tutor" search={{ level: undefined, subject: undefined }}>Back to Marketplace</Link>
         </Button>
       </div>
     );
@@ -193,6 +193,7 @@ function TutorProfilePage() {
         {/* Back */}
         <Link
           to="/find-a-tutor"
+          search={{ level: undefined, subject: undefined }}
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />

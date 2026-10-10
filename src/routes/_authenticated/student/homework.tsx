@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { DataStore } from "@/lib/data-store";
-import { firebase, getCurrentUser } from "@/integrations/firebase/client";
+import { firebase } from "@/integrations/firebase/client";
 
 export const Route = createFileRoute("/_authenticated/student/homework")({
   component: StudentHomework,
@@ -17,11 +17,31 @@ export const Route = createFileRoute("/_authenticated/student/homework")({
 
 const BUCKET = "homework-chat-files";
 
+// Collect all file IDs from a homework list and resolve them to HTTPS URLs
+async function resolveAllFileUrls(homework: any[]): Promise<Record<string, string>> {
+  const allIds: string[] = [];
+  for (const hw of homework) {
+    if (Array.isArray(hw.fileIds)) allIds.push(...hw.fileIds);
+    if (Array.isArray(hw.submissionFileIds)) allIds.push(...hw.submissionFileIds);
+  }
+  const unique = [...new Set(allIds)];
+  if (unique.length === 0) return {};
+  const entries = await Promise.all(
+    unique.map(async (fid) => {
+      const url = await DataStore.getFileDownloadUrl(BUCKET, fid);
+      return [fid, url] as [string, string];
+    })
+  );
+  return Object.fromEntries(entries);
+}
+
 function StudentHomework() {
   const [studentId, setStudentId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [homework, setHomework] = useState<any[]>([]);
   const [filter, setFilter] = useState("all");
+  // Map of fileId -> resolved HTTPS URL
+  const [fileUrls, setFileUrls] = useState<Record<string, string>>({});
 
   // Submission dialog
   const [submitting, setSubmitting] = useState<any | null>(null);
@@ -32,6 +52,8 @@ function StudentHomework() {
   const load = async (uid: string) => {
     const hw = await DataStore.getHomeworkForStudent(uid);
     setHomework(hw);
+    const resolved = await resolveAllFileUrls(hw);
+    setFileUrls((prev) => ({ ...prev, ...resolved }));
   };
 
   useEffect(() => {
@@ -144,7 +166,7 @@ function StudentHomework() {
                       {hw.fileIds.map((fid: string, i: number) => (
                         <a
                           key={fid}
-                          href={DataStore.getFileDownloadUrl(BUCKET, fid)}
+                          href={fileUrls[fid] || "#"}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex items-center gap-1.5 text-xs text-blue-600 hover:underline border border-blue-200 rounded-md px-2 py-1"
@@ -168,7 +190,7 @@ function StudentHomework() {
                       {hw.submissionFileIds.map((fid: string, i: number) => (
                         <a
                           key={fid}
-                          href={DataStore.getFileDownloadUrl(BUCKET, fid)}
+                          href={fileUrls[fid] || "#"}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex items-center gap-1.5 text-xs text-emerald-700 hover:underline border border-emerald-300 rounded-md px-2 py-1"

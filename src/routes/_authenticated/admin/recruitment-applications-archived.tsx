@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { DataStore } from "@/lib/data-store";
+import type { RecruitmentApplication } from "@/lib/data-store";
 
 export const Route = createFileRoute(
   "/_authenticated/admin/recruitment-applications-archived",
@@ -40,7 +41,7 @@ async function sendDiscordNotification(app: Record<string, unknown>): Promise<vo
 }
 
 function ArchivedRecruitmentApplications() {
-  const [applications, setApplications] = useState<Record<string, unknown>[]>([]);
+  const [applications, setApplications] = useState<RecruitmentApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 

@@ -8,7 +8,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { firebase, getCurrentUser } from "@/integrations/firebase/client";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { motion } from "motion/react";
+import { motion } from "framer-motion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { seoMeta, seoLinks } from "@/lib/seo";
 

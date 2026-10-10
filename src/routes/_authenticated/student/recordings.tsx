@@ -5,7 +5,7 @@ import { PageHeader, EmptyState, LoadingSpinner } from "@/components/portal-shar
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DataStore } from "@/lib/data-store";
-import { firebase, getCurrentUser } from "@/integrations/firebase/client";
+import { firebase } from "@/integrations/firebase/client";
 
 export const Route = createFileRoute("/_authenticated/student/recordings")({
   component: StudentRecordings,
@@ -13,19 +13,28 @@ export const Route = createFileRoute("/_authenticated/student/recordings")({
 
 const BUCKET = "6a161d75000df19d01fb";
 
-function getPlaybackUrl(rec: any): string {
-  if (rec.externalUrl) return rec.externalUrl;
-  if (rec.fileId) return DataStore.getFileDownloadUrl(BUCKET, rec.fileId);
-  return "";
-}
-
 function isInlineVideo(rec: any): boolean {
   return !rec.externalUrl && !!rec.fileId;
+}
+
+// Resolve Firebase Storage file IDs to HTTPS download URLs
+async function resolveRecordingUrls(recordings: any[]): Promise<Record<string, string>> {
+  const entries = await Promise.all(
+    recordings
+      .filter((rec) => rec.fileId && !rec.externalUrl)
+      .map(async (rec) => {
+        const url = await DataStore.getFileDownloadUrl(BUCKET, rec.fileId);
+        return [rec.fileId, url] as [string, string];
+      })
+  );
+  return Object.fromEntries(entries);
 }
 
 function StudentRecordings() {
   const [loading, setLoading] = useState(true);
   const [recordings, setRecordings] = useState<any[]>([]);
+  // Map of fileId -> resolved HTTPS URL for playback
+  const [fileUrls, setFileUrls] = useState<Record<string, string>>({});
 
   useEffect(() => {
     (async () => {
@@ -34,6 +43,8 @@ function StudentRecordings() {
       if (uid) {
         const data = await DataStore.getRecordingsForStudent(uid);
         setRecordings(data);
+        const resolved = await resolveRecordingUrls(data);
+        setFileUrls(resolved);
       }
       setLoading(false);
     })();
@@ -64,7 +75,7 @@ function StudentRecordings() {
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {recordings.map((rec: any) => {
-            const viewUrl = getPlaybackUrl(rec);
+            const viewUrl = rec.externalUrl || fileUrls[rec.fileId] || "";
             const inline = isInlineVideo(rec);
 
             return (
@@ -72,7 +83,7 @@ function StudentRecordings() {
                 {/* Video area */}
                 <div className="aspect-video bg-muted relative overflow-hidden">
                   {inline && viewUrl ? (
-                    // Appwrite-hosted file — play inline
+                    // Firebase Storage file — play inline
                     <video
                       src={viewUrl}
                       controls

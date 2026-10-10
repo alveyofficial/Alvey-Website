@@ -47,7 +47,7 @@ function InternalNotes() {
   };
 
   const deleteNote = (id: string) => {
-    // TODO: Also delete the corresponding Appwrite document when persistence is wired up.
+    // TODO: Also delete the corresponding Firestore document when persistence is wired up.
     setNotes((prev) => prev.filter((n) => n.id !== id));
   };
 
@@ -93,7 +93,7 @@ function InternalNotes() {
         <EmptyState
           icon={StickyNote}
           title="No notes yet"
-          description="Notes are currently local to this session only. Create a recruitment_notes collection in Appwrite and wire addNote / deleteNote to persist and load them across sessions."
+          description="Notes are currently local to this session only. Create a recruitment_notes collection in Firestore and wire addNote / deleteNote to persist and load them across sessions."
         />
       ) : (
         <div className="space-y-4">

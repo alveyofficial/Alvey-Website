@@ -33,3 +33,12 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+# Archived Appwrite-era files (reference only)
+legacy/
+
+# Temporary agent/workflow output files
+tsc-*.txt
+*.log
+build-out.log
+run-tsc.ps1

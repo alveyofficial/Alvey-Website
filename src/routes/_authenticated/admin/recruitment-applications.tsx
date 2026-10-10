@@ -40,15 +40,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { DataStore } from "@/lib/data-store";
-
-interface RecruitmentApplication {
-  id: string;
-  full_name?: string;
-  role_applied_for?: string;
-  email?: string;
-  created_at?: string;
-  status?: string;
-}
+import type { RecruitmentApplication } from "@/lib/data-store";
 
 function InfoField({
   label,
@@ -92,8 +84,7 @@ async function sendDiscordNotification(app: Record<string, unknown>): Promise<vo
     );
     const email = String(app.email || app.Email_address || "");
 
-    // We call the Appwrite function via the REST API so we don't need a
-    // server-side SDK — the function itself posts to Discord.
+    // We call the Cloud Function via a webhook URL — no server-side SDK needed
     const payload = {
       type: "recruitment_accepted",
       channelId,
@@ -125,7 +116,7 @@ function ReviewModal({
   onClose,
   onAction,
 }: {
-  app: Record<string, unknown>;
+  app: RecruitmentApplication;
   onClose: () => void;
   onAction: () => void;
 }) {
@@ -473,17 +464,12 @@ function ReviewModal({
 
 function AdminRecruitmentApplications() {
 
-  const [applications, setApplications] = useState<
-    Record<string, unknown>[]
-  >([]);
+  const [applications, setApplications] = useState<RecruitmentApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("active");
-  const [reviewing, setReviewing] = useState<Record<
-    string,
-    unknown
-  > | null>(null);
-  const [selectedApplication, setSelectedApplication] = useState<any | null>(null);
+  const [reviewing, setReviewing] = useState<RecruitmentApplication | null>(null);
+  const [selectedApplication, setSelectedApplication] = useState<RecruitmentApplication | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
 
 

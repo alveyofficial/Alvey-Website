@@ -6,13 +6,31 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { DataStore } from "@/lib/data-store";
-import { firebase, getCurrentUser } from "@/integrations/firebase/client";
+import { firebase, getCurrentUser, db } from "@/integrations/firebase/client";
+import {
+  collection,
+  query,
+  where,
+  orderBy,
+  onSnapshot,
+} from "firebase/firestore";
 
 export const Route = createFileRoute("/_authenticated/student/chat")({
   component: StudentChat,
 });
 
 const BUCKET = "homework-chat-files";
+
+// Resolve a list of file IDs to HTTPS download URLs
+async function resolveFileUrls(fileIds: string[]): Promise<Record<string, string>> {
+  const entries = await Promise.all(
+    fileIds.map(async (fid) => {
+      const url = await DataStore.getFileDownloadUrl(BUCKET, fid);
+      return [fid, url] as [string, string];
+    })
+  );
+  return Object.fromEntries(entries);
+}
 
 function StudentChat() {
   const [studentId, setStudentId] = useState<string | null>(null);
@@ -24,10 +42,20 @@ function StudentChat() {
   const [text, setText] = useState("");
   const [attachFile, setAttachFile] = useState<File | null>(null);
   const [sending, setSending] = useState(false);
+  // Map of fileId -> resolved HTTPS URL
+  const [fileUrls, setFileUrls] = useState<Record<string, string>>({});
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const activeConvRef = useRef<any>(null);
   const unsubRef = useRef<(() => void) | null>(null);
+
+  // Resolve any file IDs in newly loaded messages
+  const resolveMessageFileIds = useCallback(async (msgs: any[]) => {
+    const allFileIds = msgs.flatMap((m) => (Array.isArray(m.fileIds) ? m.fileIds : []));
+    if (allFileIds.length === 0) return;
+    const resolved = await resolveFileUrls(allFileIds);
+    setFileUrls((prev) => ({ ...prev, ...resolved }));
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -46,21 +74,28 @@ function StudentChat() {
   const subscribeToConversation = useCallback((convId: string) => {
     unsubRef.current?.();
     try {
-      const channel = `databases.Database.collections.chat_messages.documents`;
-      const unsub = firebase.client.subscribe(channel, (response: any) => {
-        const events: string[] = response.events || [];
-        const isCreate = events.some((e) => e.includes(".create"));
-        if (!isCreate) return;
-        const doc = response.payload;
-        if (!doc || doc.conversationId !== activeConvRef.current?.id) return;
-        setMessages((prev) => {
-          const exists = prev.some((m) => m.$id === doc.$id || m.id === doc.$id);
-          if (exists) return prev;
-          return [...prev, { ...doc, id: doc.$id }];
+      const q = query(
+        collection(db, "chat_messages"),
+        where("conversationId", "==", convId),
+        orderBy("createdAt", "asc")
+      );
+      unsubRef.current = onSnapshot(q, (snapshot) => {
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === "added") {
+            const msg = { id: change.doc.id, ...change.doc.data() } as any;
+            setMessages((prev) => {
+              if (prev.some((m) => m.id === msg.id)) return prev;
+              return [...prev, msg];
+            });
+            // Resolve file URLs for the new message
+            if (Array.isArray(msg.fileIds) && msg.fileIds.length > 0) {
+              resolveFileUrls(msg.fileIds).then((resolved) => {
+                setFileUrls((prev) => ({ ...prev, ...resolved }));
+              });
+            }
+          }
         });
-        setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
       });
-      unsubRef.current = unsub;
     } catch (e) {
       console.warn("Realtime subscribe failed:", e);
     }
@@ -72,6 +107,7 @@ function StudentChat() {
     setMsgLoading(true);
     const msgs = await DataStore.getMessages(conv.id);
     setMessages(msgs);
+    await resolveMessageFileIds(msgs);
     setMsgLoading(false);
     subscribeToConversation(conv.id);
     const uid = (await firebase.auth.getUser()).data.user?.id;
@@ -82,7 +118,7 @@ function StudentChat() {
       );
     }
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
-  }, [subscribeToConversation]);
+  }, [subscribeToConversation, resolveMessageFileIds]);
 
   const send = async () => {
     if (!studentId || !activeConv || (!text.trim() && !attachFile)) return;
@@ -103,7 +139,16 @@ function StudentChat() {
         fileIds, fileNames,
         otherUserId: activeConv.tutorId,
       });
-      setMessages((prev) => [...prev, msg]);
+      // Optimistically add (onSnapshot will deduplicate)
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === msg.id)) return prev;
+        return [...prev, msg];
+      });
+      // Pre-resolve file URLs for the optimistic message
+      if (fileIds.length > 0) {
+        const resolved = await resolveFileUrls(fileIds);
+        setFileUrls((prev) => ({ ...prev, ...resolved }));
+      }
       setText("");
       setAttachFile(null);
       setConversations((prev) =>
@@ -202,7 +247,7 @@ function StudentChat() {
                       <div className={`max-w-[70%] rounded-2xl px-4 py-2.5 text-sm space-y-1 ${isMe ? "bg-blue-600 text-white rounded-br-sm" : "bg-muted text-foreground rounded-bl-sm"}`}>
                         {m.body && <p className="leading-relaxed">{m.body}</p>}
                         {Array.isArray(m.fileIds) && m.fileIds.length > 0 && m.fileIds.map((fid: string, i: number) => (
-                          <a key={fid} href={DataStore.getFileDownloadUrl(BUCKET, fid)} target="_blank" rel="noopener noreferrer"
+                          <a key={fid} href={fileUrls[fid] || "#"} target="_blank" rel="noopener noreferrer"
                             className={`flex items-center gap-1.5 text-xs underline ${isMe ? "text-blue-100" : "text-blue-600"}`}>
                             <Download className="h-3 w-3" />{m.fileNames?.[i] || "Attachment"}
                           </a>

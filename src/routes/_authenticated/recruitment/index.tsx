@@ -14,6 +14,7 @@ import { PageHeader, StatCard, StatusBadge, EmptyState } from "@/components/port
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { firebase, getCurrentUser } from "@/integrations/firebase/client";
 import { DataStore } from "@/lib/data-store";
+import type { RecruitmentApplication } from "@/lib/data-store";
 import { getRecruitmentMetrics, type RecruitmentMetrics } from "@/lib/analytics";
 
 export const Route = createFileRoute("/_authenticated/recruitment/")({
@@ -23,7 +24,7 @@ export const Route = createFileRoute("/_authenticated/recruitment/")({
 function RecruitmentDashboard() {
   const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [metrics, setMetrics] = useState<RecruitmentMetrics | null>(null);
-  const [recent, setRecent] = useState<Record<string, unknown>[]>([]);
+  const [recent, setRecent] = useState<RecruitmentApplication[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

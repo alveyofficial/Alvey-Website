@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { DataStore, type PlatformReview } from "@/lib/data-store";
 import { seoMeta, seoLinks, jsonLdScript, websiteSchema, organizationSchema, serviceSchema } from "@/lib/seo";
-import { motion } from "motion/react";
+import { motion } from "framer-motion";
 
 const HOME_DESCRIPTION =
   "Find an online tutor or find students — Alvey makes it easy for both! We connect students and tutors all over the world. Whether you're doing IGCSE or AS/A-Levels, Alvey has you covered. IGCSE Tutors, A-Level Tutors, we have it all!";

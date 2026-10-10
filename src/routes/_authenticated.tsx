@@ -34,7 +34,9 @@ type Role =
   | "guest"
   | "student"
   | "tutor"
+  | "tutors"
   | "recruitment"
+  | "staff_recruitment"
   | "website"
   | "admin";
 

@@ -81,7 +81,7 @@ export interface Tutor {
   testimonial?: string | null;
   responseTime?: string;
 
-  // Optional Appwrite profile links
+  // Optional profile contact links
   contactUrl?: string | null;
   inquiryUrl?: string | null;
 
@@ -121,6 +121,7 @@ export interface Review {
   created_at: string;
   tutor_id: string;
   status: "pending" | "approved" | "rejected";
+  tutor_response?: string;
 }
 
 export interface PlatformReview {
@@ -135,6 +136,7 @@ export interface PlatformReview {
   isDeleted: boolean;
   helpfulCount: number;
   createdAt: string;
+  status?: string;
 }
 
 export interface Testimonial {
@@ -488,7 +490,7 @@ function parseQueryConstraints(queries: string[]): QueryConstraint[] {
 }
 
 // ---------------------------------------------------------------------------
-// Core Firestore CRUD helpers (replaces Appwrite SDK calls throughout this file)
+// Core Firestore CRUD helpers
 // ---------------------------------------------------------------------------
 
 async function listDocuments(collectionId: string, queries: string[] = []): Promise<any[]> {
@@ -550,7 +552,7 @@ function mapTutorDoc(doc: any): Tutor {
     "Certified Tutor",
   );
 
-  // Prefer an explicit slug stored in Appwrite, then fall back to
+  // Prefer an explicit slug stored in Firestore, then fall back to
   // generating one from the tutor's display name so the URL is always
   // human-readable and stable.
   const slug =
@@ -714,6 +716,228 @@ function parseJson(value: unknown) {
   return value;
 }
 
+// ---------------------------------------------------------------------------
+// Exported typed interfaces — used by route files for useState type annotations
+// ---------------------------------------------------------------------------
+
+export interface AppNotification {
+  id: string;
+  user_id?: string;
+  type?: string;
+  title: string;
+  body: string;
+  link?: string;
+  is_read: boolean;
+  is_deleted?: boolean;
+  created_at: string;
+  [key: string]: unknown;
+}
+
+export interface Advertisement {
+  id: string;
+  $id?: string;
+  title?: string;
+  description?: string;
+  body?: string;
+  monthly_price?: number;
+  monthlyPrice?: number;
+  price?: number;
+  teaching_format?: string;
+  teachingFormat?: string;
+  advertisement_status?: string;
+  status?: string;
+  is_active?: boolean;
+  isActive?: boolean;
+  isDeleted?: boolean;
+  isFeatured?: boolean;
+  tutorId?: string;
+  tutor_id?: string;
+  tutor?: Record<string, unknown>;
+  createdBy?: string;
+  subject?: string;
+  level?: string;
+  [key: string]: unknown;
+}
+
+export interface TutorApplication {
+  id: string;
+  $id?: string;
+  $createdAt?: string;
+  full_name?: string;
+  fullName?: string;
+  email?: string;
+  Email_address?: string;
+  phone?: string;
+  phoneNumber?: string;
+  subjects?: string[];
+  subjectName?: string;
+  subject_name?: string;
+  subjectCode?: string;
+  subject_code?: string;
+  levels?: string[];
+  teachingLevel?: string;
+  teaching_level?: string;
+  teachingFormat?: string;
+  teaching_format?: string;
+  examBoard?: string;
+  exam_board?: string;
+  examResultSummary?: string;
+  exam_result_summary?: string;
+  teachingExperience?: string;
+  cover_letter?: string;
+  headline?: string;
+  highestQualification?: string;
+  highest_qualification?: string;
+  highestQualificationLink?: string;
+  qualification_link?: string;
+  highestQualificationFileId?: string;
+  highest_qualification_file_id?: string;
+  highestQualificationFileName?: string;
+  highest_qualification_file_name?: string;
+  highestQualificationFileUrl?: string;
+  highest_qualification_file_url?: string;
+  resultDocumentLink?: string;
+  result_document_link?: string;
+  resultDocumentFileId?: string;
+  result_document_file_id?: string;
+  resultDocumentFileName?: string;
+  result_document_file_name?: string;
+  resultDocumentFileUrl?: string;
+  result_document_file_url?: string;
+  oneOnOneRateUsd?: number;
+  hourlyRate?: number;
+  groupRateUsd?: number;
+  maxGroupStudents?: number;
+  weeklyClassesPerStudent?: number;
+  classDurationMinutes?: number;
+  yearsExperience?: number;
+  years_experience?: number;
+  languages?: string[];
+  languagesSpoken?: string;
+  languagesFluent?: string;
+  discordUsername?: string;
+  discord_username?: string;
+  instagramHandle?: string;
+  instagram_handle?: string;
+  dateOfBirth?: string;
+  date_of_birth?: string;
+  countryOfResidence?: string;
+  country_of_residence?: string;
+  availability?: string;
+  videoLink?: string;
+  testimonial?: string;
+  internalNotes?: string;
+  internal_notes?: string;
+  applicantUserId?: string;
+  applicant_user_id?: string;
+  status?: string;
+  created_at?: string;
+  createdAt?: string;
+  [key: string]: unknown;
+}
+
+export interface RecruitmentApplication {
+  id: string;
+  $id?: string;
+  $createdAt?: string;
+  full_name?: string;
+  Full_name?: string;
+  fullName?: string;
+  email?: string;
+  Email_address?: string;
+  phone?: string;
+  phoneNumber?: string;
+  discord_username?: string;
+  Discord_username?: string;
+  instagram_handle?: string;
+  Instagram_handle?: string;
+  country_of_residence?: string;
+  Country_of_residence?: string;
+  current_education_level?: string;
+  Current_education_level?: string;
+  languages_fluent_in?: string;
+  Languages_fluent_in?: string;
+  languages?: string[];
+  role_applied_for?: string;
+  Role_you_want_to_apply_for?: string;
+  reason_to_apply?: string;
+  Reason_to_apply?: string;
+  experience?: string;
+  Experience?: string;
+  why_good_fit?: string;
+  Why_good_fit?: string;
+  cover_letter?: string;
+  hoursPerWeek?: string | number;
+  projectLinks?: string;
+  internalNotes?: string;
+  internal_notes?: string;
+  applicantUserId?: string;
+  applicant_user_id?: string;
+  status?: string;
+  created_at?: string;
+  createdAt?: string;
+  [key: string]: unknown;
+}
+
+export interface Page {
+  id: string;
+  title?: string;
+  slug?: string;
+  status?: string;
+  content?: string;
+  seo_title?: string;
+  seo_description?: string;
+  updated_at?: string;
+  [key: string]: unknown;
+}
+
+export interface LessonRecord {
+  id: string;
+  starts_at?: string;
+  ends_at?: string;
+  status?: string;
+  subject?: string;
+  academic_level?: string;
+  student_id?: string;
+  tutor_id?: string;
+  notes?: string;
+  is_deleted?: boolean;
+  student?: Record<string, unknown>;
+  tutor?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+export interface ReviewRecord {
+  id: string;
+  rating?: number;
+  comment?: string;
+  status?: string;
+  created_at?: string;
+  student_name?: string;
+  tutor_response?: string;
+  authorName?: string;
+  title?: string;
+  body?: string;
+  tutorId?: string;
+  tutor_id?: string;
+  [key: string]: unknown;
+}
+
+export interface UserRecord {
+  id: string;
+  $id?: string;
+  userId?: string;
+  authUserId?: string;
+  email?: string;
+  displayName?: string;
+  name?: string;
+  role?: string;
+  avatar_url?: string;
+  active?: boolean;
+  discordId?: string | null;
+  [key: string]: unknown;
+}
+
 export const DataStore = {
   saveUserRecord: async (user: {
     id: string;
@@ -759,12 +983,12 @@ export const DataStore = {
         [Query.equal("active", true)]
       );
 
-      console.log("APPWRITE TUTOR DOCS:", docs);
-      console.log("APPWRITE TUTOR COUNT:", docs.length);
+      console.log("FIRESTORE TUTOR DOCS:", docs);
+      console.log("FIRESTORE TUTOR COUNT:", docs.length);
 
       return docs.map(mapTutorDoc);
     } catch (error) {
-      console.error("FAILED TO LOAD TUTORS FROM APPWRITE:", error);
+      console.error("FAILED TO LOAD TUTORS FROM FIRESTORE:", error);
 
       return getLocal<Tutor[]>(KEYS.TUTORS, defaultTutors);
     }
@@ -2890,12 +3114,7 @@ export const DataStore = {
       setLocal(KEYS.REVIEWS, list);
     }
 
-    const docs = await listDocuments(COLLECTIONS.REVIEWS, [
-      Query.equal("$id", id),
-      Query.limit(1),
-    ]);
-
-    const reviewDoc = docs[0];
+    const reviewDoc = await getDocument(COLLECTIONS.REVIEWS, id);
 
     await upsertDocument(COLLECTIONS.REVIEWS, id, {
       isPublic: status === "approved",
@@ -3339,9 +3558,6 @@ export const DataStore = {
     }
   },
 
-  updateLessonStatus: async (lessonId: string, status: string): Promise<void> => {
-    await upsertDocument(COLLECTIONS.LESSONS, lessonId, { status });
-  },
 
   // ─────────────────────────────────────────────────────────────────────────────
   // HOMEWORK
@@ -3733,19 +3949,26 @@ export const DataStore = {
     return { fileId: fileRef.fullPath, url };
   },
 
-  getFilePreviewUrl: (_bucketId: string, fileId: string, _width = 256): string => {
-    // Firebase Storage doesn't do on-the-fly image resizing like Appwrite.
-    // fileId is stored as the full storage path. Return a placeholder until
-    // a Cloud Function or imgix is wired up for resizing.
-    // For now, the raw download URL is adequate for profile pictures.
-    return fileId || "";
+  getFilePreviewUrl: async (_bucketId: string, fileId: string, _width = 256): Promise<string> => {
+    // Firebase Storage doesn't do on-the-fly image resizing.
+    // fileId is stored as the full storage path. Return the real HTTPS download URL.
+    if (!fileId) return "";
+    try {
+      return await getDownloadURL(storageRef(storage, fileId));
+    } catch {
+      return "";
+    }
   },
 
-  getFileDownloadUrl: (_bucketId: string, fileId: string): string => {
-    // fileId is stored as the full storage path after migration.
-    // Callers that stored an Appwrite fileId will get an empty string here
-    // until data is re-uploaded to Firebase Storage.
-    return fileId || "";
+  getFileDownloadUrl: async (_bucketId: string, fileId: string): Promise<string> => {
+    // fileId is stored as the full Firebase Storage path.
+    // Returns the real HTTPS download URL via getDownloadURL.
+    if (!fileId) return "";
+    try {
+      return await getDownloadURL(storageRef(storage, fileId));
+    } catch {
+      return "";
+    }
   },
 
   uploadFile: async (file: File, bucketId: string, userId: string): Promise<{ fileId: string; fileName: string }> => {
@@ -3781,18 +4004,36 @@ export const DataStore = {
   },
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // MESSAGING — Firebase doesn't have a built-in email topic API.
-  // sendTopicEmail is a no-op stub here; wire up Firebase Extensions
-  // (e.g. "Trigger Email") or a Cloud Function when email sending is needed.
+  // MESSAGING — Sends email via the Firebase Extension "Trigger Email from Firestore".
+  // Requires the extension to be installed from:
+  //   https://extensions.dev/extensions/firebase/firestore-send-email
+  // Configure it to watch the 'mail' collection with your Resend SMTP credentials.
   // ─────────────────────────────────────────────────────────────────────────────
   sendTopicEmail: async (opts: {
     topicId: string;
     subject: string;
     body: string;
+    recipientEmail?: string;
   }): Promise<void> => {
-    // TODO: replace with Firebase Extension "Trigger Email from Firestore"
-    // or a Cloud Function that reads from a `mail` collection.
-    console.warn("[sendTopicEmail] Not yet implemented on Firebase. Topic:", opts.topicId, "Subject:", opts.subject);
+    if (!opts.recipientEmail) {
+      // No recipient email — skip silently (in-app notification still fires)
+      return;
+    }
+    try {
+      // Fire-and-forget write to the 'mail' collection.
+      // The "Trigger Email from Firestore" extension picks this up and sends via Resend SMTP.
+      addDoc(collection(db, "mail"), {
+        to: opts.recipientEmail,
+        message: {
+          subject: opts.subject,
+          html: `<p>${opts.body.replace(/\n/g, "<br>")}</p>`,
+        },
+        createdAt: new Date().toISOString(),
+      });
+    } catch (err) {
+      // Non-critical — log but don't throw so in-app notifications still work
+      console.warn("[sendTopicEmail] Failed to write mail document:", err);
+    }
   },
 
   // Notify a specific user by userId — creates in-app notification AND sends email
@@ -3816,10 +4057,18 @@ export const DataStore = {
 
     // Optionally send email via topic
     if (opts.sendEmail !== false) {
+      // Look up the user's email to pass to sendTopicEmail
+      let recipientEmail: string | undefined;
+      try {
+        const userDoc = await getDocument(COLLECTIONS.USERS, opts.userId);
+        recipientEmail = userDoc?.email || undefined;
+      } catch { /* ignore — email is best-effort */ }
+
       await DataStore.sendTopicEmail({
         topicId: opts.userRole === "student" ? "students" : "tutors",
         subject: opts.title,
         body: `${opts.body}${opts.link ? `\n\nView here: ${typeof window !== "undefined" ? window.location.origin : ""}${opts.link}` : ""}`,
+        recipientEmail,
       });
     }
   },

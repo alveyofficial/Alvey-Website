@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { DataStore } from "@/lib/data-store";
+import type { TutorApplication } from "@/lib/data-store";
 import { firebase, getCurrentUser } from "@/integrations/firebase/client";
 
 export const Route = createFileRoute("/_authenticated/admin/tutor-applications")({
@@ -54,7 +55,7 @@ function ReviewModal({
   onClose,
   onAction,
 }: {
-  app: Record<string, any>;
+  app: TutorApplication;
   onClose: () => void;
   onAction: () => void;
 }) {
@@ -546,11 +547,11 @@ function ReviewModal({
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 function AdminTutorApplications() {
-  const [applications, setApplications] = useState<Record<string, any>[]>([]);
+  const [applications, setApplications] = useState<TutorApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("active"); // active = non-archived
-  const [reviewing, setReviewing] = useState<Record<string, any> | null>(null);
+  const [reviewing, setReviewing] = useState<TutorApplication | null>(null);
 
   useEffect(() => {
     loadApplications();

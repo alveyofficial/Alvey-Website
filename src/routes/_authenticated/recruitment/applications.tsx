@@ -16,7 +16,7 @@ function RecruitmentApplications() {
       <EmptyState
         icon={FileText}
         title="Connect the recruitment applications data source"
-        description="Call DataStore.getRecruitmentApplicationsFromDB() and render the results here. Add search and filter by wiring the query to Appwrite's fulltext search or client-side filtering on the returned array."
+        description="Call DataStore.getRecruitmentApplicationsFromDB() and render the results here. Add search and filter by wiring the query to a Firestore index or client-side filtering on the returned array."
       />
     </div>
   );

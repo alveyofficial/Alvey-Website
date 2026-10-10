@@ -15,6 +15,7 @@ import { PageHeader, StatCard, StatusBadge, EmptyState } from "@/components/port
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { firebase, getCurrentUser } from "@/integrations/firebase/client";
 import { DataStore } from "@/lib/data-store";
+import type { TutorApplication } from "@/lib/data-store";
 import { getAdminDashboardMetrics, type AdminDashboardMetrics } from "@/lib/analytics";
 
 const toDateValue = (v: unknown) => {
@@ -31,7 +32,7 @@ export const Route = createFileRoute("/_authenticated/admin/")({
 function AdminDashboard() {
   const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [metrics, setMetrics] = useState<AdminDashboardMetrics | null>(null);
-  const [recentApps, setRecentApps] = useState<Record<string, any>[]>([]);
+  const [recentApps, setRecentApps] = useState<TutorApplication[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -195,13 +196,13 @@ function AdminDashboard() {
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">Database Status</span>
                     <span className="text-sm font-medium text-muted-foreground italic">
-                      Connect an Appwrite health-check endpoint
+                      Connect a Firebase health-check endpoint
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">Auth Service</span>
                     <span className="text-sm font-medium text-muted-foreground italic">
-                      Poll Appwrite /health/db via server function
+                      Poll Firebase via server function
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -215,7 +216,7 @@ function AdminDashboard() {
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">Edge Functions</span>
                     <span className="text-sm font-medium text-muted-foreground italic">
-                      Query Appwrite Functions API for execution logs
+                      Query Cloud Functions for execution logs
                     </span>
                   </div>
                   <div className="flex justify-between items-center">

@@ -22,6 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { DataStore } from "@/lib/data-store";
+import type { Review, PlatformReview } from "@/lib/data-store";
 import { firebase, getCurrentUser } from "@/integrations/firebase/client";
 
 export const Route = createFileRoute("/_authenticated/admin/reviews")({
@@ -35,12 +36,10 @@ function AdminReviews() {
   const [section, setSection] = useState<ReviewSection>("platform");
   const [filter, setFilter] = useState<ReviewFilter>("all");
 
-  const [tutorReviews, setTutorReviews] = useState<Record<string, unknown>[]>(
+  const [tutorReviews, setTutorReviews] = useState<Review[]>(
     [],
   );
-  const [platformReviews, setPlatformReviews] = useState<
-    Record<string, unknown>[]
-  >([]);
+  const [platformReviews, setPlatformReviews] = useState<PlatformReview[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [showAddPlatformReview, setShowAddPlatformReview] = useState(false);
@@ -384,7 +383,7 @@ function PlatformReviewCard({
   onModerate,
   onUpdated,
 }: {
-  review: Record<string, unknown>;
+  review: PlatformReview;
   onModerate: (
     id: string,
     status: "pending" | "approved" | "rejected",
@@ -645,7 +644,7 @@ function TutorReviewCard({
   review,
   onModerate,
 }: {
-  review: Record<string, unknown>;
+  review: Review;
   onModerate: (
     id: string,
     status: "approved" | "rejected",
@@ -659,15 +658,7 @@ function TutorReviewCard({
         <div className="flex justify-between items-start mb-2">
           <div>
             <p className="font-semibold text-sm">
-              {String(
-                (review.student as Record<string, unknown> | undefined)
-                  ?.display_name || "Student",
-              )}{" "}
-              →{" "}
-              {String(
-                (review.tutor as Record<string, unknown> | undefined)
-                  ?.display_name || "Tutor",
-              )}
+              {review.student_name || "Student"}
             </p>
 
             <div className="flex items-center gap-1 text-amber-500 mt-1">

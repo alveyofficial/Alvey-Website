@@ -7,13 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { DataStore } from "@/lib/data-store";
+import type { TutorApplication } from "@/lib/data-store";
 
 export const Route = createFileRoute("/_authenticated/admin/tutor-applications-archived")({
   component: ArchivedTutorApplications,
 });
 
 function ArchivedTutorApplications() {
-  const [applications, setApplications] = useState<Record<string, unknown>[]>([]);
+  const [applications, setApplications] = useState<TutorApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 

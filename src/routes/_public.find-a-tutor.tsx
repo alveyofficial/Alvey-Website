@@ -122,7 +122,7 @@ function FindATutorPage() {
 
       try {
         const [tList, sList] = await Promise.all([
-          // Re-use loader data when available; only hit Appwrite when missing.
+          // Re-use loader data when available; only hit Firestore when missing.
           loaderTutors?.length ? Promise.resolve(loaderTutors) : DataStore.getTutors(),
           DataStore.getSubjects(),
         ]);

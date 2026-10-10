@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { DataStore } from "@/lib/data-store";
-import { firebase, getCurrentUser } from "@/integrations/firebase/client";
+import { firebase } from "@/integrations/firebase/client";
 
 export const Route = createFileRoute("/_authenticated/tutor/recordings")({
   component: TutorRecordings,
@@ -23,16 +23,22 @@ export const Route = createFileRoute("/_authenticated/tutor/recordings")({
 
 const BUCKET = "6a161d75000df19d01fb"; // Tutors Link bucket
 
-// Returns the best URL to use for playback
-function getPlaybackUrl(rec: any): string {
-  if (rec.externalUrl) return rec.externalUrl;
-  if (rec.fileId) return DataStore.getFileDownloadUrl(BUCKET, rec.fileId);
-  return "";
-}
-
-// Whether the recording can be played inline (Appwrite-hosted file, not external)
+// Whether the recording can be played inline (Firebase Storage file, not external)
 function isInlineVideo(rec: any): boolean {
   return !rec.externalUrl && !!rec.fileId;
+}
+
+// Resolve Firebase Storage file IDs to HTTPS download URLs
+async function resolveRecordingUrls(recordings: any[]): Promise<Record<string, string>> {
+  const entries = await Promise.all(
+    recordings
+      .filter((rec) => rec.fileId && !rec.externalUrl)
+      .map(async (rec) => {
+        const url = await DataStore.getFileDownloadUrl(BUCKET, rec.fileId);
+        return [rec.fileId, url] as [string, string];
+      })
+  );
+  return Object.fromEntries(entries);
 }
 
 function TutorRecordings() {
@@ -49,6 +55,8 @@ function TutorRecordings() {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
+  // Map of fileId -> resolved HTTPS URL for playback
+  const [fileUrls, setFileUrls] = useState<Record<string, string>>({});
 
   const load = async (uid: string) => {
     const [recs, sts] = await Promise.all([
@@ -57,6 +65,8 @@ function TutorRecordings() {
     ]);
     setRecordings(recs);
     setStudents(sts);
+    const resolved = await resolveRecordingUrls(recs);
+    setFileUrls((prev) => ({ ...prev, ...resolved }));
   };
 
   useEffect(() => {
@@ -161,7 +171,7 @@ function TutorRecordings() {
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {recordings.map((rec: any) => {
-            const viewUrl = getPlaybackUrl(rec);
+            const viewUrl = rec.externalUrl || fileUrls[rec.fileId] || "";
             const inline = isInlineVideo(rec);
             return (
               <Card key={rec.id} className="overflow-hidden">
