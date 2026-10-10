@@ -10,7 +10,6 @@
 // set, identity resolution gracefully falls back to anonymous (no userId/userRole).
 
 import { createFileRoute } from "@tanstack/react-router";
-import { adminAuth, adminDb } from "@/lib/firebase-admin";
 
 const AI_FUNCTION_URL = process.env.AI_FUNCTION_URL || "";
 
@@ -52,6 +51,8 @@ async function resolveCurrentUser(
   if (!idToken) return { userId: null, userRole: null };
 
   try {
+    // Dynamic import — firebase-admin must not load during SSR page renders
+    const { adminAuth, adminDb } = await import("@/lib/firebase-admin");
     const decoded = await adminAuth.verifyIdToken(idToken);
     const uid = decoded.uid;
     const userDoc = await adminDb.collection("users").doc(uid).get();

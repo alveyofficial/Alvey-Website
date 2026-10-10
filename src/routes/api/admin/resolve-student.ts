@@ -8,12 +8,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { collection, getDocs, query, where, limit } from "firebase/firestore";
 import { db } from "@/integrations/firebase/client";
-import { adminAuth } from "@/lib/firebase-admin";
 
 export const Route = createFileRoute("/api/admin/resolve-student")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        // Dynamic import so firebase-admin is never loaded during SSR page renders
+        const { adminAuth } = await import("@/lib/firebase-admin");
         try {
           const { email } = await request.json();
 
