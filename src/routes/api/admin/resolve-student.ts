@@ -2,16 +2,13 @@
  * POST /api/admin/resolve-student
  *
  * Looks up a Firebase Auth user by email and returns their UID.
- *
- * TODO: Full server-side lookup requires the Firebase Admin SDK initialized with a
- * service-account key (FIREBASE_SERVICE_ACCOUNT_JSON env var). Until that is set up,
- * this route falls back to querying the Firestore `users` collection by email —
- * which works as long as user records are written there on sign-up (auth.tsx does this).
+ * Requires a valid Firebase ID token in the Authorization header.
  */
 
 import { createFileRoute } from "@tanstack/react-router";
 import { collection, getDocs, query, where, limit } from "firebase/firestore";
 import { db } from "@/integrations/firebase/client";
+import { adminAuth } from "@/lib/firebase-admin";
 
 export const Route = createFileRoute("/api/admin/resolve-student")({
   server: {
@@ -31,9 +28,13 @@ export const Route = createFileRoute("/api/admin/resolve-student")({
             return Response.json({ error: "Unauthorized." }, { status: 401 });
           }
 
-          // Query Firestore users collection by email as a fallback.
-          // When Firebase Admin SDK is available, replace this with:
-          // const userRecord = await adminAuth.getUserByEmail(email.trim());
+          try {
+            await adminAuth.verifyIdToken(jwt);
+          } catch {
+            return Response.json({ error: "Forbidden." }, { status: 403 });
+          }
+
+          // Query Firestore users collection by email.
           const q = query(
             collection(db, "users"),
             where("email", "==", email.trim()),

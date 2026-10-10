@@ -10,8 +10,9 @@
 // set, identity resolution gracefully falls back to anonymous (no userId/userRole).
 
 import { createFileRoute } from "@tanstack/react-router";
+import { adminAuth, adminDb } from "@/lib/firebase-admin";
 
-const AI_FUNCTION_URL = process.env.AI_FUNCTION_URL || process.env.APPWRITE_FUNCTION_AI_BRAIN_URL || "";
+const AI_FUNCTION_URL = process.env.AI_FUNCTION_URL || "";
 
 // ---------------------------------------------------------------------------
 // Message normalisation
@@ -26,22 +27,21 @@ function normalizeMessages(body: {
   if (Array.isArray(body.messages)) {
     return (body.messages as { role?: string; content?: string }[])
       .filter((m) => m && typeof m.role === "string" && typeof m.content === "string")
-      .map((m) => ({ role: m.role === "assistant" ? "assistant" : "user", content: m.content! }));
+      .map((m): ChatMessage => ({ role: m.role === "assistant" ? "assistant" : "user", content: m.content! }));
   }
   if (typeof body.message !== "string") return undefined;
   const history = Array.isArray(body.history) ? body.history : [];
   return [
     ...(history as { role?: string; content?: string }[])
       .filter((m) => m && typeof m.role === "string" && typeof m.content === "string")
-      .map((m) => ({ role: m.role === "assistant" ? "assistant" : "user", content: m.content! })),
+      .map((m): ChatMessage => ({ role: m.role === "assistant" ? "assistant" : "user", content: m.content! })),
     { role: "user" as const, content: body.message as string },
   ];
 }
 
 // ---------------------------------------------------------------------------
-// Resolve identity — reads the Bearer token from Authorization header.
-// Firebase ID token verification happens server-side here when the Admin SDK
-// is available; otherwise resolves as anonymous.
+// Resolve identity — reads the Bearer token from Authorization header and
+// verifies it with Firebase Admin SDK.
 // ---------------------------------------------------------------------------
 async function resolveCurrentUser(
   request: Request,
@@ -51,10 +51,15 @@ async function resolveCurrentUser(
 
   if (!idToken) return { userId: null, userRole: null };
 
-  // TODO: Verify idToken with Firebase Admin SDK when service account is available.
-  // For now, we cannot verify server-side, so return anonymous.
-  // The AI function itself can validate the token if needed.
-  return { userId: null, userRole: null };
+  try {
+    const decoded = await adminAuth.verifyIdToken(idToken);
+    const uid = decoded.uid;
+    const userDoc = await adminDb.collection("users").doc(uid).get();
+    const role = userDoc.exists ? (userDoc.data()?.role as string | undefined) ?? null : null;
+    return { userId: uid, userRole: role };
+  } catch {
+    return { userId: null, userRole: null };
+  }
 }
 
 // ---------------------------------------------------------------------------
