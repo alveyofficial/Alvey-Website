@@ -7,7 +7,11 @@
  *   { audience: 'students'|'tutors'|'staff'|'newsletter', subject: string, html: string }
  *
  * - 'newsletter': queries users where emailSubscriptions.newsletter == true
- * - 'students'|'tutors'|'staff': queries users where role == the singular form
+ * - 'students'|'tutors'|'staff': queries users where role == singular AND
+ *   emailSubscriptions.announcements == true (users who opted out are excluded)
+ *
+ * All emails are wrapped in the broadcastEmail() template which appends an
+ * unsubscribe footer for CAN-SPAM/GDPR compliance.
  *
  * Sends in batches of 50 with a 1-second pause between batches to respect
  * Resend rate limits.
@@ -17,9 +21,15 @@
  */
 
 import { createFileRoute } from "@tanstack/react-router";
-import { sendEmail } from "@/lib/resend";
+import { sendEmail, broadcastEmail } from "@/lib/resend";
 
 type Audience = "students" | "tutors" | "staff" | "newsletter";
+
+const ROLE_MAP: Record<Exclude<Audience, "newsletter">, string> = {
+  students: "student",
+  tutors: "tutor",
+  staff: "staff",
+};
 
 export const Route = createFileRoute("/api/admin/send-broadcast")({
   server: {
@@ -87,18 +97,18 @@ export const Route = createFileRoute("/api/admin/send-broadcast")({
           let snapshot;
 
           if (audience === "newsletter") {
+            // Explicit opt-in flag
             snapshot = await usersRef
               .where("emailSubscriptions.newsletter", "==", true)
               .get();
           } else {
-            const roleMap: Record<Audience, string> = {
-              students: "student",
-              tutors: "tutor",
-              staff: "staff",
-              newsletter: "newsletter",
-            };
+            // Filter by role AND by emailSubscriptions.announcements == true.
+            // saveUserRecord() defaults announcements to true, so users who
+            // never changed the setting are included. Users who set it false
+            // are excluded per their preference.
             snapshot = await usersRef
-              .where("role", "==", roleMap[audience])
+              .where("role", "==", ROLE_MAP[audience])
+              .where("emailSubscriptions.announcements", "==", true)
               .get();
           }
 
@@ -111,7 +121,15 @@ export const Route = createFileRoute("/api/admin/send-broadcast")({
           }
 
           // ------------------------------------------------------------------
-          // 4. Send in batches of 50 with 1s delay between batches
+          // 4. Wrap html in broadcast template (appends unsubscribe footer)
+          //    Required for CAN-SPAM / GDPR compliance.
+          // ------------------------------------------------------------------
+          // TODO: replace with a real per-user unsubscribe token when available.
+          const unsubscribeUrl = "https://alvey.study/settings?tab=notifications";
+          const { html: wrappedHtml } = broadcastEmail(subject, html, unsubscribeUrl);
+
+          // ------------------------------------------------------------------
+          // 5. Send in batches of 50 with 1s delay between batches
           // ------------------------------------------------------------------
           let sent = 0;
           let failed = 0;
@@ -122,7 +140,12 @@ export const Route = createFileRoute("/api/admin/send-broadcast")({
 
             const results = await Promise.allSettled(
               batch.map((email) =>
-                sendEmail({ from: "noreply@alvey.study", to: email, subject, html }),
+                sendEmail({
+                  from: "noreply@alvey.study",
+                  to: email,
+                  subject,
+                  html: wrappedHtml,
+                }),
               ),
             );
 

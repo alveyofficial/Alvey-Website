@@ -49,8 +49,11 @@ exports.websiteNotifications = onRequest(
   async (req, res) => {
     // ── CORS ────────────────────────────────────────────────────────────────
     const origin = req.headers.origin || "";
-    const corsOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
-    res.set("Access-Control-Allow-Origin", corsOrigin);
+    // Only reflect the origin header for known-good origins.
+    // Unknown origins get no ACAO header so browsers block them.
+    if (ALLOWED_ORIGINS.includes(origin)) {
+      res.set("Access-Control-Allow-Origin", origin);
+    }
     res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
     res.set("Access-Control-Allow-Headers", "Content-Type");
 

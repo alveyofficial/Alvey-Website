@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Bell, CheckCheck } from "lucide-react";
+import { Bell, CheckCheck, ShieldAlert } from "lucide-react";
 import { PageHeader, EmptyState } from "@/components/portal-shared";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ import {
 import { DataStore } from "@/lib/data-store";
 import type { AppNotification } from "@/lib/data-store";
 import { firebase } from "@/integrations/firebase/client";
-import { getIdToken } from "@/hooks/use-admin";
+import { getIdToken, getAdminStatus } from "@/hooks/use-admin";
 
 export const Route = createFileRoute("/_authenticated/admin/notifications")({
   component: AdminNotifications,
@@ -28,6 +28,7 @@ function AdminNotifications() {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
+  const [authorized, setAuthorized] = useState<boolean | null>(null);
 
   // Broadcast state
   const [broadcastAudience, setBroadcastAudience] = useState<Audience | "">("");
@@ -46,8 +47,16 @@ function AdminNotifications() {
       const uid = userData.user?.id || null;
       setUserId(uid);
       if (uid) {
-        const data = await DataStore.getNotifications(uid);
-        setNotifications(data);
+        // Use the custom claim token — faster than a Firestore read and
+        // cannot be spoofed by the client.
+        const isAdmin = await getAdminStatus();
+        setAuthorized(isAdmin);
+        if (isAdmin) {
+          const data = await DataStore.getNotifications(uid);
+          setNotifications(data);
+        }
+      } else {
+        setAuthorized(false);
       }
       setLoading(false);
     })();
@@ -110,6 +119,22 @@ function AdminNotifications() {
     return (
       <div className="flex justify-center py-12">
         <div className="h-8 w-8 rounded-full border-4 border-blue-600 border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
+  if (authorized === false) {
+    return (
+      <div>
+        <PageHeader
+          title="Notifications"
+          description="Platform-wide notifications and alerts."
+        />
+        <EmptyState
+          icon={ShieldAlert}
+          title="Access Restricted"
+          description="The notifications page is only available to Website Managers and Owners."
+        />
       </div>
     );
   }

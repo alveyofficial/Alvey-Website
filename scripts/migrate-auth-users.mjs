@@ -17,7 +17,7 @@
 
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
-import { Client, Users } from 'node-appwrite';
+import { Client, Users, Query } from 'node-appwrite';
 
 // ── Init Firebase Admin ───────────────────────────────────────────────────────
 
@@ -62,7 +62,10 @@ const PAGE_SIZE = 100;
 let offset = 0;
 
 while (true) {
-  const response = await users.list([], undefined, PAGE_SIZE, offset);
+  // node-appwrite v13+ uses Query-based pagination (not positional offset/limit params)
+  const response = await users.list({
+    queries: [Query.limit(PAGE_SIZE), Query.offset(offset)],
+  });
   const batch = response.users ?? [];
 
   if (batch.length === 0) break;

@@ -16,6 +16,7 @@ import { Route as PublicRouteImport } from './routes/_public'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as PublicIndexRouteImport } from './routes/_public.index'
 import { Route as ApiSitemapRouteImport } from './routes/api/sitemap'
+import { Route as ApiSendEmailRouteImport } from './routes/api/send-email'
 import { Route as ApiChatbotRouteImport } from './routes/api/chatbot'
 import { Route as PublicWorkWithUsRouteImport } from './routes/_public.work-with-us'
 import { Route as PublicTermsOfServiceRouteImport } from './routes/_public.terms-of-service'
@@ -34,6 +35,8 @@ import { Route as AuthenticatedRecruitmentIndexRouteImport } from './routes/_aut
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as ApiPublicStatsRouteImport } from './routes/api/public/stats'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
+import { Route as ApiAdminSetAdminClaimRouteImport } from './routes/api/admin/set-admin-claim'
+import { Route as ApiAdminSendBroadcastRouteImport } from './routes/api/admin/send-broadcast'
 import { Route as ApiAdminResolveStudentRouteImport } from './routes/api/admin/resolve-student'
 import { Route as PublicTutorsTutorSlugRouteImport } from './routes/_public.tutors.$tutorSlug'
 import { Route as PublicBlogsSlugRouteImport } from './routes/_public.blogs.$slug'
@@ -113,6 +116,11 @@ const PublicIndexRoute = PublicIndexRouteImport.update({
 const ApiSitemapRoute = ApiSitemapRouteImport.update({
   id: '/api/sitemap',
   path: '/api/sitemap',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSendEmailRoute = ApiSendEmailRouteImport.update({
+  id: '/api/send-email',
+  path: '/api/send-email',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiChatbotRoute = ApiChatbotRouteImport.update({
@@ -204,6 +212,16 @@ const ApiPublicStatsRoute = ApiPublicStatsRouteImport.update({
 const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
   id: '/api/public/health',
   path: '/api/public/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminSetAdminClaimRoute = ApiAdminSetAdminClaimRouteImport.update({
+  id: '/api/admin/set-admin-claim',
+  path: '/api/admin/set-admin-claim',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminSendBroadcastRoute = ApiAdminSendBroadcastRouteImport.update({
+  id: '/api/admin/send-broadcast',
+  path: '/api/admin/send-broadcast',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAdminResolveStudentRoute = ApiAdminResolveStudentRouteImport.update({
@@ -500,6 +518,7 @@ export interface FileRoutesByFullPath {
   '/terms-of-service': typeof PublicTermsOfServiceRoute
   '/work-with-us': typeof PublicWorkWithUsRoute
   '/api/chatbot': typeof ApiChatbotRoute
+  '/api/send-email': typeof ApiSendEmailRoute
   '/api/sitemap': typeof ApiSitemapRoute
   '/admin/advertisements': typeof AuthenticatedAdminAdvertisementsRoute
   '/admin/ai-assistant': typeof AuthenticatedAdminAiAssistantRoute
@@ -548,6 +567,8 @@ export interface FileRoutesByFullPath {
   '/blogs/$slug': typeof PublicBlogsSlugRoute
   '/tutors/$tutorSlug': typeof PublicTutorsTutorSlugRoute
   '/api/admin/resolve-student': typeof ApiAdminResolveStudentRoute
+  '/api/admin/send-broadcast': typeof ApiAdminSendBroadcastRoute
+  '/api/admin/set-admin-claim': typeof ApiAdminSetAdminClaimRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/stats': typeof ApiPublicStatsRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -571,6 +592,7 @@ export interface FileRoutesByTo {
   '/terms-of-service': typeof PublicTermsOfServiceRoute
   '/work-with-us': typeof PublicWorkWithUsRoute
   '/api/chatbot': typeof ApiChatbotRoute
+  '/api/send-email': typeof ApiSendEmailRoute
   '/api/sitemap': typeof ApiSitemapRoute
   '/admin/advertisements': typeof AuthenticatedAdminAdvertisementsRoute
   '/admin/ai-assistant': typeof AuthenticatedAdminAiAssistantRoute
@@ -619,6 +641,8 @@ export interface FileRoutesByTo {
   '/blogs/$slug': typeof PublicBlogsSlugRoute
   '/tutors/$tutorSlug': typeof PublicTutorsTutorSlugRoute
   '/api/admin/resolve-student': typeof ApiAdminResolveStudentRoute
+  '/api/admin/send-broadcast': typeof ApiAdminSendBroadcastRoute
+  '/api/admin/set-admin-claim': typeof ApiAdminSetAdminClaimRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/stats': typeof ApiPublicStatsRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -645,6 +669,7 @@ export interface FileRoutesById {
   '/_public/terms-of-service': typeof PublicTermsOfServiceRoute
   '/_public/work-with-us': typeof PublicWorkWithUsRoute
   '/api/chatbot': typeof ApiChatbotRoute
+  '/api/send-email': typeof ApiSendEmailRoute
   '/api/sitemap': typeof ApiSitemapRoute
   '/_public/': typeof PublicIndexRoute
   '/_authenticated/admin/advertisements': typeof AuthenticatedAdminAdvertisementsRoute
@@ -694,6 +719,8 @@ export interface FileRoutesById {
   '/_public/blogs/$slug': typeof PublicBlogsSlugRoute
   '/_public/tutors/$tutorSlug': typeof PublicTutorsTutorSlugRoute
   '/api/admin/resolve-student': typeof ApiAdminResolveStudentRoute
+  '/api/admin/send-broadcast': typeof ApiAdminSendBroadcastRoute
+  '/api/admin/set-admin-claim': typeof ApiAdminSetAdminClaimRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/stats': typeof ApiPublicStatsRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -720,6 +747,7 @@ export interface FileRouteTypes {
     | '/terms-of-service'
     | '/work-with-us'
     | '/api/chatbot'
+    | '/api/send-email'
     | '/api/sitemap'
     | '/admin/advertisements'
     | '/admin/ai-assistant'
@@ -768,6 +796,8 @@ export interface FileRouteTypes {
     | '/blogs/$slug'
     | '/tutors/$tutorSlug'
     | '/api/admin/resolve-student'
+    | '/api/admin/send-broadcast'
+    | '/api/admin/set-admin-claim'
     | '/api/public/health'
     | '/api/public/stats'
     | '/admin/'
@@ -791,6 +821,7 @@ export interface FileRouteTypes {
     | '/terms-of-service'
     | '/work-with-us'
     | '/api/chatbot'
+    | '/api/send-email'
     | '/api/sitemap'
     | '/admin/advertisements'
     | '/admin/ai-assistant'
@@ -839,6 +870,8 @@ export interface FileRouteTypes {
     | '/blogs/$slug'
     | '/tutors/$tutorSlug'
     | '/api/admin/resolve-student'
+    | '/api/admin/send-broadcast'
+    | '/api/admin/set-admin-claim'
     | '/api/public/health'
     | '/api/public/stats'
     | '/admin'
@@ -864,6 +897,7 @@ export interface FileRouteTypes {
     | '/_public/terms-of-service'
     | '/_public/work-with-us'
     | '/api/chatbot'
+    | '/api/send-email'
     | '/api/sitemap'
     | '/_public/'
     | '/_authenticated/admin/advertisements'
@@ -913,6 +947,8 @@ export interface FileRouteTypes {
     | '/_public/blogs/$slug'
     | '/_public/tutors/$tutorSlug'
     | '/api/admin/resolve-student'
+    | '/api/admin/send-broadcast'
+    | '/api/admin/set-admin-claim'
     | '/api/public/health'
     | '/api/public/stats'
     | '/_authenticated/admin/'
@@ -928,8 +964,11 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   ApiChatbotRoute: typeof ApiChatbotRoute
+  ApiSendEmailRoute: typeof ApiSendEmailRoute
   ApiSitemapRoute: typeof ApiSitemapRoute
   ApiAdminResolveStudentRoute: typeof ApiAdminResolveStudentRoute
+  ApiAdminSendBroadcastRoute: typeof ApiAdminSendBroadcastRoute
+  ApiAdminSetAdminClaimRoute: typeof ApiAdminSetAdminClaimRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicStatsRoute: typeof ApiPublicStatsRoute
 }
@@ -983,6 +1022,13 @@ declare module '@tanstack/react-router' {
       path: '/api/sitemap'
       fullPath: '/api/sitemap'
       preLoaderRoute: typeof ApiSitemapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/send-email': {
+      id: '/api/send-email'
+      path: '/api/send-email'
+      fullPath: '/api/send-email'
+      preLoaderRoute: typeof ApiSendEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/chatbot': {
@@ -1109,6 +1155,20 @@ declare module '@tanstack/react-router' {
       path: '/api/public/health'
       fullPath: '/api/public/health'
       preLoaderRoute: typeof ApiPublicHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/set-admin-claim': {
+      id: '/api/admin/set-admin-claim'
+      path: '/api/admin/set-admin-claim'
+      fullPath: '/api/admin/set-admin-claim'
+      preLoaderRoute: typeof ApiAdminSetAdminClaimRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/send-broadcast': {
+      id: '/api/admin/send-broadcast'
+      path: '/api/admin/send-broadcast'
+      fullPath: '/api/admin/send-broadcast'
+      preLoaderRoute: typeof ApiAdminSendBroadcastRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/admin/resolve-student': {
@@ -1612,8 +1672,11 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   ApiChatbotRoute: ApiChatbotRoute,
+  ApiSendEmailRoute: ApiSendEmailRoute,
   ApiSitemapRoute: ApiSitemapRoute,
   ApiAdminResolveStudentRoute: ApiAdminResolveStudentRoute,
+  ApiAdminSendBroadcastRoute: ApiAdminSendBroadcastRoute,
+  ApiAdminSetAdminClaimRoute: ApiAdminSetAdminClaimRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicStatsRoute: ApiPublicStatsRoute,
 }

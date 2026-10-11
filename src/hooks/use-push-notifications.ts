@@ -63,6 +63,13 @@ export function usePushNotifications(): UsePushNotificationsResult {
       const vapidKey = (import.meta as ImportMeta & { env?: Record<string, string | undefined> })
         .env?.VITE_FIREBASE_VAPID_KEY;
 
+      if (!vapidKey) {
+        console.error(
+          "usePushNotifications: VITE_FIREBASE_VAPID_KEY is not configured — FCM token registration skipped",
+        );
+        return;
+      }
+
       const messaging = getMessaging();
       const token = await getToken(messaging, {
         vapidKey,
