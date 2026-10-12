@@ -1,9 +1,8 @@
 /**
  * GET /api/public/stats
  *
- * Returns live platform stats (tutor count, subject count, average rating).
- * Uses the Firebase client-side SDK since this is a public, read-only endpoint.
- * Full user count requires Firebase Admin SDK — falls back to 0 until configured.
+ * Returns live platform stats (tutor count, member count, subject count, average rating).
+ * Runs server-side only — uses Firebase Admin SDK for the user count.
  */
 
 import { createFileRoute } from "@tanstack/react-router";
@@ -25,7 +24,15 @@ export const Route = createFileRoute("/api/public/stats")({
     handlers: {
       GET: async () => {
         try {
-          const tutors = await listActiveTutors();
+          // Load admin SDK for server-side user count
+          const { adminDb } = await import("@/lib/firebase-admin");
+
+          const [tutors, usersSnap] = await Promise.all([
+            listActiveTutors(),
+            adminDb.collection("users").count().get(),
+          ]);
+
+          const memberCount = usersSnap.data().count ?? 0;
 
           const subjectSet = new Set<string>();
           let ratingSum = 0;
@@ -48,8 +55,7 @@ export const Route = createFileRoute("/api/public/stats")({
 
           const payload = {
             tutors: tutors.length,
-            // TODO: populate with Firebase Admin SDK user count
-            members: 0,
+            members: memberCount,
             subjects: subjectSet.size,
             rating: ratingCount > 0 ? Number((ratingSum / ratingCount).toFixed(1)) : 0,
           };
