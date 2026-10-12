@@ -24,15 +24,15 @@ export const Route = createFileRoute("/api/public/stats")({
     handlers: {
       GET: async () => {
         try {
-          // Load admin SDK for server-side user count
-          const { adminDb } = await import("@/lib/firebase-admin");
+          // Load admin SDK for server-side user count from Firebase Auth directly
+          const { adminAuth } = await import("@/lib/firebase-admin");
 
-          const [tutors, usersSnap] = await Promise.all([
+          const [tutors, authUsers] = await Promise.all([
             listActiveTutors(),
-            adminDb.collection("users").count().get(),
+            adminAuth.listUsers(1000),
           ]);
 
-          const memberCount = usersSnap.data().count ?? 0;
+          const memberCount = authUsers.users.length;
 
           const subjectSet = new Set<string>();
           let ratingSum = 0;
