@@ -82,6 +82,7 @@ import { Route as AuthenticatedAdminNotificationsRouteImport } from './routes/_a
 import { Route as AuthenticatedAdminHomepageRouteImport } from './routes/_authenticated/admin/homepage'
 import { Route as AuthenticatedAdminBlogsRouteImport } from './routes/_authenticated/admin/blogs'
 import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin/analytics'
+import { Route as AuthenticatedAdminChatsRouteImport } from './routes/_authenticated/admin/chats'
 import { Route as AuthenticatedAdminAiAssistantRouteImport } from './routes/_authenticated/admin/ai-assistant'
 import { Route as AuthenticatedAdminAdvertisementsRouteImport } from './routes/_authenticated/admin/advertisements'
 
@@ -486,6 +487,12 @@ const AuthenticatedAdminAnalyticsRoute =
   AuthenticatedAdminAnalyticsRouteImport.update({
     id: '/admin/analytics',
     path: '/admin/analytics',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAdminChatsRoute =
+  AuthenticatedAdminChatsRouteImport.update({
+    id: '/admin/chats',
+    path: '/admin/chats',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedAdminAiAssistantRoute =
@@ -1563,6 +1570,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminAdvertisementsRoute: AuthenticatedAdminAdvertisementsRoute,
   AuthenticatedAdminAiAssistantRoute: AuthenticatedAdminAiAssistantRoute,
   AuthenticatedAdminAnalyticsRoute: AuthenticatedAdminAnalyticsRoute,
+  AuthenticatedAdminChatsRoute: AuthenticatedAdminChatsRoute,
   AuthenticatedAdminBlogsRoute: AuthenticatedAdminBlogsRoute,
   AuthenticatedAdminHomepageRoute: AuthenticatedAdminHomepageRoute,
   AuthenticatedAdminNotificationsRoute: AuthenticatedAdminNotificationsRoute,

@@ -2153,9 +2153,19 @@ export const DataStore = {
   // --- USER ROLES & PROFILES ---
   getUserRoles: async (userId: string): Promise<string[]> => {
     try {
-      // Firebase has no "teams" concept. Roles are stored as the `role` field
-      // on the user document in the `users` Firestore collection.
-      const userDoc = await getDocument(COLLECTIONS.USERS, userId);
+      // Primary lookup: document ID should equal the Firebase Auth UID.
+      let userDoc = await getDocument(COLLECTIONS.USERS, userId);
+
+      // Fallback: if no document found by ID, search by authUserId field.
+      // This handles legacy documents created with a mismatched document ID.
+      if (!userDoc) {
+        const results = await listDocuments(COLLECTIONS.USERS, [
+          Query.equal("authUserId", userId),
+          Query.limit(1),
+        ]);
+        if (results.length > 0) userDoc = results[0];
+      }
+
       if (!userDoc) return [];
       const role = safeString(userDoc.role, "");
       return role ? [role] : [];
@@ -3825,6 +3835,66 @@ export const DataStore = {
           .map((m: any) => upsertDocument("chat_messages", m.$id, { isRead: true }))
       );
     } catch { /* non-critical */ }
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // CHAT — ADMIN
+  // ─────────────────────────────────────────────────────────────────────────────
+  getAllChatConversations: async (): Promise<any[]> => {
+    try {
+      const docs = await listDocuments("chat_conversations", [
+        Query.equal("isDeleted", false),
+        Query.orderDesc("lastMessageAt"),
+      ]);
+
+      const tutors = await DataStore.getTutors();
+
+      return await Promise.all(
+        docs.map(async (d: any) => {
+          let studentName = "Student";
+          try {
+            const student = await getDocument(COLLECTIONS.USERS, d.studentId);
+            studentName =
+              student?.displayName || student?.name || student?.email || "Student";
+          } catch { /* ignore */ }
+
+          const tutor = tutors.find(
+            (t: any) =>
+              t.id === d.tutorId ||
+              t.authUserId === d.tutorId ||
+              t.userId === d.tutorId,
+          );
+
+          return {
+            ...d,
+            id: d.$id,
+            studentName,
+            tutorName: tutor?.name || "Tutor",
+            studentAvatar: avatarFor(studentName),
+            tutorAvatar: tutor?.avatar_url || avatarFor("Tutor"),
+          };
+        }),
+      );
+    } catch {
+      return [];
+    }
+  },
+
+  getAdminChatMessages: async (
+    conversationId: string,
+    limit = 100,
+  ): Promise<any[]> => {
+    try {
+      const docs = await listDocuments("chat_messages", [
+        Query.equal("conversationId", conversationId),
+        Query.equal("isDeleted", false),
+        Query.orderAsc("createdAt"),
+        Query.limit(limit),
+      ]);
+      return docs.map((d: any) => ({ ...d, id: d.$id }));
+    } catch {
+      return [];
+    }
   },
 
   // ─────────────────────────────────────────────────────────────────────────────

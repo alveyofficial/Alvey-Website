@@ -1,4 +1,4 @@
-﻿import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+﻿import { createFileRoute, Link, useParams, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   Star,
@@ -16,6 +16,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DataStore, Tutor, Review } from "@/lib/data-store";
+import { getCurrentUser } from "@/integrations/firebase/client";
+import { toast } from "sonner";
 import {
   seoMeta,
   seoLinks,
@@ -71,12 +73,32 @@ function TutorProfilePage() {
     from: "/_public/tutors/$tutorSlug",
   });
 
+  const navigate = useNavigate();
   const { tutor: initialTutor } = Route.useLoaderData();
 
   const [tutor, setTutor] = useState<Tutor | null>(initialTutor ?? null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [allTutors, setAllTutors] = useState<Tutor[]>([]);
   const [loading, setLoading] = useState(!initialTutor);
+  const [messagingTutor, setMessagingTutor] = useState(false);
+
+  const handleMessage = async () => {
+    if (!tutor) return;
+    const user = await getCurrentUser();
+    if (!user) {
+      navigate({ to: "/auth" });
+      return;
+    }
+    setMessagingTutor(true);
+    try {
+      await DataStore.getOrCreateConversation(user.id, tutor.id);
+      navigate({ to: "/student/chat" });
+    } catch {
+      toast.error("Failed to open conversation. Please try again.");
+    } finally {
+      setMessagingTutor(false);
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -560,13 +582,14 @@ function TutorProfilePage() {
                   variant="outline"
                   className="rounded-xl h-11"
                 >
-                  <Link
-                    to="/contact"
-                    search={{ tutorId: tutor.id }}
+                  <button
+                    onClick={handleMessage}
+                    disabled={messagingTutor}
+                    className="flex items-center"
                   >
                     <MessageSquare className="h-4 w-4 mr-2" />
-                    Message
-                  </Link>
+                    {messagingTutor ? "Opening…" : "Message"}
+                  </button>
                 </Button>
               </div>
 
