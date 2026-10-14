@@ -1,5 +1,6 @@
 ﻿import { createFileRoute, Link, useParams, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { BookingModal } from "@/components/booking-modal";
 import {
   Star,
   CheckCircle,
@@ -81,6 +82,7 @@ function TutorProfilePage() {
   const [allTutors, setAllTutors] = useState<Tutor[]>([]);
   const [loading, setLoading] = useState(!initialTutor);
   const [messagingTutor, setMessagingTutor] = useState(false);
+  const [bookingOpen, setBookingOpen] = useState(false);
 
   const handleMessage = async () => {
     if (!tutor) return;
@@ -565,17 +567,17 @@ function TutorProfilePage() {
 
               <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3">
                 <Button
-                  asChild
                   className="bg-[#164E5E] hover:bg-[#3D7F8F] text-white font-semibold rounded-xl h-11"
+                  onClick={() => setBookingOpen(true)}
                 >
-                  <Link
-                    to="/contact"
-                    search={{ tutorId: tutor.id }}
-                  >
-                    <Calendar className="h-4 w-4 mr-2" />
-                    Book Demo
-                  </Link>
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Book Demo
                 </Button>
+                <BookingModal
+                  tutor={tutor}
+                  open={bookingOpen}
+                  onOpenChange={setBookingOpen}
+                />
 
                 <Button
                   asChild

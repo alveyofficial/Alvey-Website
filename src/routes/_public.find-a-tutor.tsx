@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { BookingModal } from "@/components/booking-modal";
 import {
   Search,
   SlidersHorizontal,
@@ -91,6 +92,7 @@ function FindATutorPage() {
   const [maxPrice, setMaxPrice] = useState(0);
   const [onlyVerified, setOnlyVerified] = useState(false);
   const [sortBy, setSortBy] = useState("featured");
+  const [bookingTutor, setBookingTutor] = useState<Tutor | null>(null);
   const visibleSubjects = useMemo(() => {
     if (selectedLevels.length === 0) {
       return subjects;
@@ -794,16 +796,11 @@ function FindATutorPage() {
                     </Button>
 
                     <Button
-                      asChild
                       size="sm"
                       className="w-full bg-[#164E5E] hover:bg-[#3D7F8F] text-white text-xs font-semibold rounded-lg"
+                      onClick={() => setBookingTutor(tutor)}
                     >
-                      <Link
-                        to="/contact"
-                        search={{ tutorId: tutor.id }}
-                      >
-                        Contact & Book
-                      </Link>
+                      Contact & Book
                     </Button>
                   </CardFooter>
                 </Card>
@@ -813,6 +810,14 @@ function FindATutorPage() {
           }
         </main>
       </div>
+
+      {bookingTutor && (
+        <BookingModal
+          tutor={bookingTutor}
+          open={!!bookingTutor}
+          onOpenChange={(open) => !open && setBookingTutor(null)}
+        />
+      )}
 
       {/*
         Crawler-accessible tutor directory.
