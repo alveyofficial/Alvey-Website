@@ -56,6 +56,17 @@
         "firebase-debug.*.log",
         ".prettierrc.json"
       ]
+    },
+    {
+      "source": "functions/alvey-whatsapp-webhook",
+      "codebase": "alvey-whatsapp-webhook",
+      "runtime": "nodejs22",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log"
+      ]
     }
   ]
 }

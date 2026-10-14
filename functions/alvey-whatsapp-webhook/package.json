@@ -1,13 +1,16 @@
 {
   "name": "alvey-whatsapp-webhook",
   "version": "1.0.0",
-  "description": "Meta webhook handler for the Alvey WhatsApp bot — verifies the webhook and processes inbound messages",
-  "type": "module",
+  "description": "Meta WhatsApp Cloud API webhook handler for the Alvey bot — routes inbound messages through alvey-ai-brain and stores sessions in Firestore",
   "main": "src/main.js",
   "scripts": {
     "start": "node src/main.js"
   },
+  "engines": {
+    "node": "22"
+  },
   "dependencies": {
-    "node-appwrite": "^26.2.0"
+    "firebase-admin": "^13.0.0",
+    "firebase-functions": "^6.3.2"
   }
 }
