@@ -61,19 +61,18 @@ relevant SRS section before merging:
 
 ## Security Testing (§24.6)
 
-- Confirm RLS policies in
-  `supabase/migrations/20260711220310_*.sql` still match the access
-  patterns each portal exercises (e.g. a student cannot read another
-  student's lessons; a tutor cannot approve their own application).
+- Confirm Firestore Security Rules still match the access patterns each
+  portal exercises (e.g. a student cannot read another student's lessons;
+  a tutor cannot approve their own application).
 - Confirm every `/admin/*` and `/recruitment/*` page that displays
   aggregate or personal data checks `DataStore.getUserRoles` before
   rendering (see the guards added to `admin/index.tsx`,
   `admin/analytics.tsx`, and `recruitment/index.tsx`) — this is currently
   enforced client-side per-page rather than centrally in
   `_authenticated.tsx`'s `beforeLoad`; see §27 for the tracked follow-up.
-- Confirm server-role secrets (`APPWRITE_API_KEY`,
-  `SUPABASE_SERVICE_ROLE_KEY`, `GEMINI_API_KEY`) never appear in
-  client-bundled code (only inside `*.server.ts` or server route handlers).
+- Confirm server-role secrets (`GEMINI_API_KEY`, `DISCORD_WEBHOOK_URL`,
+  `RESEND_API_KEY`) never appear in client-bundled code (only inside
+  `*.server.ts`, server route handlers, or Firebase Function secrets).
 
 ## Performance Testing (§24.7)
 
@@ -89,10 +88,7 @@ relevant SRS section before merging:
 
 Verify the seams between:
 
-- Frontend ↔ Appwrite Database/Auth/Storage (`src/integrations/appwrite`).
-- Frontend ↔ Supabase (`src/integrations/supabase`) — both integrations
-  currently coexist in this codebase; confirm new features target the
-  correct one before adding queries.
+- Frontend ↔ Firebase (Firestore, Auth, Storage) (`src/integrations/firebase`).
 - `/api/chatbot` ↔ Gemini (`@google/genai`).
 - Discord synchronization (when `features.discordSync` is enabled in
   `src/lib/config.ts`).
@@ -115,7 +111,7 @@ fail acceptance criteria are not released.
 ## Error Handling (§24.11)
 
 - Confirm network/database failures degrade gracefully rather than
-  crashing — most of `data-store.ts` already wraps Appwrite calls in
+  crashing — most of `data-store.ts` already wraps Firestore calls in
   try/catch and falls back to local mock data; new code should follow the
   same pattern (see `src/lib/analytics.ts`'s `safeList` helper).
 - Confirm the root error boundary (`src/routes/__root.tsx`
@@ -132,8 +128,8 @@ fail acceptance criteria are not released.
 ## Data Validation (§24.13)
 
 - Required fields are enforced both client-side (form checks) and
-  server-side (RLS policies / Appwrite required attributes in
-  `scripts/appwrite-setup.ts`).
+  server-side (Firestore Security Rules / required field validation in
+  `src/lib/data-store.ts`).
 - Duplicate prevention: unique constraints exist on
   `student_tutor_assignments (student_id, tutor_id)` and
   `reviews (tutor_id, student_id)`.

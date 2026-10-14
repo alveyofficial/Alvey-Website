@@ -56,17 +56,17 @@ Covers the analytics & reporting sprint (SRS §20, §24, §27, §28).
 ### Dependencies added
 
 None. All charts use the existing Recharts dependency; all icons use the
-existing Lucide set; all backend calls use the existing Appwrite SDK.
+existing Lucide set; all backend calls use the existing Firebase SDK.
 
 ---
 
 ## 3. Architecture Decisions
 
 - **Additive analytics module:** `analytics.ts` wraps `DataStore`'s existing
-  public methods wherever possible; direct Appwrite queries are used only
-  for `$createdAt` timestamps that `DataStore` does not expose. This means
-  the analytics layer is trivially removable and has no side-effects on
-  existing features.
+  public methods wherever possible; direct Firestore queries are used only
+  for `_createdAt` timestamps (set by `createDocument` in `data-store.ts`)
+  that `DataStore` does not expose. This means the analytics layer is
+  trivially removable and has no side-effects on existing features.
 - **Client-side aggregation:** deliberate at current scale (< thousands of
   records). The `safeList` helper and `Promise.all` fan-out keep perceived
   load times low.

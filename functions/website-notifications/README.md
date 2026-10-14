@@ -1,46 +1,65 @@
 # website-notifications
 
-## 🧰 Usage
+Firebase Cloud Function (v2 HTTPS) that receives form submissions from the
+Alvey website and dispatches notifications.
 
-### GET /ping
+## What it does
 
-- Returns a "Pong" message.
+Accepts a `POST` request with a JSON body containing a `type` field. It:
 
-**Response**
+1. Sends a formatted Discord embed to `DISCORD_WEBHOOK_URL`.
+2. Optionally sends a confirmation email to the submitter via the Resend API
+   (if `RESEND_API_KEY` is set and an email address is present in the payload).
 
-Sample `200` Response:
+A `GET` request returns `{ ok: true }` as a health check.
 
-```text
-Pong
+## Notification types
+
+| `type` value              | Discord title                    | Trigger                        |
+| ------------------------- | -------------------------------- | ------------------------------ |
+| `tutor_application`       | 🎓 New Tutor Application         | Tutor application form         |
+| `recruitment_application` | 👥 New Recruitment Application   | Recruitment application form   |
+| `contact_message`         | 📩 New Contact Message           | Public contact form            |
+
+All other `type` values fall back to "🌐 New Website Notification".
+
+## Endpoint
+
+After deploying, Firebase prints the URL. It follows this pattern:
+
+```
+https://us-central1-<project-id>.cloudfunctions.net/websiteNotifications
 ```
 
-### GET, POST, PUT, PATCH, DELETE /
+Set `VITE_NOTIFICATIONS_FUNCTION_URL` in `.env` (and in Firebase App Hosting
+environment config) to this URL.
 
-- Returns a "Learn More" JSON response.
+## Secrets
 
-**Response**
+Two Firebase secrets are required. Set them before deploying:
 
-Sample `200` Response:
-
-```json
-{
-  "motto": "Build like a team of hundreds_",
-  "learn": "https://appwrite.io/docs",
-  "connect": "https://appwrite.io/discord",
-  "getInspired": "https://builtwith.appwrite.io"
-}
+```bash
+firebase functions:secrets:set DISCORD_WEBHOOK_URL
+firebase functions:secrets:set RESEND_API_KEY
 ```
 
-## ⚙️ Configuration
+To verify a secret was stored:
 
-| Setting           | Value         |
-| ----------------- | ------------- |
-| Runtime           | Node (18.0)   |
-| Entrypoint        | `src/main.js` |
-| Build Commands    | `npm install` |
-| Permissions       | `any`         |
-| Timeout (Seconds) | 15            |
+```bash
+firebase functions:secrets:access DISCORD_WEBHOOK_URL
+firebase functions:secrets:access RESEND_API_KEY
+```
 
-## 🔒 Environment Variables
+| Secret                | Required | Purpose                                      |
+| --------------------- | -------- | -------------------------------------------- |
+| `DISCORD_WEBHOOK_URL` | Yes      | Discord incoming webhook URL                 |
+| `RESEND_API_KEY`      | No       | Resend API key for confirmation emails       |
 
-No environment variables required.
+If `RESEND_API_KEY` is not set the function still sends the Discord
+notification — the email step is skipped with a warning log.
+
+## Deploying
+
+```bash
+firebase deploy --only functions:websiteNotifications
+```
