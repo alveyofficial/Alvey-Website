@@ -2,51 +2,49 @@
  * GET /api/public/stats
  *
  * Returns live platform stats (tutor count, member count, subject count, average rating).
- * Runs server-side only — uses Firebase Admin SDK for the user count.
+ * Runs server-side only — uses the Firebase Admin SDK throughout so SSR context works.
  */
 
 import { createFileRoute } from "@tanstack/react-router";
-import { collection, getDocs, query, where } from "firebase/firestore";
-import { db } from "@/integrations/firebase/client";
-
-async function listActiveTutors() {
-  try {
-    const q = query(collection(db, "tutor_profiles"), where("active", "==", true));
-    const snap = await getDocs(q);
-    return snap.docs.map((d) => d.data()) as Record<string, unknown>[];
-  } catch {
-    return [];
-  }
-}
 
 export const Route = createFileRoute("/api/public/stats")({
   server: {
     handlers: {
       GET: async () => {
         try {
-          // Load admin SDK for server-side user count from Firebase Auth directly
-          const { adminAuth } = await import("@/lib/firebase-admin");
+          // All Firestore/Auth access via Admin SDK — client SDK doesn't work in SSR context.
+          const { adminAuth, adminDb } = await import("@/lib/firebase-admin");
 
-          const [tutors, authUsers] = await Promise.all([
-            listActiveTutors(),
+          const [tutorsSnap, catSnap, authUsers] = await Promise.all([
+            adminDb.collection("tutor_profiles").where("active", "==", true).get(),
+            adminDb.collection("subject_categories").where("active", "==", true).get(),
             adminAuth.listUsers(1000),
           ]);
 
+          const tutors = tutorsSnap.docs.map((d) => d.data()) as Record<string, unknown>[];
           const memberCount = authUsers.users.length;
 
-          const subjectSet = new Set<string>();
+          // Subject count from the subject_categories collection; fall back to
+          // unique subjects from tutor profiles if the collection is empty.
+          let subjectCount: number;
+          if (catSnap.size > 0) {
+            subjectCount = catSnap.size;
+          } else {
+            const subjectSet = new Set<string>();
+            for (const tutor of tutors) {
+              const subjects = Array.isArray(tutor.subjects) ? tutor.subjects : [];
+              subjects.forEach((s) => {
+                if (typeof s === "string" && s.trim()) subjectSet.add(s);
+              });
+            }
+            subjectCount = subjectSet.size;
+          }
+
           let ratingSum = 0;
           let ratingCount = 0;
-
           for (const tutor of tutors) {
-            const subjects = Array.isArray(tutor.subjects) ? tutor.subjects : [];
-            subjects.forEach((subject) => {
-              if (typeof subject === "string" && subject.trim()) {
-                subjectSet.add(subject);
-              }
-            });
-
-            const rating = Number(tutor.rating ?? tutor.rating_avg ?? 0);
+            // Firestore field is "rating"; rating_avg is the legacy mapped alias.
+            const rating = Number((tutor as any).rating ?? (tutor as any).rating_avg ?? 0);
             if (Number.isFinite(rating) && rating > 0) {
               ratingSum += rating;
               ratingCount += 1;
@@ -56,7 +54,7 @@ export const Route = createFileRoute("/api/public/stats")({
           const payload = {
             tutors: tutors.length,
             members: memberCount,
-            subjects: subjectSet.size,
+            subjects: subjectCount,
             rating: ratingCount > 0 ? Number((ratingSum / ratingCount).toFixed(1)) : 0,
           };
 

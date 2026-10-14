@@ -331,7 +331,6 @@ const defaultLevels = [
   "GCSE",
   "IGCSE",
   "A-Level",
-  "University",
 ];
 
 const KEYS = {
@@ -961,7 +960,7 @@ export const DataStore = {
       ),
 
       // KEEP THE EXISTING ROLE
-      role: existing?.role ?? safeString(user.role, "student"),
+      role: existing?.role ?? safeString(user.role, "guest"),
 
       discordId: existing?.discordId ?? null,
       active: existing?.active ?? true,
@@ -2190,7 +2189,7 @@ export const DataStore = {
     try {
       const doc = await getDocument(COLLECTIONS.USERS, userId);
       if (doc?.role === role) {
-        await upsertDocument(COLLECTIONS.USERS, userId, { ...doc, role: "student" });
+        await upsertDocument(COLLECTIONS.USERS, userId, { ...doc, role: "guest" });
       }
     } catch { }
 
@@ -2430,7 +2429,7 @@ export const DataStore = {
       const docs = await listDocuments(COLLECTIONS.PLATFORM_REVIEWS, [
         Query.equal("isPublic", true),
         Query.equal("isDeleted", false),
-        Query.orderDesc("$createdAt"),
+        Query.orderDesc("_createdAt"),
       ]);
 
       return docs.map((doc) => ({
@@ -2771,12 +2770,18 @@ export const DataStore = {
   // --- SUBJECT CATEGORIES ---
   getSubjectCategories: async (): Promise<any[]> => {
     try {
+      // Drop orderAsc("displayOrder") to avoid requiring a composite Firestore index.
+      // Sort client-side so UI order is preserved without the index.
       const docs = await listDocuments(COLLECTIONS.SUBJECT_CATEGORIES, [
         Query.equal("active", true),
-        Query.orderAsc("displayOrder"),
       ]);
-      if (docs.length > 0) return docs;
-    } catch { }
+      if (docs.length > 0) {
+        docs.sort((a: any, b: any) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0));
+        return docs;
+      }
+    } catch (err) {
+      console.error("getSubjectCategories failed:", err);
+    }
     return [];
   },
 

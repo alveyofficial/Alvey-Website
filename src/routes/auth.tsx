@@ -492,9 +492,10 @@ function redirectByRole(roles: string[], navigate: ReturnType<typeof useNavigate
     navigate({ to: "/tutor" });
   } else if (roles.includes("recruitment") || roles.includes("staff_recruitment")) {
     navigate({ to: "/recruitment" });
-  } else if (roles.includes("Students") || roles.length > 0) {
+  } else if (roles.includes("student") || roles.includes("Students")) {
     navigate({ to: "/student/dashboard" });
   } else {
+    // guest, unrecognized role, or no role → public homepage
     navigate({ to: "/" });
   }
 }
