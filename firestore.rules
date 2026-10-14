@@ -245,6 +245,36 @@ service cloud.firestore {
     }
 
     // -------------------------------------------------------------------------
+    // bookings
+    // -------------------------------------------------------------------------
+    match /bookings/{bookingId} {
+      allow read: if isAdmin()
+        || (isSignedIn() && resource.data.studentId == request.auth.uid)
+        || (isSignedIn() && resource.data.tutorAuthUserId == request.auth.uid);
+
+      allow create: if isSignedIn()
+        && request.resource.data.studentId == request.auth.uid
+        && request.resource.data.keys().hasAll([
+             'studentId', 'tutorId', 'tutorAuthUserId', 'tutorName',
+             'studentName', 'preferredDate', 'preferredTime', 'coverNote',
+             'status', 'referenceCode'
+           ]);
+
+      allow update: if isAdmin()
+        || (isTutor()
+            && resource.data.tutorAuthUserId == request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+            && request.resource.data.status in ['awaiting_payment', 'declined'])
+        || (isOwner(resource.data.studentId)
+            && resource.data.status == 'awaiting_payment'
+            && request.resource.data.diff(resource.data).affectedKeys()
+                 .hasOnly(['receiptUrl', 'receiptPath', 'receiptUploadedAt', 'status'])
+            && request.resource.data.status == 'verifying_receipt');
+
+      allow delete: if isAdmin();
+    }
+
+    // -------------------------------------------------------------------------
     // Catch-all: deny everything not explicitly matched above
     // -------------------------------------------------------------------------
     match /{document=**} {

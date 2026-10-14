@@ -368,6 +368,7 @@ const COLLECTIONS = {
   SCHEDULES: "schedules",
   ASSIGNMENTS: "student_tutor_assignments",
   BLOG_POSTS: "blog_posts",
+  BOOKINGS: "bookings",
 };
 
 function getLocal<T>(key: string, defaultValue: T): T {
@@ -940,6 +941,54 @@ export interface UserRecord {
   active?: boolean;
   discordId?: string | null;
   [key: string]: unknown;
+}
+
+export type BookingStatus =
+  | 'pending_tutor'
+  | 'awaiting_payment'
+  | 'verifying_receipt'
+  | 'confirmed'
+  | 'declined';
+
+export interface Booking {
+  id: string;
+  studentId: string;
+  tutorId: string;
+  tutorAuthUserId: string;
+  tutorName: string;
+  studentName: string;
+  requestedAt: string;           // ISO string
+  preferredDate: string;         // ISO date string
+  preferredTime: string;         // "HH:MM"
+  coverNote: string;
+  status: BookingStatus;
+  referenceCode: string;         // "ALV-XXXX-XXXX"
+  receiptUrl: string | null;
+  receiptPath: string | null;
+  receiptUploadedAt: string | null;  // ISO string | null
+  adminNote: string | null;
+  confirmedAt: string | null;    // ISO string | null
+  meetingRoomUrl: string | null;
+  isDeleted: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// Booking helpers
+// ---------------------------------------------------------------------------
+
+function generateBookingRef(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no ambiguous chars
+  const seg = () => Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  return `ALV-${seg()}-${seg()}`;
+}
+
+async function shouldSendBookingEmail(userId: string): Promise<boolean> {
+  try {
+    const prefs = await getDocument(COLLECTIONS.NOTIFICATION_PREFERENCES, userId);
+    return (prefs?.bookingEmails ?? true) && (prefs?.emailNotifications ?? true);
+  } catch {
+    return true;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -3009,6 +3058,7 @@ export const DataStore = {
     lesson_reminders?: boolean;
     announcements?: boolean;
     marketing?: boolean;
+    booking_emails?: boolean;
   }): Promise<void> => {
     await upsertDocument(COLLECTIONS.NOTIFICATION_PREFERENCES, prefs.user_id, {
       userId: prefs.user_id,
@@ -3017,6 +3067,7 @@ export const DataStore = {
       lessonReminders: prefs.lesson_reminders ?? true,
       announcements: prefs.announcements ?? true,
       marketing: prefs.marketing ?? false,
+      bookingEmails: prefs.booking_emails ?? true,
       updatedAt: new Date().toISOString(),
       createdAt: new Date().toISOString(),
     });
@@ -4275,6 +4326,316 @@ export const DataStore = {
         recipientEmail,
       });
     }
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // BOOKINGS
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  createBooking: async (params: {
+    tutorId: string;
+    tutorAuthUserId: string;
+    tutorName: string;
+    studentId: string;
+    studentName: string;
+    preferredDate: string;
+    preferredTime: string;
+    coverNote: string;
+  }): Promise<Booking> => {
+    const referenceCode = generateBookingRef();
+    const now = new Date().toISOString();
+    const data = {
+      studentId: params.studentId,
+      tutorId: params.tutorId,
+      tutorAuthUserId: params.tutorAuthUserId,
+      tutorName: params.tutorName,
+      studentName: params.studentName,
+      requestedAt: now,
+      preferredDate: params.preferredDate,
+      preferredTime: params.preferredTime,
+      coverNote: params.coverNote,
+      status: 'pending_tutor' as BookingStatus,
+      referenceCode,
+      receiptUrl: null,
+      receiptPath: null,
+      receiptUploadedAt: null,
+      adminNote: null,
+      confirmedAt: null,
+      meetingRoomUrl: null,
+      isDeleted: false,
+    };
+    const doc = await createDocument(COLLECTIONS.BOOKINGS, data);
+    // Notify tutor
+    try {
+      const sendEmail = await shouldSendBookingEmail(params.tutorAuthUserId);
+      await DataStore.notifyUser({
+        userId: params.tutorAuthUserId,
+        userRole: 'tutor',
+        type: 'booking',
+        title: `New Demo Request from ${params.studentName}`,
+        body: 'A student has requested a demo session. Please accept or decline.',
+        link: '/tutor/bookings',
+        sendEmail,
+      });
+    } catch (err) {
+      console.error('[createBooking] Failed to notify tutor:', err);
+    }
+    return { id: doc.$id || doc.id, ...data };
+  },
+
+  respondToBooking: async (bookingId: string, response: 'accept' | 'decline'): Promise<void> => {
+    const bookingDoc = await getDocument(COLLECTIONS.BOOKINGS, bookingId);
+    if (!bookingDoc) throw new Error(`Booking ${bookingId} not found`);
+
+    const newStatus: BookingStatus = response === 'accept' ? 'awaiting_payment' : 'declined';
+    await upsertDocument(COLLECTIONS.BOOKINGS, bookingId, { status: newStatus });
+
+    const { studentId, tutorName } = bookingDoc;
+    try {
+      const sendEmail = await shouldSendBookingEmail(studentId);
+      if (response === 'accept') {
+        await DataStore.notifyUser({
+          userId: studentId,
+          userRole: 'student',
+          type: 'booking',
+          title: `Your demo with ${tutorName} was accepted — please complete payment`,
+          body: 'Your demo request has been accepted. Please proceed to payment to confirm your booking.',
+          link: '/student/bookings',
+          sendEmail,
+        });
+      } else {
+        await DataStore.notifyUser({
+          userId: studentId,
+          userRole: 'student',
+          type: 'booking',
+          title: `Your demo request with ${tutorName} was declined`,
+          body: 'Unfortunately your demo request was not accepted at this time.',
+          link: '/student/bookings',
+          sendEmail,
+        });
+      }
+    } catch (err) {
+      console.error('[respondToBooking] Failed to notify student:', err);
+    }
+  },
+
+  uploadReceipt: async (bookingId: string, file: File): Promise<void> => {
+    const bookingDoc = await getDocument(COLLECTIONS.BOOKINGS, bookingId);
+    if (!bookingDoc) throw new Error(`Booking ${bookingId} not found`);
+
+    const fileRef = storageRef(storage, `booking-receipts/${bookingId}/${file.name}`);
+    await uploadBytes(fileRef, file);
+    const receiptUrl = await getDownloadURL(fileRef);
+    const receiptPath = fileRef.fullPath;
+    const now = new Date().toISOString();
+
+    await upsertDocument(COLLECTIONS.BOOKINGS, bookingId, {
+      receiptUrl,
+      receiptPath,
+      receiptUploadedAt: now,
+      status: 'verifying_receipt' as BookingStatus,
+    });
+
+    // Notify all admins
+    try {
+      const admins = await listDocuments(COLLECTIONS.USERS, [
+        Query.equal('role', 'admin'),
+        Query.equal('active', true),
+      ]);
+      for (const admin of admins) {
+        const adminId = admin.authUserId || admin.$id || admin.id;
+        if (!adminId) continue;
+        await DataStore.notifyUser({
+          userId: adminId,
+          userRole: 'tutor', // admin notifications use tutor channel for email routing
+          type: 'booking',
+          title: `Receipt uploaded for booking ${bookingDoc.referenceCode}`,
+          body: `A student has uploaded a payment receipt for booking ${bookingDoc.referenceCode}. Please review.`,
+          link: '/admin/scheduling',
+          sendEmail: true,
+        });
+      }
+    } catch (err) {
+      console.error('[uploadReceipt] Failed to notify admins:', err);
+    }
+  },
+
+  moderateReceipt: async (bookingId: string, decision: 'approve' | 'reject', adminNote?: string): Promise<void> => {
+    const bookingDoc = await getDocument(COLLECTIONS.BOOKINGS, bookingId);
+    if (!bookingDoc) throw new Error(`Booking ${bookingId} not found`);
+
+    const now = new Date().toISOString();
+    const { studentId, tutorAuthUserId, referenceCode } = bookingDoc;
+
+    if (decision === 'approve') {
+      await upsertDocument(COLLECTIONS.BOOKINGS, bookingId, {
+        status: 'confirmed' as BookingStatus,
+        confirmedAt: now,
+        adminNote: null,
+      });
+      // Notify student
+      try {
+        const sendEmailStudent = await shouldSendBookingEmail(studentId);
+        await DataStore.notifyUser({
+          userId: studentId,
+          userRole: 'student',
+          type: 'booking',
+          title: `Booking ${referenceCode} confirmed!`,
+          body: 'Your demo booking has been confirmed. Your demo is scheduled.',
+          link: '/student/bookings',
+          sendEmail: sendEmailStudent,
+        });
+      } catch (err) {
+        console.error('[moderateReceipt] Failed to notify student:', err);
+      }
+      // Notify tutor
+      try {
+        const sendEmailTutor = await shouldSendBookingEmail(tutorAuthUserId);
+        await DataStore.notifyUser({
+          userId: tutorAuthUserId,
+          userRole: 'tutor',
+          type: 'booking',
+          title: `Booking ${referenceCode} confirmed!`,
+          body: 'A student booking has been confirmed. The demo is scheduled.',
+          link: '/tutor/bookings',
+          sendEmail: sendEmailTutor,
+        });
+      } catch (err) {
+        console.error('[moderateReceipt] Failed to notify tutor:', err);
+      }
+    } else {
+      await upsertDocument(COLLECTIONS.BOOKINGS, bookingId, {
+        status: 'awaiting_payment' as BookingStatus,
+        adminNote: adminNote || null,
+      });
+      // Notify student
+      try {
+        const sendEmail = await shouldSendBookingEmail(studentId);
+        await DataStore.notifyUser({
+          userId: studentId,
+          userRole: 'student',
+          type: 'booking',
+          title: 'Receipt rejected — please re-upload',
+          body: adminNote
+            ? `Receipt rejected — please re-upload. Reason: ${adminNote}`
+            : 'Your receipt was rejected. Please upload a valid payment receipt.',
+          link: '/student/bookings',
+          sendEmail,
+        });
+      } catch (err) {
+        console.error('[moderateReceipt] Failed to notify student:', err);
+      }
+    }
+  },
+
+  getBookingsForStudent: async (studentId: string): Promise<Booking[]> => {
+    try {
+      const docs = await listDocuments(COLLECTIONS.BOOKINGS, [
+        Query.equal('studentId', studentId),
+        Query.equal('isDeleted', false),
+        Query.orderDesc('requestedAt'),
+        Query.limit(50),
+      ]);
+      return docs.map((d: any) => ({
+        id: d.$id || d.id,
+        studentId: d.studentId,
+        tutorId: d.tutorId,
+        tutorAuthUserId: d.tutorAuthUserId,
+        tutorName: d.tutorName,
+        studentName: d.studentName,
+        requestedAt: d.requestedAt,
+        preferredDate: d.preferredDate,
+        preferredTime: d.preferredTime,
+        coverNote: d.coverNote,
+        status: d.status as BookingStatus,
+        referenceCode: d.referenceCode,
+        receiptUrl: d.receiptUrl ?? null,
+        receiptPath: d.receiptPath ?? null,
+        receiptUploadedAt: d.receiptUploadedAt ?? null,
+        adminNote: d.adminNote ?? null,
+        confirmedAt: d.confirmedAt ?? null,
+        meetingRoomUrl: d.meetingRoomUrl ?? null,
+        isDeleted: Boolean(d.isDeleted),
+      }));
+    } catch (err) {
+      console.error('[getBookingsForStudent] Failed:', err);
+      return [];
+    }
+  },
+
+  getBookingsForTutor: async (tutorAuthUserId: string): Promise<Booking[]> => {
+    try {
+      const candidates = await resolveTutorIdCandidates(tutorAuthUserId);
+      const docs = await listDocuments(COLLECTIONS.BOOKINGS, [
+        Query.equal('tutorAuthUserId', candidates.length > 1 ? candidates : candidates[0]),
+        Query.equal('isDeleted', false),
+        Query.orderDesc('requestedAt'),
+        Query.limit(50),
+      ]);
+      return docs.map((d: any) => ({
+        id: d.$id || d.id,
+        studentId: d.studentId,
+        tutorId: d.tutorId,
+        tutorAuthUserId: d.tutorAuthUserId,
+        tutorName: d.tutorName,
+        studentName: d.studentName,
+        requestedAt: d.requestedAt,
+        preferredDate: d.preferredDate,
+        preferredTime: d.preferredTime,
+        coverNote: d.coverNote,
+        status: d.status as BookingStatus,
+        referenceCode: d.referenceCode,
+        receiptUrl: d.receiptUrl ?? null,
+        receiptPath: d.receiptPath ?? null,
+        receiptUploadedAt: d.receiptUploadedAt ?? null,
+        adminNote: d.adminNote ?? null,
+        confirmedAt: d.confirmedAt ?? null,
+        meetingRoomUrl: d.meetingRoomUrl ?? null,
+        isDeleted: Boolean(d.isDeleted),
+      }));
+    } catch (err) {
+      console.error('[getBookingsForTutor] Failed:', err);
+      return [];
+    }
+  },
+
+  getAllPendingReceipts: async (): Promise<Booking[]> => {
+    try {
+      const docs = await listDocuments(COLLECTIONS.BOOKINGS, [
+        Query.equal('status', 'verifying_receipt'),
+        Query.equal('isDeleted', false),
+        Query.orderDesc('requestedAt'),
+        Query.limit(100),
+      ]);
+      return docs.map((d: any) => ({
+        id: d.$id || d.id,
+        studentId: d.studentId,
+        tutorId: d.tutorId,
+        tutorAuthUserId: d.tutorAuthUserId,
+        tutorName: d.tutorName,
+        studentName: d.studentName,
+        requestedAt: d.requestedAt,
+        preferredDate: d.preferredDate,
+        preferredTime: d.preferredTime,
+        coverNote: d.coverNote,
+        status: d.status as BookingStatus,
+        referenceCode: d.referenceCode,
+        receiptUrl: d.receiptUrl ?? null,
+        receiptPath: d.receiptPath ?? null,
+        receiptUploadedAt: d.receiptUploadedAt ?? null,
+        adminNote: d.adminNote ?? null,
+        confirmedAt: d.confirmedAt ?? null,
+        meetingRoomUrl: d.meetingRoomUrl ?? null,
+        isDeleted: Boolean(d.isDeleted),
+      }));
+    } catch (err) {
+      console.error('[getAllPendingReceipts] Failed:', err);
+      return [];
+    }
+  },
+
+  softDeleteBooking: async (bookingId: string): Promise<void> => {
+    await upsertDocument(COLLECTIONS.BOOKINGS, bookingId, { isDeleted: true });
   },
 
 };
