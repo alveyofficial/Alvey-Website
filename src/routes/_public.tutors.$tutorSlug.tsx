@@ -92,7 +92,7 @@ function TutorProfilePage() {
     setMessagingTutor(true);
     try {
       await DataStore.getOrCreateConversation(user.id, tutor.id);
-      navigate({ to: "/student/chat" });
+      navigate({ to: "/student/chat", search: { tutorId: tutor.id } });
     } catch {
       toast.error("Failed to open conversation. Please try again.");
     } finally {
