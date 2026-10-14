@@ -43,7 +43,7 @@ service cloud.firestore {
 
       allow create: if isOwner(userId)
         && (!('role' in request.resource.data)
-            || request.resource.data.role == 'student');
+            || request.resource.data.role in ['guest', 'student', 'tutor', 'staff', 'admin']);
 
       allow update: if isAdmin()
         || (isOwner(userId)

@@ -14,12 +14,11 @@
 import { useEffect, useState } from "react";
 import { auth } from "@/integrations/firebase/client";
 import { onAuthStateChanged } from "firebase/auth";
-
-type UserRole = "student" | "tutor" | "staff" | "admin" | null;
+import type { UserRole } from "@/lib/user-role";
 
 interface UseAdminResult {
   isAdmin: boolean;
-  role: UserRole;
+  role: UserRole | null;
   isStaff: boolean;
   isTutor: boolean;
   isStudent: boolean;
@@ -29,7 +28,7 @@ interface UseAdminResult {
 
 export function useAdmin(): UseAdminResult {
   const [isAdmin, setIsAdmin] = useState(false);
-  const [role, setRole] = useState<UserRole>(null);
+  const [role, setRole] = useState<UserRole | null>(null);
   const [isStaff, setIsStaff] = useState(false);
   const [isTutor, setIsTutor] = useState(false);
   const [isStudent, setIsStudent] = useState(false);

@@ -46,6 +46,7 @@
   import { toast } from "sonner";
   import { DataStore, type Tutor } from "@/lib/data-store";
   import type { UserRecord } from "@/lib/data-store";
+  import type { UserRole } from "@/lib/user-role";
 
   export const Route = createFileRoute("/_authenticated/admin/students")({
     component: AdminStudents,
@@ -65,7 +66,7 @@
     const [loading, setLoading] = useState(false);
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
-    const [role, setRole] = useState("student");
+    const [role, setRole] = useState<UserRole>("student");
     const [tutors, setTutors] = useState<Tutor[]>([]);
     const [tutorId, setTutorId] = useState("");
     useEffect(() => {
@@ -181,7 +182,7 @@
             </div>
             <div>
               <Label>Role</Label>
-              <Select value={role} onValueChange={setRole}>
+              <Select value={role} onValueChange={(v) => setRole(v as UserRole)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="student">Student</SelectItem>
@@ -242,7 +243,7 @@
       (student.displayName || student.name || "") as string
     );
     const [email] = useState((student.email || "") as string);
-    const [role, setRole] = useState((student.role || "student") as string);
+    const [role, setRole] = useState((student.role || "student") as UserRole);
     const [saving, setSaving] = useState(false);
     const [confirmArchive, setConfirmArchive] = useState(false);
     const [tutors, setTutors] = useState<Tutor[]>([]);
@@ -383,7 +384,7 @@
                 </div>
                 <div>
                   <Label>Role</Label>
-                  <Select value={role} onValueChange={setRole}>
+                  <Select value={role} onValueChange={(v) => setRole(v as UserRole)}>
                     <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="student">Student</SelectItem>

@@ -22,6 +22,7 @@ import {
   deleteObject,
 } from "firebase/storage";
 import { db, storage, getCurrentUser } from "@/integrations/firebase/client";
+import type { UserRole } from "@/lib/user-role";
 
 
 export interface Tutor {
@@ -930,7 +931,7 @@ export interface UserRecord {
   email?: string;
   displayName?: string;
   name?: string;
-  role?: string;
+  role?: UserRole;
   avatar_url?: string;
   active?: boolean;
   discordId?: string | null;
@@ -942,7 +943,7 @@ export const DataStore = {
     id: string;
     email?: string;
     displayName?: string;
-    role?: string;
+    role?: UserRole;
   }) => {
     const existing = await DataStore.getUserRecord(user.id);
 
@@ -2164,7 +2165,7 @@ export const DataStore = {
     }
   },
 
-  assignUserRole: async (userId: string, role: string): Promise<void> => {
+  assignUserRole: async (userId: string, role: UserRole): Promise<void> => {
     try {
       const user = await getCurrentUser();
       await upsertDocument(COLLECTIONS.USERS, userId, {
@@ -2180,12 +2181,12 @@ export const DataStore = {
     } catch { }
 
     const mockRoles = getLocal<Record<string, string[]>>("user_roles_map", {});
-    if (!mockRoles[userId]) mockRoles[userId] = ["student"];
+    if (!mockRoles[userId]) mockRoles[userId] = ["guest"];
     if (!mockRoles[userId].includes(role)) mockRoles[userId].push(role);
     setLocal("user_roles_map", mockRoles);
   },
 
-  removeUserRole: async (userId: string, role: string): Promise<void> => {
+  removeUserRole: async (userId: string, role: UserRole): Promise<void> => {
     try {
       const doc = await getDocument(COLLECTIONS.USERS, userId);
       if (doc?.role === role) {
@@ -3199,9 +3200,9 @@ export const DataStore = {
   },
 
   removeFromTeam: async (_teamId: string, membershipId: string): Promise<void> => {
-    // membershipId == userId in the Firebase model. Reset to "student".
+    // membershipId == userId in the Firebase model. Reset to guest (default role).
     try {
-      await upsertDocument(COLLECTIONS.USERS, membershipId, { role: "student" });
+      await upsertDocument(COLLECTIONS.USERS, membershipId, { role: "guest" });
     } catch (e: any) {
       console.warn("removeFromTeam:", e);
     }
@@ -3275,7 +3276,7 @@ export const DataStore = {
           name,
           displayName: user.displayName || name,
           email: user.email || "",
-          role: user.role || "student",
+          role: (user.role as UserRole) || "guest",
           avatar_url: avatarFor(name),
         };
       });
@@ -3289,7 +3290,7 @@ export const DataStore = {
     id: string;
     name: string;
     email: string;
-    role?: string;
+    role?: UserRole;
     active?: boolean;
   }): Promise<void> => {
     await upsertDocument(COLLECTIONS.USERS, student.id, {

@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { firebase, getCurrentUser } from "@/integrations/firebase/client";
 import { DataStore } from "@/lib/data-store";
+import type { UserRole } from "@/lib/user-role";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,7 +35,7 @@ type ProfileUser = {
   id: string;
   name: string;
   email: string;
-  role: string;
+  role: UserRole;
   active: boolean;
 };
 
