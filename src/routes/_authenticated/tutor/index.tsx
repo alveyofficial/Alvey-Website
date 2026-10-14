@@ -43,7 +43,7 @@ function TutorDashboard() {
           DataStore.getStudentsForTutor(uid),
           DataStore.getLessonsForTutor(uid),
           DataStore.getNotifications(uid),
-          DataStore.getTutorById(uid),
+          DataStore.getTutorByUserId(uid),
           DataStore.getHomeworkForTutor(uid),
           DataStore.getPaymentsForTutor(uid),
           DataStore.getConversationsForTutor(uid),

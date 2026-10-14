@@ -461,7 +461,11 @@ function parseQueryConstraints(queries: string[]): QueryConstraint[] {
         const field = equalMatch[1];
         let val: any;
         try { val = JSON.parse(equalMatch[2]); } catch { val = equalMatch[2]; }
-        constraints.push(where(field, "==", val));
+        if (Array.isArray(val)) {
+          constraints.push(where(field, "in", val));
+        } else {
+          constraints.push(where(field, "==", val));
+        }
         continue;
       }
       // orderDesc("field")
@@ -938,6 +942,65 @@ export interface UserRecord {
   [key: string]: unknown;
 }
 
+// ---------------------------------------------------------------------------
+// Identity-mapping helpers — resolve auth-UID mismatches between Firestore
+// document IDs and the Firebase Auth UID stored in the authUserId field.
+// ---------------------------------------------------------------------------
+
+async function getCurrentAuthIdentity(): Promise<{ id: string; email: string } | null> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return null;
+    return { id: user.id, email: user.email ?? "" };
+  } catch { return null; }
+}
+
+async function resolveTutorIdCandidates(tutorId: string): Promise<string[]> {
+  const ids = new Set<string>([tutorId]);
+  try {
+    const directDoc = await getDocument(COLLECTIONS.TUTOR_PROFILES, tutorId);
+    const linkedAuthUserId = safeString(directDoc?.authUserId);
+    if (linkedAuthUserId) ids.add(linkedAuthUserId);
+  } catch {}
+  const identity = await getCurrentAuthIdentity();
+  if (!identity || identity.id !== tutorId) return [...ids];
+  const [byAuthUserId, byEmail] = await Promise.all([
+    listDocuments(COLLECTIONS.TUTOR_PROFILES, [Query.equal("authUserId", identity.id), Query.limit(20)]),
+    identity.email
+      ? listDocuments(COLLECTIONS.TUTOR_PROFILES, [Query.equal("contactEmail", identity.email), Query.limit(20)])
+      : Promise.resolve([]),
+  ]);
+  for (const doc of [...byAuthUserId, ...byEmail]) {
+    ids.add(safeString(doc.id || doc.$id));
+    const linked = safeString(doc.authUserId);
+    if (linked) ids.add(linked);
+  }
+  return [...ids];
+}
+
+async function resolveStudentIdCandidates(studentId: string): Promise<string[]> {
+  const ids = new Set<string>([studentId]);
+  try {
+    const directDoc = await getDocument(COLLECTIONS.USERS, studentId);
+    const linkedAuthUserId = safeString(directDoc?.authUserId);
+    if (linkedAuthUserId) ids.add(linkedAuthUserId);
+  } catch {}
+  const identity = await getCurrentAuthIdentity();
+  if (!identity || identity.id !== studentId) return [...ids];
+  const [byAuthUserId, byEmail] = await Promise.all([
+    listDocuments(COLLECTIONS.USERS, [Query.equal("authUserId", identity.id), Query.limit(20)]),
+    identity.email
+      ? listDocuments(COLLECTIONS.USERS, [Query.equal("email", identity.email), Query.limit(20)])
+      : Promise.resolve([]),
+  ]);
+  for (const doc of [...byAuthUserId, ...byEmail]) {
+    ids.add(safeString(doc.id || doc.$id));
+    const linked = safeString(doc.authUserId);
+    if (linked) ids.add(linked);
+  }
+  return [...ids];
+}
+
 export const DataStore = {
   saveUserRecord: async (user: {
     id: string;
@@ -1021,12 +1084,30 @@ export const DataStore = {
     );
   },
 
+  /**
+   * Look up a tutor by their Firebase Auth UID (stored in authUserId field).
+   * Falls back to getTutorById for backward compatibility when the document
+   * ID matches the auth UID.
+   */
+  getTutorByUserId: async (uid: string): Promise<Tutor | null> => {
+    try {
+      const docs = await listDocuments(COLLECTIONS.TUTOR_PROFILES, [
+        Query.equal("authUserId", uid),
+        Query.equal("active", true),
+        Query.limit(1),
+      ]);
+      if (docs.length > 0) return mapTutorDoc(docs[0]);
+    } catch { /* fall through */ }
+    return DataStore.getTutorById(uid);
+  },
+
 
 
   saveTutor: async (tutor: Tutor): Promise<void> => {
     const payload = {
       slug: nameToSlug(tutor.name) || tutor.id,
       displayName: tutor.name,
+      authUserId: tutor.id,
       phone: tutor.phone ?? null,
       discordUsername: tutor.discordUsername ?? null,
       dateOfBirth: tutor.dateOfBirth ?? null,
@@ -2214,8 +2295,9 @@ export const DataStore = {
     const tutors = await DataStore.getTutors();
 
     try {
+      const candidates = await resolveStudentIdCandidates(studentId);
       const docs = await listDocuments(COLLECTIONS.ASSIGNMENTS, [
-        Query.equal("studentId", studentId),
+        Query.equal("studentId", candidates.length > 1 ? candidates : candidates[0]),
         Query.equal("isActive", true),
       ]);
 
@@ -2300,10 +2382,11 @@ export const DataStore = {
     studentId: string
   ): Promise<any | null> => {
     try {
+      const candidates = await resolveStudentIdCandidates(studentId);
       const docs = await listDocuments(
         COLLECTIONS.ASSIGNMENTS,
         [
-          Query.equal("studentId", studentId),
+          Query.equal("studentId", candidates.length > 1 ? candidates : candidates[0]),
           Query.equal("isActive", true),
         ]
       );
@@ -2503,12 +2586,28 @@ export const DataStore = {
 
   moderatePlatformReview: async (
     id: string,
-    status: "pending" | "approved" | "rejected",
+    status: "pending" | "approved",
   ): Promise<void> => {
     await upsertDocument(COLLECTIONS.PLATFORM_REVIEWS, id, {
       isPublic: status === "approved",
-      isDeleted: status === "rejected",
+      isDeleted: false,
     });
+  },
+
+  deletePlatformReview: async (id: string): Promise<void> => {
+    await upsertDocument(COLLECTIONS.PLATFORM_REVIEWS, id, { isDeleted: true, isPublic: false });
+  },
+
+  restorePlatformReview: async (id: string): Promise<void> => {
+    await upsertDocument(COLLECTIONS.PLATFORM_REVIEWS, id, { isDeleted: false });
+  },
+
+  permanentlyDeletePlatformReview: async (id: string): Promise<void> => {
+    await deleteDocument(COLLECTIONS.PLATFORM_REVIEWS, id);
+  },
+
+  permanentlyDeleteReview: async (id: string): Promise<void> => {
+    await deleteDocument(COLLECTIONS.REVIEWS, id);
   },
 
   updatePlatformReview: async (
@@ -2926,8 +3025,13 @@ export const DataStore = {
   // --- NOTIFICATIONS ---
   getNotifications: async (userId: string): Promise<any[]> => {
     try {
+      const [tutorCandidates, studentCandidates] = await Promise.all([
+        resolveTutorIdCandidates(userId),
+        resolveStudentIdCandidates(userId),
+      ]);
+      const allCandidates = [...new Set([...tutorCandidates, ...studentCandidates])];
       const docs = await listDocuments(COLLECTIONS.NOTIFICATIONS, [
-        Query.equal("userId", userId),
+        Query.equal("userId", allCandidates.length > 1 ? allCandidates : allCandidates[0]),
         Query.equal("isDeleted", false),
         Query.orderDesc("createdAt"),
         Query.limit(50),
@@ -2939,8 +3043,13 @@ export const DataStore = {
 
   getUnreadNotificationCount: async (userId: string): Promise<number> => {
     try {
+      const [tutorCandidates, studentCandidates] = await Promise.all([
+        resolveTutorIdCandidates(userId),
+        resolveStudentIdCandidates(userId),
+      ]);
+      const allCandidates = [...new Set([...tutorCandidates, ...studentCandidates])];
       const docs = await listDocuments(COLLECTIONS.NOTIFICATIONS, [
-        Query.equal("userId", userId),
+        Query.equal("userId", allCandidates.length > 1 ? allCandidates : allCandidates[0]),
         Query.equal("isRead", false),
         Query.equal("isDeleted", false),
       ]);
@@ -3232,8 +3341,9 @@ export const DataStore = {
   getStudentAssignmentsFromDB: async (studentId: string): Promise<any[]> => {
     try {
       const tutors = await DataStore.getTutors();
+      const candidates = await resolveStudentIdCandidates(studentId);
       const docs = await listDocuments(COLLECTIONS.ASSIGNMENTS, [
-        Query.equal("studentId", studentId),
+        Query.equal("studentId", candidates.length > 1 ? candidates : candidates[0]),
         Query.equal("isActive", true),
       ]);
       if (docs.length > 0) {
@@ -3365,8 +3475,9 @@ export const DataStore = {
   // --- AVAILABILITY ---
   getTutorAvailability: async (tutorId: string): Promise<any[]> => {
     try {
+      const candidates = await resolveTutorIdCandidates(tutorId);
       return await listDocuments(COLLECTIONS.SCHEDULES, [
-        Query.equal("tutorId", tutorId),
+        Query.equal("tutorId", candidates.length > 1 ? candidates : candidates[0]),
         Query.equal("isActive", true),
         Query.orderAsc("dayOfWeek"),
       ]);
@@ -3482,8 +3593,9 @@ export const DataStore = {
   // ─────────────────────────────────────────────────────────────────────────────
   getStudentsForTutor: async (tutorId: string): Promise<any[]> => {
     try {
+      const candidates = await resolveTutorIdCandidates(tutorId);
       const docs = await listDocuments(COLLECTIONS.ASSIGNMENTS, [
-        Query.equal("tutorId", tutorId),
+        Query.equal("tutorId", candidates.length > 1 ? candidates : candidates[0]),
         Query.equal("isActive", true),
       ]);
       if (docs.length === 0) return [];
@@ -3520,15 +3632,16 @@ export const DataStore = {
   // ─────────────────────────────────────────────────────────────────────────────
   getLessonsForTutor: async (tutorId: string): Promise<any[]> => {
     try {
+      const candidates = await resolveTutorIdCandidates(tutorId);
       const [docs, assignments] = await Promise.all([
         listDocuments(COLLECTIONS.LESSONS, [
-          Query.equal("tutorId", tutorId),
+          Query.equal("tutorId", candidates.length > 1 ? candidates : candidates[0]),
           Query.equal("isDeleted", false),
           Query.orderAsc("startsAt"),
           Query.limit(200),
         ]),
         listDocuments(COLLECTIONS.ASSIGNMENTS, [
-          Query.equal("tutorId", tutorId),
+          Query.equal("tutorId", candidates.length > 1 ? candidates : candidates[0]),
           Query.equal("isActive", true),
         ]),
       ]);
@@ -3558,8 +3671,9 @@ export const DataStore = {
 
   getLessonsForStudent: async (studentId: string): Promise<any[]> => {
     try {
+      const candidates = await resolveStudentIdCandidates(studentId);
       const docs = await listDocuments(COLLECTIONS.LESSONS, [
-        Query.equal("studentId", studentId),
+        Query.equal("studentId", candidates.length > 1 ? candidates : candidates[0]),
         Query.equal("isDeleted", false),
         Query.orderAsc("startsAt"),
         Query.limit(200),
@@ -3587,8 +3701,9 @@ export const DataStore = {
   // ─────────────────────────────────────────────────────────────────────────────
   getHomeworkForTutor: async (tutorId: string): Promise<any[]> => {
     try {
+      const candidates = await resolveTutorIdCandidates(tutorId);
       const docs = await listDocuments("homework", [
-        Query.equal("tutorId", tutorId),
+        Query.equal("tutorId", candidates.length > 1 ? candidates : candidates[0]),
         Query.equal("isDeleted", false),
         Query.orderDesc("createdAt"),
         Query.limit(100),
@@ -3610,8 +3725,9 @@ export const DataStore = {
 
   getHomeworkForStudent: async (studentId: string): Promise<any[]> => {
     try {
+      const candidates = await resolveStudentIdCandidates(studentId);
       const docs = await listDocuments("homework", [
-        Query.equal("studentId", studentId),
+        Query.equal("studentId", candidates.length > 1 ? candidates : candidates[0]),
         Query.equal("isDeleted", false),
         Query.orderDesc("createdAt"),
         Query.limit(100),
@@ -3719,8 +3835,9 @@ export const DataStore = {
 
   getConversationsForTutor: async (tutorId: string): Promise<any[]> => {
     try {
+      const candidates = await resolveTutorIdCandidates(tutorId);
       const docs = await listDocuments("chat_conversations", [
-        Query.equal("tutorId", tutorId),
+        Query.equal("tutorId", candidates.length > 1 ? candidates : candidates[0]),
         Query.equal("isDeleted", false),
         Query.orderDesc("lastMessageAt"),
       ]);
@@ -3740,8 +3857,9 @@ export const DataStore = {
 
   getConversationsForStudent: async (studentId: string): Promise<any[]> => {
     try {
+      const candidates = await resolveStudentIdCandidates(studentId);
       const docs = await listDocuments("chat_conversations", [
-        Query.equal("studentId", studentId),
+        Query.equal("studentId", candidates.length > 1 ? candidates : candidates[0]),
         Query.equal("isDeleted", false),
         Query.orderDesc("lastMessageAt"),
       ]);
@@ -3902,8 +4020,9 @@ export const DataStore = {
   // ─────────────────────────────────────────────────────────────────────────────
   getRecordingsForTutor: async (tutorId: string): Promise<any[]> => {
     try {
+      const candidates = await resolveTutorIdCandidates(tutorId);
       const docs = await listDocuments("recordings", [
-        Query.equal("tutorId", tutorId),
+        Query.equal("tutorId", candidates.length > 1 ? candidates : candidates[0]),
         Query.equal("isDeleted", false),
         Query.orderDesc("recordedAt"),
         Query.limit(50),
@@ -3980,8 +4099,9 @@ export const DataStore = {
   // ─────────────────────────────────────────────────────────────────────────────
   getPaymentsForTutor: async (tutorId: string): Promise<any[]> => {
     try {
+      const candidates = await resolveTutorIdCandidates(tutorId);
       const docs = await listDocuments("payments", [
-        Query.equal("tutorId", tutorId),
+        Query.equal("tutorId", candidates.length > 1 ? candidates : candidates[0]),
         Query.equal("isDeleted", false),
         Query.orderDesc("createdAt"),
         Query.limit(100),
@@ -4065,8 +4185,9 @@ export const DataStore = {
   // ─────────────────────────────────────────────────────────────────────────────
   getScheduleExceptions: async (tutorId: string): Promise<any[]> => {
     try {
+      const candidates = await resolveTutorIdCandidates(tutorId);
       const docs = await listDocuments("schedule_exceptions", [
-        Query.equal("tutorId", tutorId),
+        Query.equal("tutorId", candidates.length > 1 ? candidates : candidates[0]),
         Query.orderAsc("date"),
       ]);
       return docs.map((d: any) => ({ ...d, id: d.$id }));

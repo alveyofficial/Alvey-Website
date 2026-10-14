@@ -34,6 +34,7 @@ import { Route as AuthenticatedTutorIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedRecruitmentIndexRouteImport } from './routes/_authenticated/recruitment/index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as ApiPublicStatsRouteImport } from './routes/api/public/stats'
+import { Route as ApiPublicNewsletterSubscribeRouteImport } from './routes/api/public/newsletter/subscribe'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiAdminSetAdminClaimRouteImport } from './routes/api/admin/set-admin-claim'
 import { Route as ApiAdminSendBroadcastRouteImport } from './routes/api/admin/send-broadcast'
@@ -208,6 +209,11 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
 const ApiPublicStatsRoute = ApiPublicStatsRouteImport.update({
   id: '/api/public/stats',
   path: '/api/public/stats',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicNewsletterSubscribeRoute = ApiPublicNewsletterSubscribeRouteImport.update({
+  id: '/api/public/newsletter/subscribe',
+  path: '/api/public/newsletter/subscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
@@ -578,6 +584,7 @@ export interface FileRoutesByFullPath {
   '/api/admin/set-admin-claim': typeof ApiAdminSetAdminClaimRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/stats': typeof ApiPublicStatsRoute
+  '/api/public/newsletter/subscribe': typeof ApiPublicNewsletterSubscribeRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/recruitment/': typeof AuthenticatedRecruitmentIndexRoute
   '/tutor/': typeof AuthenticatedTutorIndexRoute
@@ -652,6 +659,7 @@ export interface FileRoutesByTo {
   '/api/admin/set-admin-claim': typeof ApiAdminSetAdminClaimRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/stats': typeof ApiPublicStatsRoute
+  '/api/public/newsletter/subscribe': typeof ApiPublicNewsletterSubscribeRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/recruitment': typeof AuthenticatedRecruitmentIndexRoute
   '/tutor': typeof AuthenticatedTutorIndexRoute
@@ -730,6 +738,7 @@ export interface FileRoutesById {
   '/api/admin/set-admin-claim': typeof ApiAdminSetAdminClaimRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/stats': typeof ApiPublicStatsRoute
+  '/api/public/newsletter/subscribe': typeof ApiPublicNewsletterSubscribeRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/recruitment/': typeof AuthenticatedRecruitmentIndexRoute
   '/_authenticated/tutor/': typeof AuthenticatedTutorIndexRoute
@@ -807,6 +816,7 @@ export interface FileRouteTypes {
     | '/api/admin/set-admin-claim'
     | '/api/public/health'
     | '/api/public/stats'
+    | '/api/public/newsletter/subscribe'
     | '/admin/'
     | '/recruitment/'
     | '/tutor/'
@@ -881,6 +891,7 @@ export interface FileRouteTypes {
     | '/api/admin/set-admin-claim'
     | '/api/public/health'
     | '/api/public/stats'
+    | '/api/public/newsletter/subscribe'
     | '/admin'
     | '/recruitment'
     | '/tutor'
@@ -958,6 +969,7 @@ export interface FileRouteTypes {
     | '/api/admin/set-admin-claim'
     | '/api/public/health'
     | '/api/public/stats'
+    | '/api/public/newsletter/subscribe'
     | '/_authenticated/admin/'
     | '/_authenticated/recruitment/'
     | '/_authenticated/tutor/'
@@ -978,6 +990,7 @@ export interface RootRouteChildren {
   ApiAdminSetAdminClaimRoute: typeof ApiAdminSetAdminClaimRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicStatsRoute: typeof ApiPublicStatsRoute
+  ApiPublicNewsletterSubscribeRoute: typeof ApiPublicNewsletterSubscribeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1155,6 +1168,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/stats'
       fullPath: '/api/public/stats'
       preLoaderRoute: typeof ApiPublicStatsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/newsletter/subscribe': {
+      id: '/api/public/newsletter/subscribe'
+      path: '/api/public/newsletter/subscribe'
+      fullPath: '/api/public/newsletter/subscribe'
+      preLoaderRoute: typeof ApiPublicNewsletterSubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/health': {
@@ -1687,6 +1707,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAdminSetAdminClaimRoute: ApiAdminSetAdminClaimRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicStatsRoute: ApiPublicStatsRoute,
+  ApiPublicNewsletterSubscribeRoute: ApiPublicNewsletterSubscribeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

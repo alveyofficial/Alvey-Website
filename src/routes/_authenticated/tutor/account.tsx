@@ -51,7 +51,7 @@ function TutorAccount() {
       const [authUser, userRecord, tutorProfile] = await Promise.all([
         Promise.resolve(userData.user),
         DataStore.getUserRecord(uid),
-        DataStore.getTutorById(uid),
+        DataStore.getTutorByUserId(uid),
       ]);
 
       setProfile({
@@ -76,7 +76,7 @@ function TutorAccount() {
       const { fileId, url } = await DataStore.uploadProfilePicture(file, userId);
       setAvatarUrl(url);
       // Save avatar URL to tutor profile
-      const existing = await DataStore.getTutorById(userId);
+      const existing = await DataStore.getTutorByUserId(userId);
       if (existing) {
         await DataStore.saveTutor({ ...existing, avatar_url: url });
       }
@@ -101,7 +101,7 @@ function TutorAccount() {
         displayName: profile.fullName,
       });
       // Update tutor profile fields
-      const existing = await DataStore.getTutorById(userId);
+      const existing = await DataStore.getTutorByUserId(userId);
       if (existing) {
         await DataStore.saveTutor({
           ...existing,

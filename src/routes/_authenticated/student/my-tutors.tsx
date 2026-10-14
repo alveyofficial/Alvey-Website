@@ -39,7 +39,7 @@ function StudentMyTutors() {
     try {
       await DataStore.getOrCreateConversation(studentId, tutorId);
       toast.success("Conversation opened.");
-      navigate({ to: "/student/chat" });
+      navigate({ to: "/student/chat", search: { tutorId } });
     } catch {
       toast.error("Failed to start conversation.");
     } finally {

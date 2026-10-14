@@ -77,8 +77,10 @@ function Apply() {
     setLoading(true);
     try {
       const languages = languagesSpoken.split(",").map(l => l.trim()).filter(Boolean);
+      const currentUser = await getCurrentUser();
 
       const payload = {
+        applicantUserId: currentUser?.id ?? null,
         email,
         fullName,
         dateOfBirth,

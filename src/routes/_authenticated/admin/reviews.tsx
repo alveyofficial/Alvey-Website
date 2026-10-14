@@ -83,7 +83,7 @@ function AdminReviews() {
 
   const handlePlatformModerate = async (
     id: string,
-    status: "pending" | "approved" | "rejected",
+    status: "pending" | "approved",
   ) => {
     try {
       await DataStore.moderatePlatformReview(id, status);
@@ -212,6 +212,15 @@ function AdminReviews() {
               key={String(review.id)}
               review={review}
               onModerate={handleTutorModerate}
+              onPermanentlyDelete={async (id) => {
+                try {
+                  await DataStore.permanentlyDeleteReview(id);
+                  toast.success("Review permanently deleted");
+                  await loadReviews();
+                } catch {
+                  toast.error("Failed to delete review");
+                }
+              }}
             />
           ))}
         </div>
@@ -386,7 +395,7 @@ function PlatformReviewCard({
   review: PlatformReview;
   onModerate: (
     id: string,
-    status: "pending" | "approved" | "rejected",
+    status: "pending" | "approved",
   ) => Promise<void>;
   onUpdated: () => Promise<void>;
 }) {
@@ -578,7 +587,11 @@ function PlatformReviewCard({
                   variant="outline"
                   size="sm"
                   className="text-red-600 gap-1.5"
-                  onClick={() => onModerate(id, "rejected")}
+                  onClick={async () => {
+                    await DataStore.deletePlatformReview(id);
+                    toast.success("Review rejected");
+                    await onUpdated();
+                  }}
                 >
                   <X className="h-4 w-4" />
                   Reject
@@ -591,7 +604,11 @@ function PlatformReviewCard({
                 variant="outline"
                 size="sm"
                 className="text-red-600 gap-1.5"
-                onClick={() => onModerate(id, "rejected")}
+                onClick={async () => {
+                  await DataStore.deletePlatformReview(id);
+                  toast.success("Review unpublished");
+                  await onUpdated();
+                }}
               >
                 <X className="h-4 w-4" />
                 Unpublish
@@ -599,14 +616,29 @@ function PlatformReviewCard({
             )}
 
             {status === "rejected" && (
-              <Button
-                size="sm"
-                className="bg-emerald-600 hover:bg-emerald-700 gap-1.5"
-                onClick={() => onModerate(id, "approved")}
-              >
-                <RotateCcw className="h-4 w-4" />
-                Restore
-              </Button>
+              <>
+                <Button
+                  size="sm"
+                  className="bg-emerald-600 hover:bg-emerald-700 gap-1.5"
+                  onClick={() => onModerate(id, "approved")}
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Restore
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-red-600 gap-1.5"
+                  onClick={async () => {
+                    await DataStore.permanentlyDeletePlatformReview(id);
+                    toast.success("Review permanently deleted");
+                    await onUpdated();
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete Permanently
+                </Button>
+              </>
             )}
 
             <Button
@@ -623,7 +655,11 @@ function PlatformReviewCard({
               variant="ghost"
               size="sm"
               className="gap-1.5 text-muted-foreground"
-              onClick={() => onModerate(id, "rejected")}
+              onClick={async () => {
+                await DataStore.deletePlatformReview(id);
+                toast.success("Review soft-deleted");
+                await onUpdated();
+              }}
             >
               <Trash2 className="h-4 w-4" />
               Delete
@@ -643,12 +679,14 @@ function PlatformReviewCard({
 function TutorReviewCard({
   review,
   onModerate,
+  onPermanentlyDelete,
 }: {
   review: Review;
   onModerate: (
     id: string,
     status: "approved" | "rejected",
   ) => Promise<void>;
+  onPermanentlyDelete: (id: string) => Promise<void>;
 }) {
   const status = String(review.status);
 
@@ -743,6 +781,18 @@ function TutorReviewCard({
             >
               <Check className="h-4 w-4" />
               Restore
+            </Button>
+          )}
+
+          {status === "rejected" && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-red-600 gap-1.5"
+              onClick={() => onPermanentlyDelete(String(review.id))}
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete Permanently
             </Button>
           )}
 
