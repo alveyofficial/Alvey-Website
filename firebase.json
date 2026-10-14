@@ -44,6 +44,18 @@
         "firebase-debug.*.log",
         ".prettierrc.json"
       ]
+    },
+    {
+      "source": "functions/discord-notifications",
+      "codebase": "discord-notifications",
+      "runtime": "nodejs22",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        ".prettierrc.json"
+      ]
     }
   ]
 }
