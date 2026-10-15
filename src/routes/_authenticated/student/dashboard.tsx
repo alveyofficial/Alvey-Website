@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Calendar, BookMarked, MessageSquare, Bell, Users, ChevronRight, Clock, Star } from "lucide-react";
+import { Calendar, BookMarked, MessageSquare, Bell, Users, ChevronRight, Clock, Star, CreditCard } from "lucide-react";
 import { PageHeader, StatCard, EmptyState, LoadingSpinner, StatusBadge, Avatar } from "@/components/portal-shared";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,7 @@ function StudentDashboard() {
   const [loading, setLoading] = useState(true);
   const [studentName, setStudentName] = useState("");
   const [stats, setStats] = useState({
-    tutors: 0, upcomingLessons: 0, pendingHomework: 0, unreadMessages: 0,
+    tutors: 0, upcomingLessons: 0, pendingHomework: 0, unreadMessages: 0, pendingBookings: 0,
   });
   const [upcomingLessons, setUpcomingLessons] = useState<any[]>([]);
   const [pendingHomework, setPendingHomework] = useState<any[]>([]);
@@ -46,7 +46,7 @@ function StudentDashboard() {
       const uid = userData.user?.id;
       if (!uid) { setLoading(false); return; }
 
-      const [record, assigns, lessons, homework, notifications, conversations] =
+      const [record, assigns, lessons, homework, notifications, conversations, studentBookings] =
         await Promise.all([
           DataStore.getUserRecord(uid),
           DataStore.getStudentAssignments(uid),
@@ -54,6 +54,7 @@ function StudentDashboard() {
           DataStore.getHomeworkForStudent(uid),
           DataStore.getNotifications(uid),
           DataStore.getConversationsForStudent(uid),
+          DataStore.getBookingsForStudent(uid),
         ]);
 
       setStudentName(record?.displayName || userData.user?.name || "");
@@ -65,12 +66,16 @@ function StudentDashboard() {
         .slice(0, 5);
       const pendingHw = homework.filter((h: any) => h.status === "assigned" || h.status === "late");
       const unreadMsgs = conversations.reduce((s: number, c: any) => s + (c.studentUnreadCount || 0), 0);
+      const pendingBookingsCount = studentBookings.filter(
+        (bk) => bk.status === "pending_tutor" || bk.status === "awaiting_payment"
+      ).length;
 
       setStats({
         tutors: assigns.length,
         upcomingLessons: upcoming.length,
         pendingHomework: pendingHw.length,
         unreadMessages: unreadMsgs,
+        pendingBookings: pendingBookingsCount,
       });
       setUpcomingLessons(upcoming);
       setPendingHomework(pendingHw.slice(0, 3));
@@ -126,12 +131,32 @@ function StudentDashboard() {
       />
 
       {/* Stats */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard icon={Users}        label="My Tutors"          value={stats.tutors}          color="text-blue-600 bg-blue-50 dark:bg-blue-950/30" />
         <StatCard icon={Calendar}     label="Upcoming Lessons"   value={stats.upcomingLessons}  color="text-indigo-600 bg-indigo-50 dark:bg-indigo-950/30" />
         <StatCard icon={BookMarked}   label="Pending Homework"   value={stats.pendingHomework}  color="text-amber-600 bg-amber-50 dark:bg-amber-950/30" />
         <StatCard icon={MessageSquare}label="Unread Messages"    value={stats.unreadMessages}   color="text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30" />
+        <StatCard icon={CreditCard}   label="Active Bookings"    value={stats.pendingBookings}  color="text-violet-600 bg-violet-50 dark:bg-violet-950/30" />
       </div>
+
+      {/* Active bookings banner */}
+      {stats.pendingBookings > 0 && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <CreditCard className="h-4 w-4 text-violet-600 shrink-0" />
+                <p className="text-sm font-medium">
+                  You have {stats.pendingBookings} active demo booking{stats.pendingBookings > 1 ? "s" : ""} — check your Bookings page for next steps.
+                </p>
+              </div>
+              <Button size="sm" variant="outline" asChild className="shrink-0">
+                <Link to="/student/bookings">View Bookings</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Review prompt — preserved from original */}
       {assignments.length > 0 && (

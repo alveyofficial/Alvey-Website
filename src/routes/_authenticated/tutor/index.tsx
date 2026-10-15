@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   Users, Calendar, Star, Bell, DollarSign, BookMarked,
-  MessageSquare, Video, ChevronRight, Clock,
+  MessageSquare, Video, ChevronRight, Clock, CreditCard,
 } from "lucide-react";
 import { PageHeader, StatCard, EmptyState, LoadingSpinner, StatusBadge, Avatar } from "@/components/portal-shared";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,6 +25,7 @@ function TutorDashboard() {
     unreadNotifications: 0,
     avgRating: 0,
     pendingEarnings: 0,
+    pendingBookings: 0,
   });
   const [upcomingLessons, setUpcomingLessons] = useState<any[]>([]);
   const [recentNotifications, setRecentNotifications] = useState<any[]>([]);
@@ -38,7 +39,7 @@ function TutorDashboard() {
       setTutorId(uid);
       setTutorName(userData.user?.name || "Tutor");
 
-      const [students, lessons, notifications, tutor, homework, payments, conversations] =
+      const [students, lessons, notifications, tutor, homework, payments, conversations, tutorBookings] =
         await Promise.all([
           DataStore.getStudentsForTutor(uid),
           DataStore.getLessonsForTutor(uid),
@@ -47,6 +48,7 @@ function TutorDashboard() {
           DataStore.getHomeworkForTutor(uid),
           DataStore.getPaymentsForTutor(uid),
           DataStore.getConversationsForTutor(uid),
+          DataStore.getBookingsForTutor(uid),
         ]);
 
       const now = new Date();
@@ -62,6 +64,7 @@ function TutorDashboard() {
         .filter((p: any) => p.status === "pending")
         .reduce((sum: number, p: any) => sum + (p.amountGbp || 0), 0);
       const submittedHw = homework.filter((h: any) => h.status === "submitted" || h.status === "late").length;
+      const pendingBookingsCount = tutorBookings.filter((bk) => bk.status === "pending_tutor").length;
 
       setStats({
         students: students.length,
@@ -70,6 +73,7 @@ function TutorDashboard() {
         unreadNotifications: unreadNotifs,
         avgRating: tutor?.rating_avg || 0,
         pendingEarnings: pendingPay,
+        pendingBookings: pendingBookingsCount,
       });
       setUpcomingLessons(upcoming);
       setRecentNotifications(notifications.slice(0, 5));
@@ -101,7 +105,27 @@ function TutorDashboard() {
         <StatCard icon={MessageSquare} label="Unread Messages"      value={stats.unreadMessages}  color="text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30" />
         <StatCard icon={Star}          label="Average Rating"       value={stats.avgRating ? stats.avgRating.toFixed(1) : "—"} color="text-purple-600 bg-purple-50 dark:bg-purple-950/30" />
         <StatCard icon={DollarSign}    label="Pending Earnings (£)" value={stats.pendingEarnings ? `£${stats.pendingEarnings.toFixed(2)}` : "£0.00"} color="text-rose-600 bg-rose-50 dark:bg-rose-950/30" />
+        <StatCard icon={CreditCard}    label="Demo Requests"        value={stats.pendingBookings} color="text-violet-600 bg-violet-50 dark:bg-violet-950/30" />
       </div>
+
+      {/* Pending bookings banner */}
+      {stats.pendingBookings > 0 && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <CreditCard className="h-4 w-4 text-violet-600 shrink-0" />
+                <p className="text-sm font-medium">
+                  You have {stats.pendingBookings} pending demo request{stats.pendingBookings > 1 ? "s" : ""}.
+                </p>
+              </div>
+              <Button size="sm" variant="outline" asChild className="shrink-0">
+                <Link to="/tutor/bookings">View Requests</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Upcoming Lessons */}

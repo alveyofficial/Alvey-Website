@@ -29,6 +29,7 @@ import {
   Newspaper,
   BookMarked,
   Video,
+  CreditCard,
 } from "lucide-react";
 
 type Role =
@@ -85,6 +86,7 @@ const studentNav: NavItem[] = [
   { name: "Dashboard",    href: "/student/dashboard",   icon: LayoutDashboard },
   { name: "My Tutors",    href: "/student/my-tutors",   icon: Users },
   { name: "Schedule",     href: "/student/schedule",    icon: Calendar },
+  { name: "Bookings",     href: "/student/bookings",    icon: CreditCard },
   { name: "Homework",     href: "/student/homework",    icon: BookMarked },
   { name: "Chat",         href: "/student/chat",        icon: MessageSquare },
   { name: "Recordings",   href: "/student/recordings",  icon: Video },
@@ -100,6 +102,7 @@ const tutorNav: NavItem[] = [
   { name: "Dashboard",    href: "/tutor/",              icon: LayoutDashboard },
   { name: "My Students",  href: "/tutor/students",      icon: Users },
   { name: "Schedule",     href: "/tutor/schedule",      icon: Calendar },
+  { name: "Bookings",     href: "/tutor/bookings",      icon: CreditCard },
   { name: "Homework",     href: "/tutor/homework",      icon: BookMarked },
   { name: "Chat",         href: "/tutor/chat",          icon: MessageSquare },
   { name: "Recordings",   href: "/tutor/recordings",    icon: Video },

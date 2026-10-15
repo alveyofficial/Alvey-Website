@@ -34,7 +34,6 @@ import { Route as AuthenticatedTutorIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedRecruitmentIndexRouteImport } from './routes/_authenticated/recruitment/index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as ApiPublicStatsRouteImport } from './routes/api/public/stats'
-import { Route as ApiPublicNewsletterSubscribeRouteImport } from './routes/api/public/newsletter/subscribe'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiAdminSetAdminClaimRouteImport } from './routes/api/admin/set-admin-claim'
 import { Route as ApiAdminSendBroadcastRouteImport } from './routes/api/admin/send-broadcast'
@@ -51,6 +50,7 @@ import { Route as AuthenticatedTutorNotificationsRouteImport } from './routes/_a
 import { Route as AuthenticatedTutorHomeworkRouteImport } from './routes/_authenticated/tutor/homework'
 import { Route as AuthenticatedTutorEarningsRouteImport } from './routes/_authenticated/tutor/earnings'
 import { Route as AuthenticatedTutorChatRouteImport } from './routes/_authenticated/tutor/chat'
+import { Route as AuthenticatedTutorBookingsRouteImport } from './routes/_authenticated/tutor/bookings'
 import { Route as AuthenticatedTutorAvailabilityRouteImport } from './routes/_authenticated/tutor/availability'
 import { Route as AuthenticatedTutorAdvertisementRouteImport } from './routes/_authenticated/tutor/advertisement'
 import { Route as AuthenticatedTutorAccountRouteImport } from './routes/_authenticated/tutor/account'
@@ -63,6 +63,7 @@ import { Route as AuthenticatedStudentLessonsRouteImport } from './routes/_authe
 import { Route as AuthenticatedStudentHomeworkRouteImport } from './routes/_authenticated/student/homework'
 import { Route as AuthenticatedStudentDashboardRouteImport } from './routes/_authenticated/student/dashboard'
 import { Route as AuthenticatedStudentChatRouteImport } from './routes/_authenticated/student/chat'
+import { Route as AuthenticatedStudentBookingsRouteImport } from './routes/_authenticated/student/bookings'
 import { Route as AuthenticatedRecruitmentNotificationsRouteImport } from './routes/_authenticated/recruitment/notifications'
 import { Route as AuthenticatedRecruitmentNotesRouteImport } from './routes/_authenticated/recruitment/notes'
 import { Route as AuthenticatedRecruitmentDocumentsRouteImport } from './routes/_authenticated/recruitment/documents'
@@ -81,11 +82,12 @@ import { Route as AuthenticatedAdminRecruitmentApplicationsRouteImport } from '.
 import { Route as AuthenticatedAdminPagesRouteImport } from './routes/_authenticated/admin/pages'
 import { Route as AuthenticatedAdminNotificationsRouteImport } from './routes/_authenticated/admin/notifications'
 import { Route as AuthenticatedAdminHomepageRouteImport } from './routes/_authenticated/admin/homepage'
+import { Route as AuthenticatedAdminChatsRouteImport } from './routes/_authenticated/admin/chats'
 import { Route as AuthenticatedAdminBlogsRouteImport } from './routes/_authenticated/admin/blogs'
 import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin/analytics'
-import { Route as AuthenticatedAdminChatsRouteImport } from './routes/_authenticated/admin/chats'
 import { Route as AuthenticatedAdminAiAssistantRouteImport } from './routes/_authenticated/admin/ai-assistant'
 import { Route as AuthenticatedAdminAdvertisementsRouteImport } from './routes/_authenticated/admin/advertisements'
+import { Route as ApiPublicNewsletterSubscribeRouteImport } from './routes/api/public/newsletter/subscribe'
 
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
   id: '/verify-email',
@@ -211,11 +213,6 @@ const ApiPublicStatsRoute = ApiPublicStatsRouteImport.update({
   path: '/api/public/stats',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicNewsletterSubscribeRoute = ApiPublicNewsletterSubscribeRouteImport.update({
-  id: '/api/public/newsletter/subscribe',
-  path: '/api/public/newsletter/subscribe',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
   id: '/api/public/health',
   path: '/api/public/health',
@@ -305,6 +302,12 @@ const AuthenticatedTutorChatRoute = AuthenticatedTutorChatRouteImport.update({
   path: '/tutor/chat',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedTutorBookingsRoute =
+  AuthenticatedTutorBookingsRouteImport.update({
+    id: '/tutor/bookings',
+    path: '/tutor/bookings',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedTutorAvailabilityRoute =
   AuthenticatedTutorAvailabilityRouteImport.update({
     id: '/tutor/availability',
@@ -375,6 +378,12 @@ const AuthenticatedStudentChatRoute =
   AuthenticatedStudentChatRouteImport.update({
     id: '/student/chat',
     path: '/student/chat',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedStudentBookingsRoute =
+  AuthenticatedStudentBookingsRouteImport.update({
+    id: '/student/bookings',
+    path: '/student/bookings',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedRecruitmentNotificationsRoute =
@@ -484,6 +493,11 @@ const AuthenticatedAdminHomepageRoute =
     path: '/admin/homepage',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminChatsRoute = AuthenticatedAdminChatsRouteImport.update({
+  id: '/admin/chats',
+  path: '/admin/chats',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedAdminBlogsRoute = AuthenticatedAdminBlogsRouteImport.update({
   id: '/admin/blogs',
   path: '/admin/blogs',
@@ -493,12 +507,6 @@ const AuthenticatedAdminAnalyticsRoute =
   AuthenticatedAdminAnalyticsRouteImport.update({
     id: '/admin/analytics',
     path: '/admin/analytics',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedAdminChatsRoute =
-  AuthenticatedAdminChatsRouteImport.update({
-    id: '/admin/chats',
-    path: '/admin/chats',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedAdminAiAssistantRoute =
@@ -512,6 +520,12 @@ const AuthenticatedAdminAdvertisementsRoute =
     id: '/admin/advertisements',
     path: '/admin/advertisements',
     getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const ApiPublicNewsletterSubscribeRoute =
+  ApiPublicNewsletterSubscribeRouteImport.update({
+    id: '/api/public/newsletter/subscribe',
+    path: '/api/public/newsletter/subscribe',
+    getParentRoute: () => rootRouteImport,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -537,6 +551,7 @@ export interface FileRoutesByFullPath {
   '/admin/ai-assistant': typeof AuthenticatedAdminAiAssistantRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/blogs': typeof AuthenticatedAdminBlogsRoute
+  '/admin/chats': typeof AuthenticatedAdminChatsRoute
   '/admin/homepage': typeof AuthenticatedAdminHomepageRoute
   '/admin/notifications': typeof AuthenticatedAdminNotificationsRoute
   '/admin/pages': typeof AuthenticatedAdminPagesRoute
@@ -555,6 +570,7 @@ export interface FileRoutesByFullPath {
   '/recruitment/documents': typeof AuthenticatedRecruitmentDocumentsRoute
   '/recruitment/notes': typeof AuthenticatedRecruitmentNotesRoute
   '/recruitment/notifications': typeof AuthenticatedRecruitmentNotificationsRoute
+  '/student/bookings': typeof AuthenticatedStudentBookingsRoute
   '/student/chat': typeof AuthenticatedStudentChatRoute
   '/student/dashboard': typeof AuthenticatedStudentDashboardRoute
   '/student/homework': typeof AuthenticatedStudentHomeworkRoute
@@ -567,6 +583,7 @@ export interface FileRoutesByFullPath {
   '/tutor/account': typeof AuthenticatedTutorAccountRoute
   '/tutor/advertisement': typeof AuthenticatedTutorAdvertisementRoute
   '/tutor/availability': typeof AuthenticatedTutorAvailabilityRoute
+  '/tutor/bookings': typeof AuthenticatedTutorBookingsRoute
   '/tutor/chat': typeof AuthenticatedTutorChatRoute
   '/tutor/earnings': typeof AuthenticatedTutorEarningsRoute
   '/tutor/homework': typeof AuthenticatedTutorHomeworkRoute
@@ -584,11 +601,11 @@ export interface FileRoutesByFullPath {
   '/api/admin/set-admin-claim': typeof ApiAdminSetAdminClaimRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/stats': typeof ApiPublicStatsRoute
-  '/api/public/newsletter/subscribe': typeof ApiPublicNewsletterSubscribeRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/recruitment/': typeof AuthenticatedRecruitmentIndexRoute
   '/tutor/': typeof AuthenticatedTutorIndexRoute
   '/blogs/': typeof PublicBlogsIndexRoute
+  '/api/public/newsletter/subscribe': typeof ApiPublicNewsletterSubscribeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof PublicIndexRoute
@@ -612,6 +629,7 @@ export interface FileRoutesByTo {
   '/admin/ai-assistant': typeof AuthenticatedAdminAiAssistantRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/blogs': typeof AuthenticatedAdminBlogsRoute
+  '/admin/chats': typeof AuthenticatedAdminChatsRoute
   '/admin/homepage': typeof AuthenticatedAdminHomepageRoute
   '/admin/notifications': typeof AuthenticatedAdminNotificationsRoute
   '/admin/pages': typeof AuthenticatedAdminPagesRoute
@@ -630,6 +648,7 @@ export interface FileRoutesByTo {
   '/recruitment/documents': typeof AuthenticatedRecruitmentDocumentsRoute
   '/recruitment/notes': typeof AuthenticatedRecruitmentNotesRoute
   '/recruitment/notifications': typeof AuthenticatedRecruitmentNotificationsRoute
+  '/student/bookings': typeof AuthenticatedStudentBookingsRoute
   '/student/chat': typeof AuthenticatedStudentChatRoute
   '/student/dashboard': typeof AuthenticatedStudentDashboardRoute
   '/student/homework': typeof AuthenticatedStudentHomeworkRoute
@@ -642,6 +661,7 @@ export interface FileRoutesByTo {
   '/tutor/account': typeof AuthenticatedTutorAccountRoute
   '/tutor/advertisement': typeof AuthenticatedTutorAdvertisementRoute
   '/tutor/availability': typeof AuthenticatedTutorAvailabilityRoute
+  '/tutor/bookings': typeof AuthenticatedTutorBookingsRoute
   '/tutor/chat': typeof AuthenticatedTutorChatRoute
   '/tutor/earnings': typeof AuthenticatedTutorEarningsRoute
   '/tutor/homework': typeof AuthenticatedTutorHomeworkRoute
@@ -659,11 +679,11 @@ export interface FileRoutesByTo {
   '/api/admin/set-admin-claim': typeof ApiAdminSetAdminClaimRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/stats': typeof ApiPublicStatsRoute
-  '/api/public/newsletter/subscribe': typeof ApiPublicNewsletterSubscribeRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/recruitment': typeof AuthenticatedRecruitmentIndexRoute
   '/tutor': typeof AuthenticatedTutorIndexRoute
   '/blogs': typeof PublicBlogsIndexRoute
+  '/api/public/newsletter/subscribe': typeof ApiPublicNewsletterSubscribeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -691,6 +711,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/ai-assistant': typeof AuthenticatedAdminAiAssistantRoute
   '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/_authenticated/admin/blogs': typeof AuthenticatedAdminBlogsRoute
+  '/_authenticated/admin/chats': typeof AuthenticatedAdminChatsRoute
   '/_authenticated/admin/homepage': typeof AuthenticatedAdminHomepageRoute
   '/_authenticated/admin/notifications': typeof AuthenticatedAdminNotificationsRoute
   '/_authenticated/admin/pages': typeof AuthenticatedAdminPagesRoute
@@ -709,6 +730,7 @@ export interface FileRoutesById {
   '/_authenticated/recruitment/documents': typeof AuthenticatedRecruitmentDocumentsRoute
   '/_authenticated/recruitment/notes': typeof AuthenticatedRecruitmentNotesRoute
   '/_authenticated/recruitment/notifications': typeof AuthenticatedRecruitmentNotificationsRoute
+  '/_authenticated/student/bookings': typeof AuthenticatedStudentBookingsRoute
   '/_authenticated/student/chat': typeof AuthenticatedStudentChatRoute
   '/_authenticated/student/dashboard': typeof AuthenticatedStudentDashboardRoute
   '/_authenticated/student/homework': typeof AuthenticatedStudentHomeworkRoute
@@ -721,6 +743,7 @@ export interface FileRoutesById {
   '/_authenticated/tutor/account': typeof AuthenticatedTutorAccountRoute
   '/_authenticated/tutor/advertisement': typeof AuthenticatedTutorAdvertisementRoute
   '/_authenticated/tutor/availability': typeof AuthenticatedTutorAvailabilityRoute
+  '/_authenticated/tutor/bookings': typeof AuthenticatedTutorBookingsRoute
   '/_authenticated/tutor/chat': typeof AuthenticatedTutorChatRoute
   '/_authenticated/tutor/earnings': typeof AuthenticatedTutorEarningsRoute
   '/_authenticated/tutor/homework': typeof AuthenticatedTutorHomeworkRoute
@@ -738,11 +761,11 @@ export interface FileRoutesById {
   '/api/admin/set-admin-claim': typeof ApiAdminSetAdminClaimRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/stats': typeof ApiPublicStatsRoute
-  '/api/public/newsletter/subscribe': typeof ApiPublicNewsletterSubscribeRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/recruitment/': typeof AuthenticatedRecruitmentIndexRoute
   '/_authenticated/tutor/': typeof AuthenticatedTutorIndexRoute
   '/_public/blogs/': typeof PublicBlogsIndexRoute
+  '/api/public/newsletter/subscribe': typeof ApiPublicNewsletterSubscribeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -769,6 +792,7 @@ export interface FileRouteTypes {
     | '/admin/ai-assistant'
     | '/admin/analytics'
     | '/admin/blogs'
+    | '/admin/chats'
     | '/admin/homepage'
     | '/admin/notifications'
     | '/admin/pages'
@@ -787,6 +811,7 @@ export interface FileRouteTypes {
     | '/recruitment/documents'
     | '/recruitment/notes'
     | '/recruitment/notifications'
+    | '/student/bookings'
     | '/student/chat'
     | '/student/dashboard'
     | '/student/homework'
@@ -799,6 +824,7 @@ export interface FileRouteTypes {
     | '/tutor/account'
     | '/tutor/advertisement'
     | '/tutor/availability'
+    | '/tutor/bookings'
     | '/tutor/chat'
     | '/tutor/earnings'
     | '/tutor/homework'
@@ -816,11 +842,11 @@ export interface FileRouteTypes {
     | '/api/admin/set-admin-claim'
     | '/api/public/health'
     | '/api/public/stats'
-    | '/api/public/newsletter/subscribe'
     | '/admin/'
     | '/recruitment/'
     | '/tutor/'
     | '/blogs/'
+    | '/api/public/newsletter/subscribe'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -844,6 +870,7 @@ export interface FileRouteTypes {
     | '/admin/ai-assistant'
     | '/admin/analytics'
     | '/admin/blogs'
+    | '/admin/chats'
     | '/admin/homepage'
     | '/admin/notifications'
     | '/admin/pages'
@@ -862,6 +889,7 @@ export interface FileRouteTypes {
     | '/recruitment/documents'
     | '/recruitment/notes'
     | '/recruitment/notifications'
+    | '/student/bookings'
     | '/student/chat'
     | '/student/dashboard'
     | '/student/homework'
@@ -874,6 +902,7 @@ export interface FileRouteTypes {
     | '/tutor/account'
     | '/tutor/advertisement'
     | '/tutor/availability'
+    | '/tutor/bookings'
     | '/tutor/chat'
     | '/tutor/earnings'
     | '/tutor/homework'
@@ -891,11 +920,11 @@ export interface FileRouteTypes {
     | '/api/admin/set-admin-claim'
     | '/api/public/health'
     | '/api/public/stats'
-    | '/api/public/newsletter/subscribe'
     | '/admin'
     | '/recruitment'
     | '/tutor'
     | '/blogs'
+    | '/api/public/newsletter/subscribe'
   id:
     | '__root__'
     | '/_authenticated'
@@ -922,6 +951,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/ai-assistant'
     | '/_authenticated/admin/analytics'
     | '/_authenticated/admin/blogs'
+    | '/_authenticated/admin/chats'
     | '/_authenticated/admin/homepage'
     | '/_authenticated/admin/notifications'
     | '/_authenticated/admin/pages'
@@ -940,6 +970,7 @@ export interface FileRouteTypes {
     | '/_authenticated/recruitment/documents'
     | '/_authenticated/recruitment/notes'
     | '/_authenticated/recruitment/notifications'
+    | '/_authenticated/student/bookings'
     | '/_authenticated/student/chat'
     | '/_authenticated/student/dashboard'
     | '/_authenticated/student/homework'
@@ -952,6 +983,7 @@ export interface FileRouteTypes {
     | '/_authenticated/tutor/account'
     | '/_authenticated/tutor/advertisement'
     | '/_authenticated/tutor/availability'
+    | '/_authenticated/tutor/bookings'
     | '/_authenticated/tutor/chat'
     | '/_authenticated/tutor/earnings'
     | '/_authenticated/tutor/homework'
@@ -969,11 +1001,11 @@ export interface FileRouteTypes {
     | '/api/admin/set-admin-claim'
     | '/api/public/health'
     | '/api/public/stats'
-    | '/api/public/newsletter/subscribe'
     | '/_authenticated/admin/'
     | '/_authenticated/recruitment/'
     | '/_authenticated/tutor/'
     | '/_public/blogs/'
+    | '/api/public/newsletter/subscribe'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1170,13 +1202,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicStatsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/newsletter/subscribe': {
-      id: '/api/public/newsletter/subscribe'
-      path: '/api/public/newsletter/subscribe'
-      fullPath: '/api/public/newsletter/subscribe'
-      preLoaderRoute: typeof ApiPublicNewsletterSubscribeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/health': {
       id: '/api/public/health'
       path: '/api/public/health'
@@ -1289,6 +1314,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTutorChatRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/tutor/bookings': {
+      id: '/_authenticated/tutor/bookings'
+      path: '/tutor/bookings'
+      fullPath: '/tutor/bookings'
+      preLoaderRoute: typeof AuthenticatedTutorBookingsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/tutor/availability': {
       id: '/_authenticated/tutor/availability'
       path: '/tutor/availability'
@@ -1371,6 +1403,13 @@ declare module '@tanstack/react-router' {
       path: '/student/chat'
       fullPath: '/student/chat'
       preLoaderRoute: typeof AuthenticatedStudentChatRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/student/bookings': {
+      id: '/_authenticated/student/bookings'
+      path: '/student/bookings'
+      fullPath: '/student/bookings'
+      preLoaderRoute: typeof AuthenticatedStudentBookingsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/recruitment/notifications': {
@@ -1499,6 +1538,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminHomepageRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin/chats': {
+      id: '/_authenticated/admin/chats'
+      path: '/admin/chats'
+      fullPath: '/admin/chats'
+      preLoaderRoute: typeof AuthenticatedAdminChatsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/admin/blogs': {
       id: '/_authenticated/admin/blogs'
       path: '/admin/blogs'
@@ -1527,6 +1573,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAdvertisementsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/api/public/newsletter/subscribe': {
+      id: '/api/public/newsletter/subscribe'
+      path: '/api/public/newsletter/subscribe'
+      fullPath: '/api/public/newsletter/subscribe'
+      preLoaderRoute: typeof ApiPublicNewsletterSubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -1538,6 +1591,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAdminAiAssistantRoute: typeof AuthenticatedAdminAiAssistantRoute
   AuthenticatedAdminAnalyticsRoute: typeof AuthenticatedAdminAnalyticsRoute
   AuthenticatedAdminBlogsRoute: typeof AuthenticatedAdminBlogsRoute
+  AuthenticatedAdminChatsRoute: typeof AuthenticatedAdminChatsRoute
   AuthenticatedAdminHomepageRoute: typeof AuthenticatedAdminHomepageRoute
   AuthenticatedAdminNotificationsRoute: typeof AuthenticatedAdminNotificationsRoute
   AuthenticatedAdminPagesRoute: typeof AuthenticatedAdminPagesRoute
@@ -1556,6 +1610,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedRecruitmentDocumentsRoute: typeof AuthenticatedRecruitmentDocumentsRoute
   AuthenticatedRecruitmentNotesRoute: typeof AuthenticatedRecruitmentNotesRoute
   AuthenticatedRecruitmentNotificationsRoute: typeof AuthenticatedRecruitmentNotificationsRoute
+  AuthenticatedStudentBookingsRoute: typeof AuthenticatedStudentBookingsRoute
   AuthenticatedStudentChatRoute: typeof AuthenticatedStudentChatRoute
   AuthenticatedStudentDashboardRoute: typeof AuthenticatedStudentDashboardRoute
   AuthenticatedStudentHomeworkRoute: typeof AuthenticatedStudentHomeworkRoute
@@ -1568,6 +1623,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedTutorAccountRoute: typeof AuthenticatedTutorAccountRoute
   AuthenticatedTutorAdvertisementRoute: typeof AuthenticatedTutorAdvertisementRoute
   AuthenticatedTutorAvailabilityRoute: typeof AuthenticatedTutorAvailabilityRoute
+  AuthenticatedTutorBookingsRoute: typeof AuthenticatedTutorBookingsRoute
   AuthenticatedTutorChatRoute: typeof AuthenticatedTutorChatRoute
   AuthenticatedTutorEarningsRoute: typeof AuthenticatedTutorEarningsRoute
   AuthenticatedTutorHomeworkRoute: typeof AuthenticatedTutorHomeworkRoute
@@ -1590,8 +1646,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminAdvertisementsRoute: AuthenticatedAdminAdvertisementsRoute,
   AuthenticatedAdminAiAssistantRoute: AuthenticatedAdminAiAssistantRoute,
   AuthenticatedAdminAnalyticsRoute: AuthenticatedAdminAnalyticsRoute,
-  AuthenticatedAdminChatsRoute: AuthenticatedAdminChatsRoute,
   AuthenticatedAdminBlogsRoute: AuthenticatedAdminBlogsRoute,
+  AuthenticatedAdminChatsRoute: AuthenticatedAdminChatsRoute,
   AuthenticatedAdminHomepageRoute: AuthenticatedAdminHomepageRoute,
   AuthenticatedAdminNotificationsRoute: AuthenticatedAdminNotificationsRoute,
   AuthenticatedAdminPagesRoute: AuthenticatedAdminPagesRoute,
@@ -1618,6 +1674,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedRecruitmentNotesRoute: AuthenticatedRecruitmentNotesRoute,
   AuthenticatedRecruitmentNotificationsRoute:
     AuthenticatedRecruitmentNotificationsRoute,
+  AuthenticatedStudentBookingsRoute: AuthenticatedStudentBookingsRoute,
   AuthenticatedStudentChatRoute: AuthenticatedStudentChatRoute,
   AuthenticatedStudentDashboardRoute: AuthenticatedStudentDashboardRoute,
   AuthenticatedStudentHomeworkRoute: AuthenticatedStudentHomeworkRoute,
@@ -1631,6 +1688,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedTutorAccountRoute: AuthenticatedTutorAccountRoute,
   AuthenticatedTutorAdvertisementRoute: AuthenticatedTutorAdvertisementRoute,
   AuthenticatedTutorAvailabilityRoute: AuthenticatedTutorAvailabilityRoute,
+  AuthenticatedTutorBookingsRoute: AuthenticatedTutorBookingsRoute,
   AuthenticatedTutorChatRoute: AuthenticatedTutorChatRoute,
   AuthenticatedTutorEarningsRoute: AuthenticatedTutorEarningsRoute,
   AuthenticatedTutorHomeworkRoute: AuthenticatedTutorHomeworkRoute,
