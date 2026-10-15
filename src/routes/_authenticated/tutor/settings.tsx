@@ -22,6 +22,7 @@ function TutorSettings() {
     lesson_reminders: true,
     announcements: true,
     marketing: false,
+    booking_emails: true,
   });
   const [saving, setSaving] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
@@ -42,6 +43,7 @@ function TutorSettings() {
             lesson_reminders: saved.lessonReminders ?? true,
             announcements: saved.announcements ?? true,
             marketing: saved.marketing ?? false,
+            booking_emails: saved.bookingEmails ?? true,
           });
         }
       }
@@ -96,6 +98,7 @@ function TutorSettings() {
               { key: "lesson_reminders",    label: "Lesson Reminders",       desc: "Reminders before scheduled lessons" },
               { key: "announcements",       label: "Platform Announcements", desc: "Important platform-wide updates" },
               { key: "marketing",           label: "Marketing Emails",       desc: "Tips, newsletters, and promotional content" },
+              { key: "booking_emails",      label: "Booking Emails",         desc: "Email notifications for new demo requests and booking confirmations" },
             ].map(({ key, label, desc }) => (
               <div key={key} className="flex items-center justify-between gap-4">
                 <div>

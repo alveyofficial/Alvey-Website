@@ -34,6 +34,7 @@ function StudentSettings() {
     lesson_reminders: true,
     announcements: true,
     marketing: false,
+    booking_emails: true,
   });
 
   const [passwords, setPasswords] = useState({
@@ -62,6 +63,7 @@ function StudentSettings() {
             lesson_reminders: prefs.lessonReminders ?? true,
             announcements: prefs.announcements ?? true,
             marketing: prefs.marketing ?? false,
+            booking_emails: prefs.bookingEmails ?? true,
           });
         }
       }
@@ -212,6 +214,7 @@ function StudentSettings() {
                 { key: "lesson_reminders",     label: "Lesson Reminders",       desc: "Reminders before your scheduled lessons" },
                 { key: "announcements",        label: "Platform Announcements", desc: "Important news from Alvey" },
                 { key: "marketing",            label: "Marketing Emails",       desc: "Tips, newsletters, and promotional content" },
+                { key: "booking_emails",       label: "Booking Emails",         desc: "Email notifications for demo booking requests and status updates" },
               ].map(({ key, label, desc }) => (
                 <div key={key} className="flex items-center justify-between gap-4">
                   <div>
