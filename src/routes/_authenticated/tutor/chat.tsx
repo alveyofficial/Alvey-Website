@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { DataStore } from "@/lib/data-store";
 import { firebase, db } from "@/integrations/firebase/client";
+import { maskSensitiveContent } from "@/lib/safety-mask";
 import {
   collection,
   query,
@@ -127,7 +128,7 @@ function TutorChat() {
   const send = async () => {
     if (!tutorId || !activeConv || (!text.trim() && !attachFile)) return;
     setSending(true);
-    const body = text.trim();
+    const body = maskSensitiveContent(text.trim());
     try {
       let fileIds: string[] = [];
       let fileNames: string[] = [];
@@ -247,7 +248,7 @@ function TutorChat() {
                   return (
                     <div key={m.id || m.$id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                       <div className={`max-w-[70%] rounded-2xl px-4 py-2.5 text-sm space-y-1 ${isMe ? "bg-blue-600 text-white rounded-br-sm" : "bg-muted text-foreground rounded-bl-sm"}`}>
-                        {m.body && <p className="leading-relaxed">{m.body}</p>}
+                        {m.body && <p className="leading-relaxed">{maskSensitiveContent(m.body)}</p>}
                         {Array.isArray(m.fileIds) && m.fileIds.length > 0 && m.fileIds.map((fid: string, i: number) => (
                           <a key={fid} href={fileUrls[fid] || "#"} target="_blank" rel="noopener noreferrer"
                             className={`flex items-center gap-1.5 text-xs underline ${isMe ? "text-blue-100" : "text-blue-600"}`}>

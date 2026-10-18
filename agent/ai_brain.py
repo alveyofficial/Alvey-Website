@@ -1,80 +1,130 @@
 """
 agent/ai_brain.py
 
-Builds the Pipecat pipeline that:
-  1. Receives audio from the transport (tutor + student voices)
-  2. Pipes it directly into Gemini Multimodal Live API (no separate STT step)
-  3. Accumulates a timestamped transcript with speaker attribution
-  4. Returns Gemini text responses as audio back into the room
-
-Gemini acts as a silent AI tutor that has full audio context of the session.
+Gemini Multimodal Live pipeline — tutor assistant + real-time safety monitor.
 """
 
 import asyncio
 import time
 from dataclasses import dataclass, field
-from typing import Callable
+from typing import Callable, Optional
 from loguru import logger
 
 from pipecat.pipeline.pipeline import Pipeline
-from pipecat.pipeline.runner import PipelineRunner
 from pipecat.pipeline.task import PipelineTask, PipelineParams
 from pipecat.services.google import GoogleLLMService
 from pipecat.processors.aggregators.llm_response import (
     LLMAssistantResponseAggregator,
     LLMUserResponseAggregator,
 )
-from pipecat.frames.frames import (
-    TranscriptionFrame,
-)
+from pipecat.frames.frames import TranscriptionFrame
 
+# ---------------------------------------------------------------------------
+# Gemini function-calling tool: flag_violation
+# ---------------------------------------------------------------------------
+
+FLAG_VIOLATION_TOOL = {
+    "function_declarations": [
+        {
+            "name": "flag_violation",
+            "description": (
+                "Call this immediately when you detect a trust or safety violation "
+                "in the audio. Do not wait for the sentence to finish."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "enum": ["payment_dodging", "contact_sharing", "abuse", "inappropriate"],
+                        "description": "Violation category.",
+                    },
+                    "severity": {
+                        "type": "string",
+                        "enum": ["low", "medium", "high"],
+                        "description": "Severity level.",
+                    },
+                    "quote": {
+                        "type": "string",
+                        "description": "Exact words spoken that triggered this (max 200 chars).",
+                    },
+                },
+                "required": ["type", "severity", "quote"],
+            },
+        }
+    ]
+}
+
+# ---------------------------------------------------------------------------
+# Transcript
+# ---------------------------------------------------------------------------
 
 @dataclass
 class TranscriptEntry:
-    speaker: str   # "tutor", "student", or "ai"
+    speaker: str
     text: str
     timestamp: float = field(default_factory=time.time)
 
     def to_dict(self) -> dict:
-        return {
-            "speaker": self.speaker,
-            "text": self.text,
-            "timestamp": self.timestamp,
-        }
+        return {"speaker": self.speaker, "text": self.text, "timestamp": self.timestamp}
 
+# ---------------------------------------------------------------------------
+# System prompt
+# ---------------------------------------------------------------------------
 
-SYSTEM_PROMPT = """You are Alvey AI, an expert AI tutor assistant embedded in a live 1-on-1 tutoring session.
+SYSTEM_PROMPT = """You are Alvey AI — an expert tutor assistant AND real-time trust & safety monitor embedded in a live 1-on-1 tutoring session.
 
-You are listening to the conversation between the tutor and student. You have full context of everything said.
+ROLE 1 — SILENT TUTOR ASSISTANT
+- Listen to the full conversation. Stay silent unless a student submits a question via the chat interface.
+- When asked a question, answer concisely using the session context.
+- Be encouraging and supportive.
+- Never interrupt the live lesson unprompted.
 
-Your roles:
-1. SILENT OBSERVER: You listen continuously but stay silent unless directly asked a question.
-2. IN-CLASS Q&A: When a student submits a question through the chat interface, you answer it with full context of what has been discussed.
-3. POST-CLASS: When the session ends, you will generate comprehensive structured notes.
+ROLE 2 — REAL-TIME TRUST & SAFETY MONITOR (ALWAYS ACTIVE)
+You MUST call flag_violation() immediately when you detect ANY of the following:
 
-Guidelines:
-- Keep answers concise and directly relevant to what's been discussed in the session.
-- Use the tutor's teaching style and level as context for your answers.
-- Never interrupt the live conversation unprompted.
-- Be encouraging and supportive in your tone.
+PAYMENT / CONTACT DODGING (type: "payment_dodging" or "contact_sharing"):
+- Arranging payments outside Alvey: "send me via STC Pay", "transfer to my account", "I'll give you a discount off-site", mentioning IBAN, Zain Cash, Apple Pay, PayPal, Western Union
+- Sharing personal contact details: phone numbers starting with 05 or +966, WhatsApp numbers, Telegram handles, Instagram/Snapchat usernames, personal email addresses
+- Phrases like "add me on WhatsApp", "message me on Telegram", "my number is...", "find me on Instagram"
+
+ABUSE / HARASSMENT (type: "abuse" or "inappropriate"):
+- Verbal insults, degrading language, or personal attacks directed at either party
+- Sexual harassment or inappropriate comments
+- Threats or intimidation
+
+SEVERITY: low = borderline/accidental, medium = clear intent, high = explicit/repeated/severe
+
+IMPORTANT: Call flag_violation() AS SOON as you detect the violation, mid-sentence if needed. Include the triggering quote.
+
+ROLE 3 — POST-CLASS
+When the session ends, generate comprehensive structured notes.
 """
 
+# ---------------------------------------------------------------------------
+# AlveyAiBrain
+# ---------------------------------------------------------------------------
 
 class AlveyAiBrain:
-    """
-    Manages the Gemini Multimodal Live pipeline for a classroom session.
-    """
-
     def __init__(self, gemini_api_key: str, session_id: str):
         self.gemini_api_key = gemini_api_key
         self.session_id = session_id
         self.transcript: list[TranscriptEntry] = []
-        self._on_transcript_cb: Callable[[TranscriptEntry], None] | None = None
-        self._llm_service: GoogleLLMService | None = None
-        self._task: PipelineTask | None = None
+        self._on_transcript_cb: Optional[Callable[[TranscriptEntry], None]] = None
+        self._llm_service: Optional[GoogleLLMService] = None
+        self._task: Optional[PipelineTask] = None
+        self._safety_monitor = None
+        self._participant_uid_map: dict[str, str] = {}
+
+    def set_safety_monitor(self, monitor):
+        self._safety_monitor = monitor
+        logger.info("Safety monitor wired into AI brain.")
+
+    def register_participant(self, daily_sid: str, uid: str, role: str):
+        self._participant_uid_map[daily_sid] = uid
+        logger.debug(f"Registered participant: {daily_sid} → {uid} ({role})")
 
     def on_transcript_update(self, callback: Callable[[TranscriptEntry], None]):
-        """Register a callback that fires whenever a new transcript entry is added."""
         self._on_transcript_cb = callback
 
     def _record(self, speaker: str, text: str):
@@ -84,26 +134,34 @@ class AlveyAiBrain:
         if self._on_transcript_cb:
             self._on_transcript_cb(entry)
 
+    async def _handle_function_call(self, function_name: str, args: dict):
+        if function_name != "flag_violation":
+            return
+        vtype    = args.get("type", "unknown")
+        severity = args.get("severity", "medium")
+        quote    = args.get("quote", "")
+        logger.warning(f"Gemini flagged: {vtype}/{severity} — '{quote[:80]}'")
+        if self._safety_monitor:
+            asyncio.create_task(
+                self._safety_monitor.handle_violation(
+                    violation_type=vtype,
+                    severity=severity,
+                    quote=quote,
+                    offender_uid="",
+                )
+            )
+
     def build_pipeline(self, transport) -> tuple[Pipeline, PipelineTask]:
-        """
-        Build the Pipecat pipeline.
-
-        Audio flow:
-          transport.input() -> Gemini LLM -> transport.output()
-
-        Gemini receives raw audio frames directly - no STT middleware needed.
-        It handles transcription, understanding, and response generation natively.
-        """
         self._llm_service = GoogleLLMService(
             api_key=self.gemini_api_key,
-            model="gemini-2.0-flash-exp",  # Multimodal Live model
+            model="gemini-2.0-flash-exp",
             system_instruction=SYSTEM_PROMPT,
+            tools=[FLAG_VIOLATION_TOOL],
         )
 
         user_aggregator = LLMUserResponseAggregator()
         assistant_aggregator = LLMAssistantResponseAggregator()
 
-        # Wire transcript recording to the aggregators
         @user_aggregator.event_handler("on_user_turn_completion")
         async def on_user(frame: TranscriptionFrame):
             self._record("student", frame.text)
@@ -112,6 +170,11 @@ class AlveyAiBrain:
         async def on_ai(frame):
             if hasattr(frame, "text") and frame.text:
                 self._record("ai", frame.text)
+
+        @self._llm_service.event_handler("on_function_call")
+        async def on_function_call(service, function_name, tool_call_id, args):
+            await self._handle_function_call(function_name, args)
+            return {}
 
         pipeline = Pipeline([
             transport.input(),
@@ -128,18 +191,11 @@ class AlveyAiBrain:
         return pipeline, self._task
 
     async def ask_question(self, question: str) -> str:
-        """
-        Inject a student question into the active Gemini session context.
-        Returns the answer text.
-        Used by FirestoreBridge to answer in-class Q&A prompts.
-        """
         if not self._llm_service:
             return "Session not ready."
 
-        # Build context-aware messages: include recent transcript for grounding
         recent_context = "\n".join(
-            f"[{e.speaker}]: {e.text}"
-            for e in self.transcript[-20:]  # last 20 turns for context window
+            f"[{e.speaker}]: {e.text}" for e in self.transcript[-20:]
         ) or "(No conversation yet)"
 
         prompt = (

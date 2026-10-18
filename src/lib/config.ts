@@ -16,6 +16,7 @@ export const features = {
   discordSync: true,
   payments: false,
   messaging: false,
+  classroom: true,
 } as const;
 
 export type FeatureFlag = keyof typeof features;

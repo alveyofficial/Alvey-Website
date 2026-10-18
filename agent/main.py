@@ -1,10 +1,9 @@
 """
 agent/main.py
 
-Entrypoint for the Alvey classroom AI agent.
+Alvey classroom AI agent entrypoint.
 
-Environment variables (set by the Cloud Function that spawns this process,
-or via .env for local development):
+Environment variables:
   PROVIDER             - "daily" or "livekit"
   DAILY_ROOM_URL       - Full Daily room URL
   DAILY_BOT_TOKEN      - Scoped Daily meeting token for the bot
@@ -26,6 +25,7 @@ load_dotenv()
 from transport_factory import create_transport
 from ai_brain import AlveyAiBrain
 from firestore_bridge import FirestoreBridge
+from safety_monitor import SafetyMonitor
 from session_end_handler import post_session_end
 
 
@@ -43,24 +43,57 @@ def validate_env():
 async def main():
     validate_env()
 
-    room_url        = os.environ["DAILY_ROOM_URL"]
-    bot_token       = os.environ["DAILY_BOT_TOKEN"]
-    session_id      = os.environ["SESSION_ID"]
-    project_id      = os.environ["FIREBASE_PROJECT_ID"]
-    gemini_key      = os.environ["GEMINI_API_KEY"]
-    webhook_url     = os.environ["WEBHOOK_URL"]
-    webhook_secret  = os.environ["WEBHOOK_SECRET"]
+    room_url       = os.environ["DAILY_ROOM_URL"]
+    bot_token      = os.environ["DAILY_BOT_TOKEN"]
+    session_id     = os.environ["SESSION_ID"]
+    project_id     = os.environ["FIREBASE_PROJECT_ID"]
+    gemini_key     = os.environ["GEMINI_API_KEY"]
+    webhook_url    = os.environ["WEBHOOK_URL"]
+    webhook_secret = os.environ["WEBHOOK_SECRET"]
 
-    session_start   = time.time()
-    participant_uids: list[str] = []  # populated from Daily participant metadata
+    session_start = time.time()
+    participant_uids: list[str] = []
+    # Maps Daily session_id → Firebase UID, populated from on_participant_joined events
+    participant_daily_id_map: dict[str, str] = {}
 
-    # -- 1. Create transport (the only provider-specific step) ---------------
+    # ── 1. Transport (only provider-specific line) ─────────────────────────
     transport = create_transport(room_url=room_url, token=bot_token)
 
-    # -- 2. Initialise AI brain ----------------------------------------------
+    # ── 2. AI brain ────────────────────────────────────────────────────────
     brain = AlveyAiBrain(gemini_api_key=gemini_key, session_id=session_id)
 
-    # -- 3. Start Firestore Q&A bridge ---------------------------------------
+    # ── 3. Safety monitor ──────────────────────────────────────────────────
+    async def mute_user(firebase_uid: str):
+        """
+        Mute a participant by Firebase UID.
+        Resolves their Daily session_id from the participant map,
+        then revokes canSend via Daily's update_participant_permissions.
+        """
+        daily_sid = next(
+            (dsid for dsid, uid in participant_daily_id_map.items() if uid == firebase_uid),
+            None,
+        )
+        if not daily_sid:
+            logger.warning(f"Cannot mute {firebase_uid}: Daily session_id not found in map.")
+            return
+        try:
+            await transport.update_participant_permissions(
+                daily_sid,
+                permissions={"hasPresence": True, "canSend": False},
+            )
+            logger.info(f"Muted Daily participant {daily_sid} (UID: {firebase_uid})")
+        except Exception as e:
+            logger.error(f"Mute failed for {daily_sid}: {e}")
+
+    safety_monitor = SafetyMonitor(
+        project_id=project_id,
+        session_id=session_id,
+        on_mute_user=mute_user,
+    )
+    await safety_monitor.start()
+    brain.set_safety_monitor(safety_monitor)
+
+    # ── 4. Firestore Q&A bridge ────────────────────────────────────────────
     fb_bridge = FirestoreBridge(
         project_id=project_id,
         session_id=session_id,
@@ -68,16 +101,21 @@ async def main():
     )
     await fb_bridge.start()
 
-    # -- 4. Build and run the pipeline ---------------------------------------
+    # ── 5. Build pipeline and run ──────────────────────────────────────────
     _, task = brain.build_pipeline(transport)
 
-    # Collect participant UIDs from Daily events
     @transport.event_handler("on_participant_joined")
     async def on_joined(transport_ref, participant):
-        uid = participant.get("info", {}).get("userId", "")
-        if uid and uid not in participant_uids:
-            participant_uids.append(uid)
-            logger.info(f"Participant joined: {uid}")
+        uid       = participant.get("info", {}).get("userId", "")
+        daily_sid = participant.get("id", "")
+        role      = participant.get("info", {}).get("userName", "")
+        if uid:
+            if uid not in participant_uids:
+                participant_uids.append(uid)
+            if daily_sid:
+                participant_daily_id_map[daily_sid] = uid
+            brain.register_participant(daily_sid, uid, role)
+        logger.info(f"Participant joined: uid={uid} daily_sid={daily_sid}")
 
     @transport.event_handler("on_participant_left")
     async def on_left(transport_ref, participant, reason):
@@ -85,12 +123,16 @@ async def main():
 
     logger.info(f"Bot joining room: {room_url}")
 
+    from pipecat.pipeline.runner import PipelineRunner
     runner = PipelineRunner()
     await runner.run(task)
 
-    # -- 5. Pipeline ended -- send session-end webhook -----------------------
+    # ── 6. Session ended — post webhook ────────────────────────────────────
     duration = time.time() - session_start
-    logger.info(f"Session ended. Duration: {duration:.0f}s  Transcript: {len(brain.transcript)} turns")
+    logger.info(
+        f"Session ended. Duration: {duration:.0f}s  "
+        f"Transcript: {len(brain.transcript)} turns"
+    )
 
     await post_session_end(
         webhook_url=webhook_url,
@@ -102,6 +144,7 @@ async def main():
     )
 
     await fb_bridge.stop()
+    await safety_monitor.stop()
     logger.info("Agent shutdown complete.")
 
 

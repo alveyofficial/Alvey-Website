@@ -275,6 +275,66 @@ service cloud.firestore {
     }
 
     // -------------------------------------------------------------------------
+    // sessions/{sessionId} — live class session metadata
+    //
+    // Sessions are created and updated ONLY by Cloud Functions (Admin SDK).
+    // Participants (student + tutor) can read their own session docs.
+    // -------------------------------------------------------------------------
+    match /sessions/{sessionId} {
+      allow read: if isAdmin()
+        || (isSignedIn() && (
+          resource.data.studentId == request.auth.uid ||
+          resource.data.tutorId == request.auth.uid
+        ));
+      // All writes are done by the Cloud Function via Admin SDK (bypasses rules)
+      allow write: if false;
+
+      // ai_chat subcollection — in-class Q&A channel
+      match /ai_chat/{messageId} {
+        // Both participants can read all Q&A messages in their session
+        allow read: if isSignedIn() && (
+          get(/databases/$(database)/documents/sessions/$(sessionId)).data.studentId == request.auth.uid ||
+          get(/databases/$(database)/documents/sessions/$(sessionId)).data.tutorId == request.auth.uid
+        );
+        // Both participants can post questions
+        allow create: if isSignedIn() && (
+          get(/databases/$(database)/documents/sessions/$(sessionId)).data.studentId == request.auth.uid ||
+          get(/databases/$(database)/documents/sessions/$(sessionId)).data.tutorId == request.auth.uid
+        )
+          && request.resource.data.keys().hasAll(['question', 'status', 'askedAt'])
+          && request.resource.data.status == 'pending';
+        // Answers are written by the Pipecat agent via Admin SDK only
+        allow update, delete: if false;
+      }
+
+      // post_class_notes subcollection — AI-generated post-session summaries
+      match /post_class_notes/{noteId} {
+        allow read: if isSignedIn() && (
+          get(/databases/$(database)/documents/sessions/$(sessionId)).data.studentId == request.auth.uid ||
+          get(/databases/$(database)/documents/sessions/$(sessionId)).data.tutorId == request.auth.uid
+        );
+        // Notes are written exclusively by Cloud Functions (Admin SDK)
+        allow write: if false;
+      }
+
+      // safety_events — written by Pipecat agent via Admin SDK, admin read only
+      match /safety_events/{eventId} {
+        allow read: if isAdmin();
+        allow write: if false;
+      }
+
+      // live_notifications — real-time safety toasts, pushed by Admin SDK only.
+      // Both session participants can read; no client writes allowed.
+      match /live_notifications/{notifId} {
+        allow read: if isSignedIn() && (
+          get(/databases/$(database)/documents/sessions/$(sessionId)).data.studentId == request.auth.uid ||
+          get(/databases/$(database)/documents/sessions/$(sessionId)).data.tutorId == request.auth.uid
+        );
+        allow write: if false;
+      }
+    }
+
+    // -------------------------------------------------------------------------
     // Catch-all: deny everything not explicitly matched above
     // -------------------------------------------------------------------------
     match /{document=**} {
