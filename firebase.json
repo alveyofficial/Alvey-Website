@@ -12,7 +12,8 @@
       "firebase-debug.*.log",
       "functions",
       "legacy"
-    ]
+    ],
+    "alwaysDeployFromSource": true
   },
   "emulators": {
     "apphosting": {
@@ -21,6 +22,17 @@
     }
   },
   "functions": [
+    {
+      "source": "functions",
+      "codebase": "classroom",
+      "runtime": "nodejs22",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log"
+      ]
+    },
     {
       "source": "functions/website-notifications",
       "codebase": "website-notifications",

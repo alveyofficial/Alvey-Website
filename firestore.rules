@@ -25,14 +25,10 @@ service cloud.firestore {
       return isSignedIn() && request.auth.token.role == 'tutor';
     }
 
-    function isStaff() {
-      return isSignedIn() && request.auth.token.role == 'staff';
-    }
-
-    function isParticipant(resource) {
+    function isParticipant(sessionDoc) {
       return isSignedIn() &&
-        (resource.data.studentId == request.auth.uid ||
-         resource.data.tutorId == request.auth.uid);
+        (sessionDoc.data.studentId == request.auth.uid ||
+         sessionDoc.data.tutorId == request.auth.uid);
     }
 
     // -------------------------------------------------------------------------

@@ -50,3 +50,4 @@ run-tsc.ps1
 .agents/skills/
 .claude/skills/
 .agents/tasks/
+service-account.json

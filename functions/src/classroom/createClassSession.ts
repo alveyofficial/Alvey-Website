@@ -25,6 +25,9 @@ import * as logger from "firebase-functions/logger";
 
 const DAILY_API_KEY = defineSecret("DAILY_API_KEY");
 
+// Cloud Run agent URL (not secret — just a config value)
+const AGENT_URL = "https://alvey-classroom-agent-1020096383368.me-central1.run.app";
+
 // ---------------------------------------------------------------------------
 // Admin SDK initialisation (idempotent)
 // ---------------------------------------------------------------------------
@@ -185,10 +188,43 @@ export const createClassSession = onCall<
         tutorId: lesson.tutorId as string,
         studentId: lesson.studentId as string,
         status: "active",
-        // providerRoomName is INTERNAL — never returned to the client
         providerRoomName: roomName,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
       });
+
+      // ── Mint a bot token and trigger the AI agent ─────────────────────
+      try {
+        const botTokenResp = await dailyRequest<{ token: string }>(
+          "POST",
+          "/meeting-tokens",
+          apiKey,
+          {
+            properties: {
+              room_name: roomName,
+              user_name: "Alvey AI",
+              is_owner: false,
+              exp: threeHoursFromNow,
+            },
+          },
+        );
+
+        // Fire-and-forget POST to the Cloud Run agent (10s timeout)
+        fetch(`${AGENT_URL}/start`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            roomUrl,
+            token: botTokenResp.token,
+            sessionId,
+          }),
+          signal: AbortSignal.timeout(10000),
+        }).catch((e) => logger.error(`Agent trigger failed: ${e}`));
+
+        logger.info(`AI agent triggered for session ${sessionId}`);
+      } catch (e) {
+        logger.error(`Bot token/trigger failed: ${e}`);
+        // Non-fatal — the video session still works without the AI bot
+      }
     }
 
     // ── Return provider-agnostic payload ───────────────────────────────────
