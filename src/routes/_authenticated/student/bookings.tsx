@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
-  Calendar, Upload, Clock, CheckCircle, X, AlertCircle, CreditCard,
+  Calendar, Clock, CheckCircle, X, AlertCircle, CreditCard,
 } from "lucide-react";
 import {
   PageHeader, EmptyState, LoadingSpinner, StatusBadge,
@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { DataStore, type Booking } from "@/lib/data-store";
 import { firebase } from "@/integrations/firebase/client";
+import { STCPayCheckoutModal } from "@/components/stc-pay-checkout-modal";
 
 export const Route = createFileRoute("/_authenticated/student/bookings")({
   head: () => ({
@@ -27,9 +28,7 @@ function StudentBookings() {
   const [loading, setLoading] = useState(true);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [uploadingBookingId, setUploadingBookingId] = useState<string | null>(null);
-  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const [checkoutModalBooking, setCheckoutModalBooking] = useState<Booking | null>(null);
 
   const loadBookings = async (uid: string) => {
     const result = await DataStore.getBookingsForStudent(uid);
@@ -46,22 +45,6 @@ function StudentBookings() {
       setLoading(false);
     })();
   }, []);
-
-  const handleFileUpload = async (booking: Booking, file: File) => {
-    if (!file) return;
-    setUploading(true);
-    setUploadingBookingId(booking.id);
-    try {
-      await DataStore.uploadReceipt(booking.id, file);
-      if (userId) await loadBookings(userId);
-      toast.success("Receipt uploaded — awaiting admin verification.");
-    } catch {
-      toast.error("Failed to upload receipt. Please try again.");
-    } finally {
-      setUploading(false);
-      setUploadingBookingId(null);
-    }
-  };
 
   const fmt = (iso: string | null | undefined) => {
     if (!iso) return "";
@@ -137,55 +120,20 @@ function StudentBookings() {
               )}
 
               {b.status === "awaiting_payment" && (
-                <CardContent className="pt-0 space-y-4">
-                  {/* Payment instructions */}
-                  <div className="rounded-lg border p-4 space-y-3">
-                    <div className="flex items-center gap-2">
-                      <CreditCard className="h-4 w-4 text-violet-600" />
-                      <h4 className="font-semibold text-sm">Payment Instructions</h4>
+                <CardContent className="pt-0">
+                  {b.totalAmountSAR === null ? (
+                    <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 text-sm text-blue-800 dark:text-blue-300">
+                      Payment terms not set yet — please check back shortly.
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      Please transfer the session fee to the following STC Bank account, then upload your receipt below.
-                    </p>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <span className="text-muted-foreground">Bank</span>
-                      <span className="font-medium">STC Bank</span>
-                      <span className="text-muted-foreground">Account Name</span>
-                      <span className="font-medium">Alvey Education</span>
-                      <span className="text-muted-foreground">Account Number</span>
-                      <span className="font-mono font-medium">1234567890</span>
-                    </div>
-                  </div>
-
-                  {/* File upload */}
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium">Upload Payment Receipt</p>
-                    <p className="text-xs text-muted-foreground">
-                      Accepted formats: JPG, PNG, PDF. Max size: 10 MB.
-                    </p>
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="file"
-                        accept="image/*,application/pdf"
-                        className="hidden"
-                        ref={(el) => { fileInputRefs.current[b.id] = el; }}
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) handleFileUpload(b, file);
-                        }}
-                      />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-2"
-                        disabled={uploading && uploadingBookingId === b.id}
-                        onClick={() => fileInputRefs.current[b.id]?.click()}
-                      >
-                        <Upload className="h-4 w-4" />
-                        {uploading && uploadingBookingId === b.id ? "Uploading…" : "Choose File"}
-                      </Button>
-                    </div>
-                  </div>
+                  ) : (
+                    <Button
+                      size="sm"
+                      className="gap-2"
+                      onClick={() => setCheckoutModalBooking(b)}
+                    >
+                      <CreditCard className="h-4 w-4" /> View Payment Instructions
+                    </Button>
+                  )}
                 </CardContent>
               )}
 
@@ -242,6 +190,17 @@ function StudentBookings() {
             </Card>
           ))}
         </div>
+      )}
+
+      {/* STC Pay checkout modal */}
+      {checkoutModalBooking && (
+        <STCPayCheckoutModal
+          booking={checkoutModalBooking}
+          tenant={checkoutModalBooking.tenant}
+          open={!!checkoutModalBooking}
+          onOpenChange={(isOpen) => { if (!isOpen) setCheckoutModalBooking(null); }}
+          onUploadComplete={() => { if (userId) loadBookings(userId); }}
+        />
       )}
     </div>
   );

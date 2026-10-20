@@ -37,7 +37,7 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
 
-      allow create: if isOwner(userId)
+      allow create: if (isOwner(userId) || isAdmin())
         && (!('role' in request.resource.data)
             || request.resource.data.role in ['guest', 'student', 'tutor', 'staff', 'admin']);
 
@@ -268,6 +268,15 @@ service cloud.firestore {
             && request.resource.data.status == 'verifying_receipt');
 
       allow delete: if isAdmin();
+    }
+
+    // -------------------------------------------------------------------------
+    // payments
+    // -------------------------------------------------------------------------
+    match /payments/{paymentId} {
+      allow read: if isAdmin()
+        || (isSignedIn() && resource.data.studentId == request.auth.uid);
+      allow write: if false; // Only Cloud Functions (Admin SDK) write payments
     }
 
     // -------------------------------------------------------------------------

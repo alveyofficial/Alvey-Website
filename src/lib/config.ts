@@ -14,7 +14,7 @@ export const APP_NAME = "Alvey";
 export const features = {
   aiAssistant: true,
   discordSync: true,
-  payments: false,
+  payments: true,
   messaging: false,
   classroom: true,
 } as const;

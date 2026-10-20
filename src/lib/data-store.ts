@@ -369,6 +369,7 @@ const COLLECTIONS = {
   ASSIGNMENTS: "student_tutor_assignments",
   BLOG_POSTS: "blog_posts",
   BOOKINGS: "bookings",
+  PAYMENTS: "payments",
 };
 
 function getLocal<T>(key: string, defaultValue: T): T {
@@ -970,6 +971,60 @@ export interface Booking {
   confirmedAt: string | null;    // ISO string | null
   meetingRoomUrl: string | null;
   isDeleted: boolean;
+  // Payment & tenant fields
+  classQty: number | null;
+  classRateSAR: number | null;
+  platformFeesSAR: number;
+  discountSAR: number;
+  totalAmountSAR: number | null;
+  tenant: "main" | "effat";
+  geminiVerification: {
+    extractedAmount: number;
+    referenceNumber: string;
+    transactionDate: string;
+    recipientMatch: boolean;
+    confidenceStatus: "100% Match" | "Partial Match" | "No Match" | "Unable to Extract";
+    rawJson: string;
+    analyzedAt: string;
+  } | null;
+}
+
+// ---------------------------------------------------------------------------
+// Payment
+// ---------------------------------------------------------------------------
+
+export interface Payment {
+  id: string;
+  bookingId: string;
+  studentId: string;
+  studentName: string;
+  tenant: "main" | "effat";
+  source: string;
+  lineItems: Array<{
+    description: string;
+    accountId: string;
+    quantity: number;
+    rateSAR: number;
+    amountSAR: number;
+  }>;
+  subtotalSAR: number;
+  discountSAR: number;
+  platformFeesSAR: number;
+  totalSAR: number;
+  tutorId: string;
+  tutorName: string;
+  commissionRatePct: number;
+  tutorPayoutSAR: number;
+  stcPayReference: string;
+  receiptUrl: string;
+  zohoContactId: string;
+  zohoInvoiceId: string;
+  zohoPaymentId: string;
+  status: "pending" | "approved" | "rejected" | "zoho_synced" | "zoho_error";
+  zohoError: string | null;
+  createdAt: string;
+  approvedAt: string | null;
+  zohoSyncedAt: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -4556,6 +4611,13 @@ export const DataStore = {
         confirmedAt: d.confirmedAt ?? null,
         meetingRoomUrl: d.meetingRoomUrl ?? null,
         isDeleted: Boolean(d.isDeleted),
+        classQty: d.classQty ?? null,
+        classRateSAR: d.classRateSAR ?? null,
+        platformFeesSAR: d.platformFeesSAR ?? 5,
+        discountSAR: d.discountSAR ?? 0,
+        totalAmountSAR: d.totalAmountSAR ?? null,
+        tenant: (d.tenant ?? "main") as "main" | "effat",
+        geminiVerification: d.geminiVerification ?? null,
       }));
     } catch (err) {
       console.error('[getBookingsForStudent] Failed:', err);
@@ -4592,6 +4654,13 @@ export const DataStore = {
         confirmedAt: d.confirmedAt ?? null,
         meetingRoomUrl: d.meetingRoomUrl ?? null,
         isDeleted: Boolean(d.isDeleted),
+        classQty: d.classQty ?? null,
+        classRateSAR: d.classRateSAR ?? null,
+        platformFeesSAR: d.platformFeesSAR ?? 5,
+        discountSAR: d.discountSAR ?? 0,
+        totalAmountSAR: d.totalAmountSAR ?? null,
+        tenant: (d.tenant ?? "main") as "main" | "effat",
+        geminiVerification: d.geminiVerification ?? null,
       }));
     } catch (err) {
       console.error('[getBookingsForTutor] Failed:', err);
@@ -4627,6 +4696,13 @@ export const DataStore = {
         confirmedAt: d.confirmedAt ?? null,
         meetingRoomUrl: d.meetingRoomUrl ?? null,
         isDeleted: Boolean(d.isDeleted),
+        classQty: d.classQty ?? null,
+        classRateSAR: d.classRateSAR ?? null,
+        platformFeesSAR: d.platformFeesSAR ?? 5,
+        discountSAR: d.discountSAR ?? 0,
+        totalAmountSAR: d.totalAmountSAR ?? null,
+        tenant: (d.tenant ?? "main") as "main" | "effat",
+        geminiVerification: d.geminiVerification ?? null,
       }));
     } catch (err) {
       console.error('[getAllPendingReceipts] Failed:', err);
@@ -4636,6 +4712,83 @@ export const DataStore = {
 
   softDeleteBooking: async (bookingId: string): Promise<void> => {
     await upsertDocument(COLLECTIONS.BOOKINGS, bookingId, { isDeleted: true });
+  },
+
+  setPaymentTerms: async (
+    bookingId: string,
+    params: { classQty: number; classRateSAR: number; discountSAR: number; tenant: "main" | "effat" },
+  ): Promise<void> => {
+    const { classQty, classRateSAR, discountSAR, tenant } = params;
+    const totalAmountSAR = classQty * classRateSAR - discountSAR + 5;
+    await upsertDocument(COLLECTIONS.BOOKINGS, bookingId, {
+      classQty,
+      classRateSAR,
+      platformFeesSAR: 5,
+      discountSAR,
+      tenant,
+      totalAmountSAR,
+    });
+  },
+
+  getAllAwaitingPaymentBookings: async (): Promise<Booking[]> => {
+    try {
+      const docs = await listDocuments(COLLECTIONS.BOOKINGS, [
+        Query.equal('status', 'awaiting_payment'),
+        Query.equal('isDeleted', false),
+        Query.orderDesc('requestedAt'),
+        Query.limit(100),
+      ]);
+      return docs.map((d: any) => ({
+        id: d.$id || d.id,
+        studentId: d.studentId,
+        tutorId: d.tutorId,
+        tutorAuthUserId: d.tutorAuthUserId,
+        tutorName: d.tutorName,
+        studentName: d.studentName,
+        requestedAt: d.requestedAt,
+        preferredDate: d.preferredDate,
+        preferredTime: d.preferredTime,
+        coverNote: d.coverNote,
+        status: d.status as BookingStatus,
+        referenceCode: d.referenceCode,
+        receiptUrl: d.receiptUrl ?? null,
+        receiptPath: d.receiptPath ?? null,
+        receiptUploadedAt: d.receiptUploadedAt ?? null,
+        adminNote: d.adminNote ?? null,
+        confirmedAt: d.confirmedAt ?? null,
+        meetingRoomUrl: d.meetingRoomUrl ?? null,
+        isDeleted: Boolean(d.isDeleted),
+        classQty: d.classQty ?? null,
+        classRateSAR: d.classRateSAR ?? null,
+        platformFeesSAR: d.platformFeesSAR ?? 5,
+        discountSAR: d.discountSAR ?? 0,
+        totalAmountSAR: d.totalAmountSAR ?? null,
+        tenant: (d.tenant ?? "main") as "main" | "effat",
+        geminiVerification: d.geminiVerification ?? null,
+      }));
+    } catch (err) {
+      console.error('[getAllAwaitingPaymentBookings] Failed:', err);
+      return [];
+    }
+  },
+
+  createPaymentRecord: async (data: Omit<Payment, 'id'>): Promise<Payment> => {
+    const result = await createDocument(COLLECTIONS.PAYMENTS, { ...data });
+    return { ...data, id: result.id } as Payment;
+  },
+
+  getPaymentByBookingId: async (bookingId: string): Promise<Payment | null> => {
+    try {
+      const docs = await listDocuments(COLLECTIONS.PAYMENTS, [
+        Query.equal('bookingId', bookingId),
+        Query.limit(1),
+      ]);
+      if (docs.length === 0) return null;
+      const d = docs[0];
+      return { ...d, id: d.$id || d.id } as Payment;
+    } catch {
+      return null;
+    }
   },
 
 };

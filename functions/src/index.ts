@@ -8,6 +8,8 @@ import { setGlobalOptions } from "firebase-functions";
 import { createClassSession } from "./classroom/createClassSession";
 import { ingestSessionEnd } from "./classroom/ingestSessionEnd";
 import { maskChatMessage } from "./safety/maskMessage";
+import { analyzeReceipt } from "./payment/analyzeReceipt.js";
+import { approvePayment } from "./payment/approvePayment.js";
 
 // ---------------------------------------------------------------------------
 // Global defaults
@@ -26,3 +28,9 @@ export { createClassSession, ingestSessionEnd };
 // ---------------------------------------------------------------------------
 
 export { maskChatMessage };
+
+// ---------------------------------------------------------------------------
+// Payments
+// ---------------------------------------------------------------------------
+
+export { analyzeReceipt, approvePayment };
