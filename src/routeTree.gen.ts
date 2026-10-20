@@ -88,8 +88,8 @@ import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authe
 import { Route as AuthenticatedAdminAiAssistantRouteImport } from './routes/_authenticated/admin/ai-assistant'
 import { Route as AuthenticatedAdminAdvertisementsRouteImport } from './routes/_authenticated/admin/advertisements'
 import { Route as ApiPublicNewsletterSubscribeRouteImport } from './routes/api/public/newsletter/subscribe'
-import { Route as AuthenticatedStudentClassroomLessonIdRouteImport } from './routes/_authenticated/student/classroom.$lessonId'
 import { Route as AuthenticatedTutorClassroomLessonIdRouteImport } from './routes/_authenticated/tutor/classroom.$lessonId'
+import { Route as AuthenticatedStudentClassroomLessonIdRouteImport } from './routes/_authenticated/student/classroom.$lessonId'
 
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
   id: '/verify-email',
@@ -529,16 +529,16 @@ const ApiPublicNewsletterSubscribeRoute =
     path: '/api/public/newsletter/subscribe',
     getParentRoute: () => rootRouteImport,
   } as any)
-const AuthenticatedStudentClassroomLessonIdRoute =
-  AuthenticatedStudentClassroomLessonIdRouteImport.update({
-    id: '/_authenticated/student/classroom/$lessonId',
-    path: '/student/classroom/$lessonId',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
 const AuthenticatedTutorClassroomLessonIdRoute =
   AuthenticatedTutorClassroomLessonIdRouteImport.update({
-    id: '/_authenticated/tutor/classroom/$lessonId',
+    id: '/tutor/classroom/$lessonId',
     path: '/tutor/classroom/$lessonId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedStudentClassroomLessonIdRoute =
+  AuthenticatedStudentClassroomLessonIdRouteImport.update({
+    id: '/student/classroom/$lessonId',
+    path: '/student/classroom/$lessonId',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 
@@ -619,9 +619,9 @@ export interface FileRoutesByFullPath {
   '/recruitment/': typeof AuthenticatedRecruitmentIndexRoute
   '/tutor/': typeof AuthenticatedTutorIndexRoute
   '/blogs/': typeof PublicBlogsIndexRoute
-  '/api/public/newsletter/subscribe': typeof ApiPublicNewsletterSubscribeRoute
   '/student/classroom/$lessonId': typeof AuthenticatedStudentClassroomLessonIdRoute
   '/tutor/classroom/$lessonId': typeof AuthenticatedTutorClassroomLessonIdRoute
+  '/api/public/newsletter/subscribe': typeof ApiPublicNewsletterSubscribeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof PublicIndexRoute
@@ -699,9 +699,9 @@ export interface FileRoutesByTo {
   '/recruitment': typeof AuthenticatedRecruitmentIndexRoute
   '/tutor': typeof AuthenticatedTutorIndexRoute
   '/blogs': typeof PublicBlogsIndexRoute
-  '/api/public/newsletter/subscribe': typeof ApiPublicNewsletterSubscribeRoute
   '/student/classroom/$lessonId': typeof AuthenticatedStudentClassroomLessonIdRoute
   '/tutor/classroom/$lessonId': typeof AuthenticatedTutorClassroomLessonIdRoute
+  '/api/public/newsletter/subscribe': typeof ApiPublicNewsletterSubscribeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -783,9 +783,9 @@ export interface FileRoutesById {
   '/_authenticated/recruitment/': typeof AuthenticatedRecruitmentIndexRoute
   '/_authenticated/tutor/': typeof AuthenticatedTutorIndexRoute
   '/_public/blogs/': typeof PublicBlogsIndexRoute
-  '/api/public/newsletter/subscribe': typeof ApiPublicNewsletterSubscribeRoute
   '/_authenticated/student/classroom/$lessonId': typeof AuthenticatedStudentClassroomLessonIdRoute
   '/_authenticated/tutor/classroom/$lessonId': typeof AuthenticatedTutorClassroomLessonIdRoute
+  '/api/public/newsletter/subscribe': typeof ApiPublicNewsletterSubscribeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -866,9 +866,9 @@ export interface FileRouteTypes {
     | '/recruitment/'
     | '/tutor/'
     | '/blogs/'
-    | '/api/public/newsletter/subscribe'
     | '/student/classroom/$lessonId'
     | '/tutor/classroom/$lessonId'
+    | '/api/public/newsletter/subscribe'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -946,9 +946,9 @@ export interface FileRouteTypes {
     | '/recruitment'
     | '/tutor'
     | '/blogs'
-    | '/api/public/newsletter/subscribe'
     | '/student/classroom/$lessonId'
     | '/tutor/classroom/$lessonId'
+    | '/api/public/newsletter/subscribe'
   id:
     | '__root__'
     | '/_authenticated'
@@ -1029,9 +1029,9 @@ export interface FileRouteTypes {
     | '/_authenticated/recruitment/'
     | '/_authenticated/tutor/'
     | '/_public/blogs/'
-    | '/api/public/newsletter/subscribe'
     | '/_authenticated/student/classroom/$lessonId'
     | '/_authenticated/tutor/classroom/$lessonId'
+    | '/api/public/newsletter/subscribe'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1606,18 +1606,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicNewsletterSubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/student/classroom/$lessonId': {
-      id: '/_authenticated/student/classroom/$lessonId'
-      path: '/student/classroom/$lessonId'
-      fullPath: '/student/classroom/$lessonId'
-      preLoaderRoute: typeof AuthenticatedStudentClassroomLessonIdRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/tutor/classroom/$lessonId': {
       id: '/_authenticated/tutor/classroom/$lessonId'
       path: '/tutor/classroom/$lessonId'
       fullPath: '/tutor/classroom/$lessonId'
       preLoaderRoute: typeof AuthenticatedTutorClassroomLessonIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/student/classroom/$lessonId': {
+      id: '/_authenticated/student/classroom/$lessonId'
+      path: '/student/classroom/$lessonId'
+      fullPath: '/student/classroom/$lessonId'
+      preLoaderRoute: typeof AuthenticatedStudentClassroomLessonIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
   }

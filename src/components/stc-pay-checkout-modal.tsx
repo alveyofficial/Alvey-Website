@@ -148,7 +148,7 @@ export function STCPayCheckoutModal({
               <span className="font-medium">{accountName}</span>
               <span className="text-muted-foreground">IBAN</span>
               {/* TODO: replace with real IBAN */}
-              <span className="font-mono font-medium text-xs">SA00 0000 0000 0000 0000 0000</span>
+              <span className="font-mono font-medium text-xs">SA287 8000 0000 0133 8940 382</span>
             </div>
           </div>
 

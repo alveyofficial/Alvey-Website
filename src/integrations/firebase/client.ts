@@ -26,6 +26,7 @@ import {
   type User,
 } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getFunctions } from "firebase/functions";
 import { getAnalytics, isSupported } from "firebase/analytics";
@@ -207,6 +208,20 @@ export const firebase = {
 
         await updateProfile(credential.user, { displayName });
         await sendEmailVerification(credential.user);
+
+        // Create a Firestore users/{uid} document so the user has a role
+        // and appears in admin searches. Non-blocking — failure here shouldn't
+        // prevent signup from succeeding.
+        try {
+          await setDoc(doc(db, "users", credential.user.uid), {
+            email: credential.user.email,
+            displayName,
+            role: "student",
+            createdAt: serverTimestamp(),
+          });
+        } catch (firestoreErr) {
+          console.warn("Failed to create Firestore user document:", firestoreErr);
+        }
 
         const user = normalizeUser(credential.user);
         emitAuthChange(credential.user);
