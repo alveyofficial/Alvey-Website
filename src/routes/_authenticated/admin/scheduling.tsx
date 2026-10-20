@@ -582,7 +582,7 @@ function AdminScheduling() {
                                   Uploaded: {new Date(r.receiptUploadedAt as string).toLocaleString?.() ?? r.receiptUploadedAt}
                                 </p>
                               )}
-                              {!r.receiptUrl && (
+                              {r.receiptUrl && (
                                 <a
                                   href={r.receiptUrl ?? ""}
                                   target="_blank"

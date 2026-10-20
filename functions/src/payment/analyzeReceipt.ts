@@ -101,6 +101,14 @@ export const analyzeReceipt = onCall<AnalyzeReceiptData>(
       throw new HttpsError("permission-denied", "You are not the owner of this booking.");
     }
 
+    // ── Status guard — only allow analysis on pending/unverified bookings ──
+    if (!["awaiting_payment", "verifying_receipt"].includes(bookingDoc.status)) {
+      throw new HttpsError(
+        "failed-precondition",
+        "Receipt analysis is only valid for pending bookings.",
+      );
+    }
+
     const expectedAmount: number = bookingDoc.totalAmountSAR ?? 0;
 
     // ── Gemini analysis ────────────────────────────────────────────────────

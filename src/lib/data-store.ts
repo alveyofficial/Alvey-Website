@@ -4435,7 +4435,17 @@ export const DataStore = {
     } catch (err) {
       console.error('[createBooking] Failed to notify tutor:', err);
     }
-    return { id: doc.$id || doc.id, ...data };
+    return {
+      id: doc.$id || doc.id,
+      ...data,
+      classQty: null,
+      classRateSAR: null,
+      platformFeesSAR: 5,
+      discountSAR: 0,
+      totalAmountSAR: null,
+      tenant: 'main' as const,
+      geminiVerification: null,
+    };
   },
 
   respondToBooking: async (bookingId: string, response: 'accept' | 'decline'): Promise<void> => {

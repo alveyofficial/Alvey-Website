@@ -67,7 +67,7 @@ function StudentBookings() {
           icon={Calendar}
           title="No bookings yet"
           description="Browse tutors and request a demo session to get started."
-          action={<Link to="/find-a-tutor"><Button>Find a Tutor</Button></Link>}
+          action={<Link to="/find-a-tutor" search={{ level: undefined, subject: undefined }}><Button>Find a Tutor</Button></Link>}
         />
       ) : (
         <div className="space-y-4">
@@ -183,7 +183,7 @@ function StudentBookings() {
                     <span>Your demo request with {b.tutorName} was declined.</span>
                   </div>
                   <Button variant="outline" size="sm" asChild>
-                    <Link to="/find-a-tutor">Find another tutor</Link>
+                    <Link to="/find-a-tutor" search={{ level: undefined, subject: undefined }}>Find another tutor</Link>
                   </Button>
                 </CardContent>
               )}

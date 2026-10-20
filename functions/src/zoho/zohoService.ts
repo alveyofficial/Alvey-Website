@@ -219,7 +219,7 @@ export async function createInvoice(
   const resp = (await zohoRequest<{
     code: number;
     invoice?: { invoice_id: string };
-  }>("POST", "/invoices?send=false", orgId, token, invoiceBody)) as {
+  }>("POST", "/invoices?send=true", orgId, token, invoiceBody)) as {
     code: number;
     invoice?: { invoice_id: string };
   };
@@ -249,7 +249,6 @@ export async function recordPayment(
     code: number;
     payment?: { payment_id: string };
   }>("POST", "/customerpayments", orgId, token, {
-    customer_payment_id: payload.invoiceId,
     invoice_id: payload.invoiceId,
     amount: payload.amountSAR,
     payment_mode: "cash",
