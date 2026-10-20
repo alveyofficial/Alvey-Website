@@ -87,7 +87,8 @@ async function zohoRequest<T>(
   token: string,
   body?: Record<string, unknown>,
 ): Promise<T> {
-  const url = `https://books.zoho.com/api/v3${path}?organization_id=${orgId}`;
+  const sep = path.includes("?") ? "&" : "?";
+  const url = `https://books.zoho.com/api/v3${path}${sep}organization_id=${orgId}`;
   const resp = await fetch(url, {
     method,
     headers: {
