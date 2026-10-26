@@ -66,7 +66,10 @@ export const Route = createFileRoute("/api/public/stats")({
             },
           });
         } catch (error) {
-          console.error("Public stats route error:", error);
+          console.error(
+            "Public stats route error:",
+            error instanceof Error ? error.stack : String(error),
+          );
 
           return new Response(
             JSON.stringify({ error: "Failed to load public stats" }),
