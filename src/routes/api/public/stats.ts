@@ -67,15 +67,19 @@ export const Route = createFileRoute("/api/public/stats")({
           });
         } catch (error) {
           console.error("Public stats route error:", error);
+
           return new Response(
-            JSON.stringify({ tutors: 0, members: 0, subjects: 0, rating: 0 }),
+            JSON.stringify({ error: "Failed to load public stats" }),
             {
-              status: 200,
-              headers: { "content-type": "application/json", "cache-control": "no-store" },
+              status: 500,
+              headers: {
+                "content-type": "application/json",
+                "cache-control": "no-store",
+              },
             },
           );
         }
-      },
+      }
     },
   },
 });
