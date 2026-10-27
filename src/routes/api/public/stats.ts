@@ -40,12 +40,18 @@ export const Route = createFileRoute("/api/public/stats")({
             subjectCount = subjectSet.size;
           }
 
+          // Platform-wide average: only approved, non-deleted platform reviews.
+          const platformReviewsSnap = await adminDb
+            .collection("Platform_reviews")
+            .where("isPublic", "==", true)
+            .where("isDeleted", "==", false)
+            .get();
+
           let ratingSum = 0;
           let ratingCount = 0;
-          for (const tutor of tutors) {
-            // Firestore field is "rating"; rating_avg is the legacy mapped alias.
-            const rating = Number((tutor as any).rating ?? (tutor as any).rating_avg ?? 0);
-            if (Number.isFinite(rating) && rating > 0) {
+          for (const doc of platformReviewsSnap.docs) {
+            const rating = Number(doc.data().rating);
+            if (Number.isFinite(rating) && rating >= 1 && rating <= 5) {
               ratingSum += rating;
               ratingCount += 1;
             }
