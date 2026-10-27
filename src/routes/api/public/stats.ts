@@ -15,26 +15,26 @@ export const Route = createFileRoute("/api/public/stats")({
           // All Firestore/Auth access via Admin SDK — client SDK doesn't work in SSR context.
           const { adminAuth, adminDb } = await import("@/lib/firebase-admin");
 
-          const [tutorsSnap, catSnap, authUsers] = await Promise.all([
+          const [tutorsSnap, subjectsSnap, authUsers] = await Promise.all([
             adminDb.collection("tutor_profiles").where("active", "==", true).get(),
-            adminDb.collection("subject_categories").where("active", "==", true).get(),
+            adminDb.collection("subjects").where("active", "==", true).get(),
             adminAuth.listUsers(1000),
           ]);
 
           const tutors = tutorsSnap.docs.map((d) => d.data()) as Record<string, unknown>[];
           const memberCount = authUsers.users.length;
 
-          // Subject count from the subject_categories collection; fall back to
-          // unique subjects from tutor profiles if the collection is empty.
+          // Count active platform subjects; fall back to distinct tutor subjects
+          // only when no active platform subjects are configured.
           let subjectCount: number;
-          if (catSnap.size > 0) {
-            subjectCount = catSnap.size;
+          if (subjectsSnap.size > 0) {
+            subjectCount = subjectsSnap.size;
           } else {
             const subjectSet = new Set<string>();
             for (const tutor of tutors) {
               const subjects = Array.isArray(tutor.subjects) ? tutor.subjects : [];
               subjects.forEach((s) => {
-                if (typeof s === "string" && s.trim()) subjectSet.add(s);
+                if (typeof s === "string" && s.trim()) subjectSet.add(s.trim());
               });
             }
             subjectCount = subjectSet.size;
