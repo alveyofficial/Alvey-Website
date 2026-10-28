@@ -3552,7 +3552,7 @@ export const DataStore = {
   getTutorApplicationsFromDB: async (): Promise<any[]> => {
     try {
       const docs = await listDocuments(COLLECTIONS.TUTOR_APPLICATIONS, [
-        Query.orderDesc("$createdAt"),
+        Query.orderDesc("_createdAt"),
         Query.limit(200),
       ]);
       if (docs.length > 0) return docs;
@@ -3563,7 +3563,7 @@ export const DataStore = {
   getRecruitmentApplicationsFromDB: async (): Promise<any[]> => {
     try {
       const docs = await listDocuments(COLLECTIONS.RECRUITMENT_APPLICATIONS, [
-        Query.orderDesc("$createdAt"),
+        Query.orderDesc("_createdAt"),
         Query.limit(200),
       ]);
       return docs.map((doc: any) => ({
