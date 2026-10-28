@@ -506,7 +506,11 @@ async function listDocuments(collectionId: string, queries: string[] = []): Prom
     const q = constraints.length > 0 ? query(colRef, ...constraints) : query(colRef);
     const snap = await getDocs(q);
     return snap.docs.map((d) => ({ $id: d.id, id: d.id, $createdAt: d.data()._createdAt ?? null, ...d.data() }));
-  } catch {
+  } catch (error) {
+    console.error(
+      `[DataStore] Failed to list Firestore collection "${collectionId}":`,
+      error,
+    );
     return [];
   }
 }
