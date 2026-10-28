@@ -21,7 +21,7 @@ import {
   getDownloadURL,
   deleteObject,
 } from "firebase/storage";
-import { db, storage, getCurrentUser } from "@/integrations/firebase/client";
+import { db, storage, auth, getCurrentUser } from "@/integrations/firebase/client";
 import type { UserRole } from "@/lib/user-role";
 
 
@@ -505,12 +505,34 @@ async function listDocuments(collectionId: string, queries: string[] = []): Prom
     const colRef = collection(db, collectionId);
     const q = constraints.length > 0 ? query(colRef, ...constraints) : query(colRef);
     const snap = await getDocs(q);
-    return snap.docs.map((d) => ({ $id: d.id, id: d.id, $createdAt: d.data()._createdAt ?? null, ...d.data() }));
+
+    return snap.docs.map((d) => ({
+      $id: d.id,
+      id: d.id,
+      $createdAt: d.data()._createdAt ?? null,
+      ...d.data(),
+    }));
   } catch (error) {
-    console.error(
-      `[DataStore] Failed to list Firestore collection "${collectionId}":`,
-      error,
-    );
+    const user = auth.currentUser;
+    let adminClaim: boolean | null = null;
+
+    if (user) {
+      try {
+        const token = await user.getIdTokenResult(true);
+        adminClaim = token.claims.admin === true;
+      } catch (tokenError) {
+        console.error("Auth claim diagnostic failed:", tokenError);
+      }
+    }
+
+    console.error("[DataStore] Firestore read diagnostic:", {
+      collection: collectionId,
+      projectId: db.app.options.projectId,
+      signedIn: !!user,
+      adminClaim,
+      errorCode: (error as { code?: string })?.code,
+    });
+
     return [];
   }
 }
