@@ -153,7 +153,18 @@ function TutorDashboard() {
                         <Clock className="h-3 w-3" />{fmt(l.starts_at)}
                       </p>
                     </div>
-                    <StatusBadge status={l.status || "scheduled"} />
+                    <div className="flex items-center gap-2 shrink-0">
+                      <StatusBadge status={l.status || "scheduled"} />
+                      <Button size="sm" asChild>
+                        <Link
+                          to="/tutor/classroom/$lessonId"
+                          params={{ lessonId: l.id }}
+                        >
+                          <Video className="h-4 w-4 mr-1" />
+                          Start Class
+                        </Link>
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
