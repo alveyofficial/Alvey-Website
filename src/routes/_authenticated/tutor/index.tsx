@@ -99,13 +99,13 @@ function TutorDashboard() {
 
       {/* Stats */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <StatCard icon={Users}         label="Active Students"      value={stats.students}       color="text-blue-600 bg-blue-50 dark:bg-blue-950/30" />
-        <StatCard icon={Calendar}      label="Upcoming Lessons"     value={stats.upcomingLessons} color="text-indigo-600 bg-indigo-50 dark:bg-indigo-950/30" />
-        <StatCard icon={BookMarked}    label="Submissions to Review" value={pendingHomework}       color="text-amber-600 bg-amber-50 dark:bg-amber-950/30" />
-        <StatCard icon={MessageSquare} label="Unread Messages"      value={stats.unreadMessages}  color="text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30" />
-        <StatCard icon={Star}          label="Average Rating"       value={stats.avgRating ? stats.avgRating.toFixed(1) : "—"} color="text-purple-600 bg-purple-50 dark:bg-purple-950/30" />
-        <StatCard icon={DollarSign}    label="Pending Earnings (£)" value={stats.pendingEarnings ? `£${stats.pendingEarnings.toFixed(2)}` : "£0.00"} color="text-rose-600 bg-rose-50 dark:bg-rose-950/30" />
-        <StatCard icon={CreditCard}    label="Demo Requests"        value={stats.pendingBookings} color="text-violet-600 bg-violet-50 dark:bg-violet-950/30" />
+        <StatCard icon={Users} label="Active Students" value={stats.students} color="text-blue-600 bg-blue-50 dark:bg-blue-950/30" />
+        <StatCard icon={Calendar} label="Upcoming Lessons" value={stats.upcomingLessons} color="text-indigo-600 bg-indigo-50 dark:bg-indigo-950/30" />
+        <StatCard icon={BookMarked} label="Submissions to Review" value={pendingHomework} color="text-amber-600 bg-amber-50 dark:bg-amber-950/30" />
+        <StatCard icon={MessageSquare} label="Unread Messages" value={stats.unreadMessages} color="text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30" />
+        <StatCard icon={Star} label="Average Rating" value={stats.avgRating ? stats.avgRating.toFixed(1) : "—"} color="text-purple-600 bg-purple-50 dark:bg-purple-950/30" />
+        <StatCard icon={DollarSign} label="Pending Earnings (£)" value={stats.pendingEarnings ? `£${stats.pendingEarnings.toFixed(2)}` : "£0.00"} color="text-rose-600 bg-rose-50 dark:bg-rose-950/30" />
+        <StatCard icon={CreditCard} label="Demo Requests" value={stats.pendingBookings} color="text-violet-600 bg-violet-50 dark:bg-violet-950/30" />
       </div>
 
       {/* Pending bookings banner */}
@@ -206,10 +206,10 @@ function TutorDashboard() {
       {/* Quick Links */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {[
-          { label: "My Students",  href: "/tutor/students",   icon: Users },
-          { label: "Homework",     href: "/tutor/homework",   icon: BookMarked },
-          { label: "Chat",         href: "/tutor/chat",       icon: MessageSquare },
-          { label: "Recordings",   href: "/tutor/recordings", icon: Video },
+          { label: "My Students", href: "/tutor/students", icon: Users },
+          { label: "Homework", href: "/tutor/homework", icon: BookMarked },
+          { label: "Chat", href: "/tutor/chat", icon: MessageSquare },
+          { label: "Recordings", href: "/tutor/recordings", icon: Video },
         ].map(({ label, href, icon: Icon }) => (
           <Button key={href} variant="outline" className="h-14 flex-col gap-1 text-sm" asChild>
             <Link to={href}>

@@ -531,6 +531,8 @@ async function listDocuments(collectionId: string, queries: string[] = []): Prom
       signedIn: !!user,
       adminClaim,
       errorCode: (error as { code?: string })?.code,
+      errorMessage: (error as Error)?.message,
+      fullError: error,
     });
 
     return [];
@@ -1091,7 +1093,7 @@ async function resolveTutorIdCandidates(tutorId: string): Promise<string[]> {
     const directDoc = await getDocument(COLLECTIONS.TUTOR_PROFILES, tutorId);
     const linkedAuthUserId = safeString(directDoc?.authUserId);
     if (linkedAuthUserId) ids.add(linkedAuthUserId);
-  } catch {}
+  } catch { }
   const identity = await getCurrentAuthIdentity();
   if (!identity || identity.id !== tutorId) return [...ids];
   const [byAuthUserId, byEmail] = await Promise.all([
@@ -1114,7 +1116,7 @@ async function resolveStudentIdCandidates(studentId: string): Promise<string[]> 
     const directDoc = await getDocument(COLLECTIONS.USERS, studentId);
     const linkedAuthUserId = safeString(directDoc?.authUserId);
     if (linkedAuthUserId) ids.add(linkedAuthUserId);
-  } catch {}
+  } catch { }
   const identity = await getCurrentAuthIdentity();
   if (!identity || identity.id !== studentId) return [...ids];
   const [byAuthUserId, byEmail] = await Promise.all([
