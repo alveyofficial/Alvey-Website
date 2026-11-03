@@ -1277,9 +1277,7 @@ export const DataStore = {
         tutor.highestQualificationFileName ?? null,
 
       highestQualificationFileUrl:
-        tutor.highestQualificationFileUrl?.trim()
-          ? tutor.highestQualificationFileUrl.trim()
-          : undefined,
+        tutor.highestQualificationFileUrl?.trim() || null,
 
       examBoard:
         tutor.examBoard ?? null,
@@ -1288,9 +1286,7 @@ export const DataStore = {
         tutor.examResultSummary ?? null,
 
       resultDocumentLink:
-        tutor.resultDocumentLink?.trim()
-          ? tutor.resultDocumentLink.trim()
-          : undefined,
+        tutor.resultDocumentLink?.trim() || null,
 
       resultDocumentFileId:
         tutor.resultDocumentFileId ?? null,
@@ -1299,9 +1295,7 @@ export const DataStore = {
         tutor.resultDocumentFileName ?? null,
 
       resultDocumentFileUrl:
-        tutor.resultDocumentFileUrl?.trim()
-          ? tutor.resultDocumentFileUrl.trim()
-          : undefined,
+        tutor.resultDocumentFileUrl?.trim() || null,
 
       teachingExperience:
         tutor.teachingExperience ?? null,
@@ -1329,9 +1323,7 @@ export const DataStore = {
 
       // Extra profile
       videoLink:
-        tutor.videoLink?.trim()
-          ? tutor.videoLink.trim()
-          : undefined,
+        tutor.videoLink?.trim() || null,
 
       instagramHandle:
         tutor.instagramHandle ?? null,
