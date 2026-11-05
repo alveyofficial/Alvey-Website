@@ -14,7 +14,7 @@ import {
 import { PageHeader, StatCard, StatusBadge, EmptyState } from "@/components/portal-shared";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { firebase, getCurrentUser } from "@/integrations/firebase/client";
-import { DataStore } from "@/lib/data-store";
+import { DataStore, grantTutorClaim } from "@/lib/data-store";
 import type { TutorApplication } from "@/lib/data-store";
 import { getAdminDashboardMetrics, type AdminDashboardMetrics } from "@/lib/analytics";
 
@@ -89,6 +89,23 @@ function AdminDashboard() {
   return (
     <div>
       <PageHeader title="Admin Dashboard" description="Platform-wide overview and management." />
+
+      <button
+        onClick={async () => {
+          try {
+            const result = await grantTutorClaim(
+              "xWq7GBTikbWK27UVYULGZcFnorA3"
+            );
+            console.log("CLAIM RESULT:", result);
+            alert("Tutor claim granted. Check console.");
+          } catch (error) {
+            console.error("CLAIM FAILED:", error);
+            alert("Claim failed. Check console.");
+          }
+        }}
+      >
+        Grant Tutor Claim
+      </button>
 
       {loading || !metrics ? (
         <div className="flex justify-center py-12">
