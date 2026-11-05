@@ -4473,6 +4473,15 @@ export const DataStore = {
     if (!bookingDoc) throw new Error(`Booking ${bookingId} not found`);
 
     const newStatus: BookingStatus = response === 'accept' ? 'awaiting_payment' : 'declined';
+    const user = auth.currentUser;
+    const token = user ? await user.getIdTokenResult(true) : null;
+
+    console.log("BOOKING PERMISSION CHECK", {
+      uid: user?.uid,
+      tokenRole: token?.claims.role,
+      bookingTutorUid: bookingDoc.tutorAuthUserId,
+      status: bookingDoc.status,
+    });
     await upsertDocument(COLLECTIONS.BOOKINGS, bookingId, { status: newStatus });
 
     const { studentId, tutorName } = bookingDoc;
