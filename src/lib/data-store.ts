@@ -372,6 +372,31 @@ const COLLECTIONS = {
   PAYMENTS: "payments",
 };
 
+export async function grantTutorClaim(uid: string) {
+  const adminUser = auth.currentUser;
+  if (!adminUser) throw new Error("No authenticated user");
+
+  const idToken = await adminUser.getIdToken();
+
+  const response = await fetch("/api/admin/set-admin-claim", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${idToken}`,
+    },
+    body: JSON.stringify({
+      uid,
+      grant: true,
+      role: "tutor",
+    }),
+  });
+
+  const result = await response.json();
+  if (!response.ok) throw new Error(JSON.stringify(result));
+
+  return result;
+}
+
 function getLocal<T>(key: string, defaultValue: T): T {
   if (typeof window === "undefined") return defaultValue;
   try {
