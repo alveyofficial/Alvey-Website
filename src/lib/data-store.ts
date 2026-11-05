@@ -397,6 +397,18 @@ export async function grantTutorClaim(uid: string) {
   return result;
 }
 
+export async function checkTutorClaim() {
+  const user = auth.currentUser;
+  if (!user) throw new Error("No authenticated user");
+
+  const token = await user.getIdTokenResult(true);
+
+  return {
+    uid: user.uid,
+    role: token.claims.role,
+  };
+}
+
 function getLocal<T>(key: string, defaultValue: T): T {
   if (typeof window === "undefined") return defaultValue;
   try {
