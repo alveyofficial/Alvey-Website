@@ -7,7 +7,7 @@ import {
 import { PageHeader, StatCard, EmptyState, LoadingSpinner, StatusBadge, Avatar } from "@/components/portal-shared";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DataStore } from "@/lib/data-store";
+import { DataStore, checkTutorClaim } from "@/lib/data-store";
 import { firebase, getCurrentUser } from "@/integrations/firebase/client";
 
 export const Route = createFileRoute("/_authenticated/tutor/")({
@@ -96,7 +96,21 @@ function TutorDashboard() {
         title={`Welcome back${tutorName ? `, ${tutorName.split(" ")[0]}` : ""}`}
         description="Here's your teaching overview for today."
       />
-
+      <Button
+        variant="outline"
+        onClick={async () => {
+          try {
+            const result = await checkTutorClaim();
+            console.log("TUTOR CLAIM CHECK:", result);
+            alert(JSON.stringify(result));
+          } catch (error) {
+            console.error("CLAIM CHECK FAILED:", error);
+            alert("Check failed. See console.");
+          }
+        }}
+      >
+        Check My Tutor Claim
+      </Button>
       {/* Stats */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <StatCard icon={Users} label="Active Students" value={stats.students} color="text-blue-600 bg-blue-50 dark:bg-blue-950/30" />
