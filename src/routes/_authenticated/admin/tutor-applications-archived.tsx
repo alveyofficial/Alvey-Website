@@ -60,8 +60,10 @@ function ArchivedTutorApplications() {
       : ["English"];
 
     const tutorId = userId || `tutor_${id}`;
-
-    await DataStore.updateTutorApplicationStatus(id, "approved");
+    // 1. Assign tutor role and Firebase custom claim
+    if (userId) {
+      await DataStore.assignUserRole(userId, "tutor");
+    }
     await DataStore.saveTutor({
       id: tutorId,
       slug: name
@@ -84,9 +86,8 @@ function ArchivedTutorApplications() {
       is_verified: true,
       availability: "Contact for availability",
     });
-    if (userId) await DataStore.assignUserRole(userId, "tutor");
     if (email) await DataStore.addToTeam("tutors", email, userId);
-
+    await DataStore.updateTutorApplicationStatus(id, "approved");
     toast.success(`${name} approved — tutor profile created and added to Tutors team`);
     loadApplications();
   };

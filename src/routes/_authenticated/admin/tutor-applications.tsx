@@ -93,10 +93,6 @@ function ReviewModal({
   const handleApprove = async () => {
     setActing("approve");
     try {
-      // 1. Update application status
-      await DataStore.updateTutorApplicationStatus(id, "approved", notes);
-
-      // 2. Build tutor from application data
       const userId = (app.applicantUserId || app.applicant_user_id) as string | undefined;
       const name = (app.full_name || app.fullName || app.email || "New Tutor") as string;
       const email = (app.email || app.Email_address || "") as string;
@@ -120,7 +116,9 @@ function ReviewModal({
           : ["English"];
 
       const tutorId = userId || `tutor_${id}`;
-
+      if (userId) {
+        await DataStore.assignUserRole(userId, "tutor");
+      }
       await DataStore.saveTutor({
         id: tutorId,
         slug: name
@@ -261,15 +259,11 @@ function ReviewModal({
           true,
       });
 
-      // 3. Assign role
-      if (userId) {
-        await DataStore.assignUserRole(userId, "tutor");
-      }
-
       // 4. Add to tutors team
       if (email) {
         await DataStore.addToTeam("tutors", email, userId);
       }
+      await DataStore.updateTutorApplicationStatus(id, "approved", notes);
 
       toast.success(`${name} approved — tutor profile created and added to Tutors team`);
       onAction();
@@ -587,8 +581,9 @@ function AdminTutorApplications() {
         : ["English"];
 
     const tutorId = userId || `tutor_${id}`;
-
-    await DataStore.updateTutorApplicationStatus(id, "approved");
+    if (userId) {
+      await DataStore.assignUserRole(userId, "tutor");
+    }
     await DataStore.saveTutor({
       id: tutorId,
       slug: name
@@ -727,9 +722,8 @@ function AdminTutorApplications() {
       is_active:
         true,
     });
-    if (userId) await DataStore.assignUserRole(userId, "tutor");
     if (email) await DataStore.addToTeam("tutors", email, userId);
-
+    await DataStore.updateTutorApplicationStatus(id, "approved");
     toast.success(`${name} approved — tutor profile created`);
     loadApplications();
   };

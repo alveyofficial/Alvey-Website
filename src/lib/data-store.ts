@@ -2146,157 +2146,6 @@ export const DataStore = {
       list[idx].status = status;
       if (notes) list[idx].internal_notes = notes;
       setLocal(KEYS.APPLICATIONS, list);
-
-      if (status === "approved" && list[idx].applicant_user_id) {
-        const application = list[idx];
-        const userId = application.applicant_user_id;
-
-        await DataStore.assignUserRole(userId, "tutor");
-
-        await DataStore.saveTutor({
-          id: userId,
-          slug: userId,
-
-          name: application.full_name || "Certified Tutor",
-
-          phone:
-            (application.phoneNumber ||
-              application.phone ||
-              "") as string,
-
-          discordUsername:
-            (application.discordUsername ||
-              application.discord_username ||
-              "") as string,
-
-          dateOfBirth:
-            (application.dateOfBirth ||
-              application.date_of_birth ||
-              "") as string,
-
-          countryOfResidence:
-            (application.countryOfResidence ||
-              application.country_of_residence ||
-              "") as string,
-
-          avatar_url: avatarFor(
-            application.full_name || "Certified Tutor",
-          ),
-
-          headline:
-            (application.headline as string) ||
-            "Professional Educator",
-
-          about:
-            (application.teachingExperience ||
-              application.teaching_experience ||
-              application.cover_letter ||
-              "") as string,
-
-          highestQualification:
-            (application.highestQualification ||
-              application.highest_qualification ||
-              "") as string,
-
-          highestQualificationLink:
-            (application.highestQualificationLink ||
-              application.qualification_link ||
-              "") as string,
-
-          examBoard:
-            (application.examBoard ||
-              application.exam_board ||
-              "") as string,
-
-          examResultSummary:
-            (application.examResultSummary ||
-              application.exam_result_summary ||
-              "") as string,
-
-          teachingExperience:
-            (application.teachingExperience ||
-              application.teaching_experience ||
-              application.cover_letter ||
-              "") as string,
-
-          teachingFormat:
-            (application.teachingFormat ||
-              application.teaching_format ||
-              "online") as string,
-
-          oneOnOneRateUsd:
-            Number(
-              application.oneOnOneRateUsd ??
-              application.hourlyRate ??
-              application.expected_rate ??
-              0,
-            ),
-
-          groupRateUsd:
-            Number(application.groupRateUsd ?? 0),
-
-          maxGroupStudents:
-            Number(application.maxGroupStudents ?? 0),
-
-          weeklyClassesPerStudent:
-            Number(application.weeklyClassesPerStudent ?? 0),
-
-          classDurationMinutes:
-            Number(application.classDurationMinutes ?? 0),
-
-          videoLink:
-            (application.videoLink || "") as string,
-
-          instagramHandle:
-            (application.instagramHandle ||
-              application.instagram_handle ||
-              "") as string,
-
-          testimonial:
-            (application.testimonial || "") as string,
-
-          responseTime: "Within 24 hours",
-
-          hourly_rate:
-            Number(
-              application.oneOnOneRateUsd ??
-              application.hourlyRate ??
-              application.expected_rate ??
-              40,
-            ),
-
-          rating_avg: 5,
-          rating_count: 0,
-
-          years_experience:
-            Number(
-              application.yearsExperience ??
-              application.years_experience ??
-              0,
-            ),
-
-          languages:
-            application.languages ||
-            application.languagesSpoken ||
-            [],
-
-          subjects:
-            application.subjects ||
-            (application.subjectName
-              ? [application.subjectName]
-              : []),
-
-          levels:
-            application.levels ||
-            (application.teachingLevel
-              ? [application.teachingLevel]
-              : []),
-
-          is_featured: false,
-          is_verified: true,
-          availability: "Available",
-        });
-      }
     }
 
     await upsertDocument(COLLECTIONS.TUTOR_APPLICATIONS, id, {
@@ -2418,25 +2267,34 @@ export const DataStore = {
   },
 
   assignUserRole: async (userId: string, role: UserRole): Promise<void> => {
-    try {
-      const user = await getCurrentUser();
-      await upsertDocument(COLLECTIONS.USERS, userId, {
-        authUserId: userId,
-        email: safeString(user?.email, `${userId}@tutorslink.local`),
-        displayName: safeString(
-          user?.displayName,
-          user?.email?.split("@")[0] || userId
-        ), role,
-        discordId: null,
-        active: true,
-      });
-    } catch { }
+  if (role === "tutor") {
+    await grantTutorClaim(userId);
+  }
+  const user = await getCurrentUser();
 
-    const mockRoles = getLocal<Record<string, string[]>>("user_roles_map", {});
-    if (!mockRoles[userId]) mockRoles[userId] = ["guest"];
-    if (!mockRoles[userId].includes(role)) mockRoles[userId].push(role);
-    setLocal("user_roles_map", mockRoles);
-  },
+  await upsertDocument(COLLECTIONS.USERS, userId, {
+    authUserId: userId,
+    email: safeString(user?.email, `${userId}@tutorslink.local`),
+    displayName: safeString(
+      user?.displayName,
+      user?.email?.split("@")[0] || userId
+    ),
+    role,
+    discordId: null,
+    active: true,
+  });
+  const mockRoles = getLocal<Record<string, string[]>>(
+    "user_roles_map",
+    {}
+  );
+  if (!mockRoles[userId]) mockRoles[userId] = ["guest"];
+
+  if (!mockRoles[userId].includes(role)) {
+    mockRoles[userId].push(role);
+  }
+
+  setLocal("user_roles_map", mockRoles);
+},
 
   removeUserRole: async (userId: string, role: UserRole): Promise<void> => {
     try {
