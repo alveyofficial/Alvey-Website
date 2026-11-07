@@ -2267,34 +2267,34 @@ export const DataStore = {
   },
 
   assignUserRole: async (userId: string, role: UserRole): Promise<void> => {
-  if (role === "tutor") {
-    await grantTutorClaim(userId);
-  }
-  const user = await getCurrentUser();
+    if (role === "tutor") {
+      await grantTutorClaim(userId);
+    }
+    const user = await getCurrentUser();
 
-  await upsertDocument(COLLECTIONS.USERS, userId, {
-    authUserId: userId,
-    email: safeString(user?.email, `${userId}@tutorslink.local`),
-    displayName: safeString(
-      user?.displayName,
-      user?.email?.split("@")[0] || userId
-    ),
-    role,
-    discordId: null,
-    active: true,
-  });
-  const mockRoles = getLocal<Record<string, string[]>>(
-    "user_roles_map",
-    {}
-  );
-  if (!mockRoles[userId]) mockRoles[userId] = ["guest"];
+    await upsertDocument(COLLECTIONS.USERS, userId, {
+      authUserId: userId,
+      email: safeString(user?.email, `${userId}@tutorslink.local`),
+      displayName: safeString(
+        user?.displayName,
+        user?.email?.split("@")[0] || userId
+      ),
+      role,
+      discordId: null,
+      active: true,
+    });
+    const mockRoles = getLocal<Record<string, string[]>>(
+      "user_roles_map",
+      {}
+    );
+    if (!mockRoles[userId]) mockRoles[userId] = ["guest"];
 
-  if (!mockRoles[userId].includes(role)) {
-    mockRoles[userId].push(role);
-  }
+    if (!mockRoles[userId].includes(role)) {
+      mockRoles[userId].push(role);
+    }
 
-  setLocal("user_roles_map", mockRoles);
-},
+    setLocal("user_roles_map", mockRoles);
+  },
 
   removeUserRole: async (userId: string, role: UserRole): Promise<void> => {
     try {
@@ -4449,55 +4449,100 @@ export const DataStore = {
     }
   },
 
+
   moderateReceipt: async (bookingId: string, decision: 'approve' | 'reject', adminNote?: string): Promise<void> => {
     const bookingDoc = await getDocument(COLLECTIONS.BOOKINGS, bookingId);
     if (!bookingDoc) throw new Error(`Booking ${bookingId} not found`);
 
     const now = new Date().toISOString();
-    const { studentId, tutorAuthUserId, referenceCode } = bookingDoc;
+    const studentId = bookingDoc.studentId;
+    const tutorUserId = bookingDoc.tutorAuthUserId || bookingDoc.tutorId;
+    const referenceCode = bookingDoc.referenceCode || bookingId;
 
     if (decision === 'approve') {
+      if (!studentId || !tutorUserId) {
+        throw new Error('Booking is missing its student or tutor ID.');
+      }
+
+      // Build the demo lesson from the booking's preferred date and time.
+      const preferredDate = String(bookingDoc.preferredDate || '').trim();
+      const preferredTime = String(bookingDoc.preferredTime || '').trim();
+
+      if (!preferredDate || !preferredTime) {
+        throw new Error('Booking is missing its preferred date or time.');
+      }
+
+      const startsAtDate = new Date(`${preferredDate}T${preferredTime}`);
+
+      if (Number.isNaN(startsAtDate.getTime())) {
+        throw new Error('Booking contains an invalid preferred date or time.');
+      }
+
+      const endsAtDate = new Date(startsAtDate.getTime() + 60 * 60 * 1000);
+
+      // Stable ID prevents duplicate lessons if approval is retried.
+      const lessonId = `booking_${bookingId}_demo`;
+
+      await upsertDocument(COLLECTIONS.LESSONS, lessonId, {
+        bookingId,
+        studentId,
+        tutorId: tutorUserId,
+        subject: bookingDoc.subject || 'Demo lesson',
+        academicLevel: bookingDoc.academicLevel || '',
+        startsAt: startsAtDate.toISOString(),
+        endsAt: endsAtDate.toISOString(),
+        notes: bookingDoc.coverNote || '',
+        createdBy: auth.currentUser?.uid || null,
+        status: 'scheduled',
+        isDeleted: false,
+      });
+
+      // Confirm booking and link it to its lesson.
       await upsertDocument(COLLECTIONS.BOOKINGS, bookingId, {
         status: 'confirmed' as BookingStatus,
-        confirmedAt: now,
+        confirmedAt: bookingDoc.confirmedAt || now,
+        demoLessonId: lessonId,
         adminNote: null,
       });
-      // Notify student
-      try {
-        const sendEmailStudent = await shouldSendBookingEmail(studentId);
-        await DataStore.notifyUser({
-          userId: studentId,
-          userRole: 'student',
-          type: 'booking',
-          title: `Booking ${referenceCode} confirmed!`,
-          body: 'Your demo booking has been confirmed. Your demo is scheduled.',
-          link: '/student/bookings',
-          sendEmail: sendEmailStudent,
-        });
-      } catch (err) {
-        console.error('[moderateReceipt] Failed to notify student:', err);
-      }
-      // Notify tutor
-      try {
-        const sendEmailTutor = await shouldSendBookingEmail(tutorAuthUserId);
-        await DataStore.notifyUser({
-          userId: tutorAuthUserId,
-          userRole: 'tutor',
-          type: 'booking',
-          title: `Booking ${referenceCode} confirmed!`,
-          body: 'A student booking has been confirmed. The demo is scheduled.',
-          link: '/tutor/bookings',
-          sendEmail: sendEmailTutor,
-        });
-      } catch (err) {
-        console.error('[moderateReceipt] Failed to notify tutor:', err);
+
+      // Avoid sending duplicate notifications on approval retries.
+      if (bookingDoc.status !== 'confirmed') {
+        try {
+          const sendEmailStudent = await shouldSendBookingEmail(studentId);
+          await DataStore.notifyUser({
+            userId: studentId,
+            userRole: 'student',
+            type: 'booking',
+            title: `Booking ${referenceCode} confirmed!`,
+            body: 'Your demo booking has been confirmed. Your demo is scheduled.',
+            link: '/student/bookings',
+            sendEmail: sendEmailStudent,
+          });
+        } catch (err) {
+          console.error('[moderateReceipt] Failed to notify student:', err);
+        }
+
+        try {
+          const sendEmailTutor = await shouldSendBookingEmail(tutorUserId);
+          await DataStore.notifyUser({
+            userId: tutorUserId,
+            userRole: 'tutor',
+            type: 'booking',
+            title: `Booking ${referenceCode} confirmed!`,
+            body: 'A student booking has been confirmed. The demo is scheduled.',
+            link: '/tutor/bookings',
+            sendEmail: sendEmailTutor,
+          });
+        } catch (err) {
+          console.error('[moderateReceipt] Failed to notify tutor:', err);
+        }
       }
     } else {
       await upsertDocument(COLLECTIONS.BOOKINGS, bookingId, {
         status: 'awaiting_payment' as BookingStatus,
         adminNote: adminNote || null,
       });
-      // Notify student
+
       try {
         const sendEmail = await shouldSendBookingEmail(studentId);
         await DataStore.notifyUser({
@@ -4516,6 +4561,7 @@ export const DataStore = {
       }
     }
   },
+
 
   getBookingsForStudent: async (studentId: string): Promise<Booking[]> => {
     try {
