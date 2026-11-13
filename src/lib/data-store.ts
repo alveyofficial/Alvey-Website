@@ -1051,6 +1051,7 @@ export interface Booking {
     confidenceStatus: "100% Match" | "Partial Match" | "No Match" | "Unable to Extract";
     rawJson: string;
     analyzedAt: string;
+    documentStatus: "receipt" | "not_receipt" | "unreadable";
   } | null;
 }
 

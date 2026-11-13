@@ -67,7 +67,25 @@ function GeminiVerificationBadge({ geminiVerification, totalAmountSAR }: GeminiV
     );
   }
 
-  const { confidenceStatus, extractedAmount, referenceNumber } = geminiVerification;
+  const { documentStatus, confidenceStatus, extractedAmount, referenceNumber } = geminiVerification;
+
+  if (documentStatus === "not_receipt") {
+    return (
+      <div className="flex items-center gap-1.5 p-2 rounded-md text-xs bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400">
+        <X className="h-3.5 w-3.5" />
+        AI: Uploaded file is not a payment receipt
+      </div>
+    );
+  }
+
+  if (documentStatus === "unreadable") {
+    return (
+      <div className="flex items-center gap-1.5 p-2 rounded-md text-xs bg-muted border text-muted-foreground">
+        <AlertCircle className="h-3.5 w-3.5" />
+        AI: Document could not be verified
+      </div>
+    );
+  }
 
   if (confidenceStatus === "100% Match") {
     return (
@@ -111,7 +129,6 @@ function GeminiVerificationBadge({ geminiVerification, totalAmountSAR }: GeminiV
     );
   }
 
-  // Unable to Extract
   return (
     <div className="flex items-center gap-1.5 p-2 rounded-md text-xs bg-muted border text-muted-foreground">
       <AlertCircle className="h-3.5 w-3.5" />
@@ -120,7 +137,6 @@ function GeminiVerificationBadge({ geminiVerification, totalAmountSAR }: GeminiV
   );
 }
 
-// ---------------------------------------------------------------------------
 // AdminScheduling component
 // ---------------------------------------------------------------------------
 
